@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>z-agent admin</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 24px; max-width: 960px; margin: 0 auto; }
+        h1 { color: #1a73e8; }
+        .stat { display: inline-block; padding: 12px 20px; margin-right: 16px; background: #f0f4f8; border-radius: 6px; }
+        .stat-value { font-size: 24px; font-weight: 600; color: #1a73e8; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 8px 12px; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+<h1>z-agent admin</h1>
+<p>云端 Agent SaaS 平台控制台</p>
+
+<h2>概览</h2>
+<div id="overview"></div>
+
+<h2>已注册 Agent</h2>
+<ul id="agents"></ul>
+
+<h2>支持的模型</h2>
+<ul id="models"></ul>
+
+<script>
+fetch('/z-agent/admin/overview').then(r => r.json()).then(data => {
+    document.getElementById('overview').innerHTML =
+        '<span class="stat"><span class="stat-value">' + data.agentCount + '</span><br>agents</span>' +
+        '<span class="stat"><span class="stat-value">' + data.providerCount + '</span><br>providers</span>' +
+        '<span class="stat"><span class="stat-value">' + data.models.length + '</span><br>models</span>';
+    const agentUl = document.getElementById('agents');
+    (data.agents || []).forEach(a => {
+        const li = document.createElement('li');
+        li.textContent = '[' + a.kind + '] ' + a.name + ' — ' + a.description;
+        agentUl.appendChild(li);
+    });
+    const modelUl = document.getElementById('models');
+    (data.models || []).forEach(m => {
+        const li = document.createElement('li');
+        li.textContent = m;
+        modelUl.appendChild(li);
+    });
+});
+</script>
+</body>
+</html>
