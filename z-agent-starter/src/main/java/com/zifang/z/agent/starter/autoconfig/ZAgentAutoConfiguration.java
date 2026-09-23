@@ -1,7 +1,6 @@
 package com.zifang.z.agent.starter.autoconfig;
 
 import com.zifang.z.agent.core.agent.LlmAdapter;
-import com.zifang.z.agent.core.controller.AgentController;
 import com.zifang.z.agent.core.properties.AgentProperties;
 import com.zifang.z.agent.core.registry.AgentRegistry;
 import com.zifang.z.agent.core.runner.AgentRunner;
@@ -13,13 +12,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 
 /**
  * z-agent 自动装配. 业务方 @SpringBootApplication 后 Spring 会自动扫到这个 @Configuration,
  * 拉起 AgentRegistry + AgentRunner + AgentController + LlmAdapter.
  *
  * <p>LlmAdapter 会自动注入所有 kernel.llm.LlmProvider bean (6 个 provider 默认实现).
+ *
+ * <p>AgentController 由 @ComponentScan 通过 @RestController 自动发现, 不要重复 @Bean.
  */
 @Configuration
 @EnableConfigurationProperties(AgentProperties.class)
@@ -56,11 +56,5 @@ public class ZAgentAutoConfiguration {
     @Bean
     public AgentRunner agentRunner(AgentRegistry registry) {
         return new AgentRunner(registry);
-    }
-
-    @Bean
-    @Primary
-    public AgentController agentController(AgentRunner runner) {
-        return new AgentController(runner);
     }
 }
