@@ -8,6 +8,7 @@ import com.zifang.z.agent.kernel.llm.LlmProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -20,8 +21,12 @@ import org.springframework.context.annotation.Configuration;
  * <p>LlmAdapter 会自动注入所有 kernel.llm.LlmProvider bean (6 个 provider 默认实现).
  *
  * <p>AgentController 由 @ComponentScan 通过 @RestController 自动发现, 不要重复 @Bean.
+ *
+ * <p>FEATURE066 2026-09-23: 加 @ConditionalOnProperty(name = "z.agent.enabled", havingValue = "true")
+ * 防止与 z-opc 内部遗留的 z-agent-center-* 冲突. 完全替换后可去掉.
  */
 @Configuration
+@ConditionalOnProperty(name = "z.agent.enabled", havingValue = "true", matchIfMissing = false)
 @EnableConfigurationProperties(AgentProperties.class)
 @ComponentScan(basePackages = {
         "com.zifang.z.agent.core.controller",
