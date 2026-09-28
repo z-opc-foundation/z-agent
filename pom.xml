@@ -68,7 +68,7 @@
     </modules>
 
     <properties>
-        <revision>0.1.2</revision>
+        <revision>0.1.3</revision>
 
         <!-- 版本口径由父链下发：maven.compiler.source/target=8、project.build.sourceEncoding=UTF-8、
              spring-boot.version=2.7.18 三格与父链面值逐字相同，已删（根 pom 一次 + api/core/starter/admin
