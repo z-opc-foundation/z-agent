@@ -13,8 +13,8 @@ LLM 调用走 `z-agent-kernel` 的 `kernel.llm.LlmProvider` SPI。
 | 当前源码版本 | `0.1.2`（`<revision>`，唯一真源） | `grep -n '<revision>' pom.xml` |
 | Central 上实际有的版本 | `0.1.0` / `0.1.1` / `0.1.2`（2026-09-27 实测；清单会变，信命令别信这一行） | `curl -s https://repo1.maven.org/maven2/io/github/yuku123/z-agent/maven-metadata.xml \| grep -o '<version>[^<]*'` |
 | 模块 | `z-agent-api`（DTO）/ `z-agent-core`（全部逻辑与测试）/ `z-agent-starter`（自动装配）/ `z-agent-admin`（控制面） | `grep -n '<module>' pom.xml` |
-| JDK | Java 8，Spring Boot 2.7.18 | `grep -n 'maven.compiler\|spring-boot.version' pom.xml` |
-| 内核 pin | `z-agent-kernel.version=0.1.0` —— 注意内核源码树已到 `0.2.1` | `grep -n 'z-agent-kernel.version' pom.xml` |
+| JDK | Java 8，Spring Boot 2.7.18 —— 两格都由 parent `z-boot-parent:1.0.19` 下发，本仓不再自声明 | `grep -n 'z-boot-parent' pom.xml` |
+| 内核 pin | `z-agent-kernel.version=0.1.0` —— `z-boot-fleet:1.0.0` 的槽位是 `0.1.1`，本仓刻意钉在 0.1.0；内核源码树已到 `0.2.1`（`0.2.x` 未发 Central） | `grep -n 'z-agent-kernel.version' pom.xml` |
 | 源码规模 | main 16 个 `.java` / test 4 个 | `find . -path '*/target' -prune -o -name '*.java' -print \| grep -c '/src/main/'`（test 同形改 `/src/test/`） |
 | 测试数 | **37 支 `@Test`，全在 `z-agent-core`**（api/starter/admin 三个模块各 0 支） | `grep -rho '@Test' --include='*.java' . \| wc -l`；分模块：`for m in z-agent-*; do printf "%-16s %s\n" "$m" "$(grep -rho '@Test' --include='*.java' $m 2>/dev/null \| wc -l \| tr -d ' ')"; done` |
 

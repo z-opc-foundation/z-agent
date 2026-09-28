@@ -13,6 +13,17 @@
         依赖 kernel.agent SPI + kernel.llm + kernel.memory + kernel.message + kernel.tool + kernel.types + kernel.event + z-llm(可选)
     -->
 
+    <!-- 消费入口统一挂 z-boot-parent:1.0.19 = 第三方地板 z-boot-dependencies:1.0.19（156 条）
+         + 兄弟仓槽位 z-boot-fleet:1.0.0（163 条）+ Java 8 的 pluginManagement。迁移前这里没有
+         parent，根 pom 自己摊版本键 + 一条 spring-boot-dependencies import。
+         relativePath 必须留空：parent 不在磁盘上，在 repo1。 -->
+    <parent>
+        <groupId>io.github.yuku123</groupId>
+        <artifactId>z-boot-parent</artifactId>
+        <version>1.0.19</version>
+        <relativePath/>
+    </parent>
+
     <groupId>io.github.yuku123</groupId>
     <artifactId>z-agent</artifactId>
     <version>${revision}</version>
@@ -58,25 +69,55 @@
 
     <properties>
         <revision>0.1.2</revision>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <spring-boot.version>2.7.18</spring-boot.version>
+        <!-- 版本口径由父链下发：maven.compiler.source/target=8、project.build.sourceEncoding=UTF-8、
+             spring-boot.version=2.7.18 三格与父链面值逐字相同，已删（根 pom 一次 + api/core/starter/admin
+             各一次；spring-boot.version 的唯一引用点就是下面删掉的那条 import，删键即删引用点）。
+             z-agent-kernel.version=0.1.0 是**与父链不同值的刻意分歧**：fleet:1.0.0 的 z-agent-kernel-*
+             槽位是 0.1.1，而本仓基线一直在 0.1.0 上编译测试 ⇒ 删键就是悄悄换实现。留键的同时必须按坐标
+             写直接 DM 条目（继承来的直接 DM 顶得住子 pom 的 BOM import）。升 0.1.1 归兼容性决定，不在这刀。 -->
         <z-agent-kernel.version>0.1.0</z-agent-kernel.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- org.springframework.boot:spring-boot-dependencies 的 import 删掉：地板
+                 z-boot-dependencies:1.0.19 自己 import 同版本那一格，本仓第三方坐标
+                 （spring-web/webmvc/boot/autoconfigure/starter-test/jackson-databind/slf4j-api/junit）
+                 全部由父链供值。 -->
+
+            <!-- 自家 5 个 reactor 坐标钉 ${project.version}：fleet:1.0.0 已经收了 z-agent 0.1.2 那一格，
+                 继承来的 DM 会改写**传递依赖**版本 ⇒ 不补这格，revision 一抬号就会把中央上 0.1.2 的
+                 旧字节码当 sibling 编进本仓产物。 -->
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
+                <groupId>io.github.yuku123</groupId>
+                <artifactId>z-agent</artifactId>
+                <version>${project.version}</version>
                 <type>pom</type>
-                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.github.yuku123</groupId>
+                <artifactId>z-agent-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.yuku123</groupId>
+                <artifactId>z-agent-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.yuku123</groupId>
+                <artifactId>z-agent-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.yuku123</groupId>
+                <artifactId>z-agent-admin</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
-            <!-- z-agent-kernel SPI 子模块 (z-agent 是平台仓, 依赖全套核心 SDK 包) -->
+            <!-- z-agent-kernel SPI 子模块 (z-agent 是平台仓, 依赖全套核心 SDK 包)
+                 这 8 条是把上面那格分歧落到坐标上的直接条目，缺一条那条就回到 fleet 的 0.1.1。 -->
             <dependency>
                 <groupId>io.github.yuku123</groupId>
                 <artifactId>z-agent-kernel-agent</artifactId>
@@ -117,20 +158,40 @@
                 <artifactId>z-agent-kernel-middleware</artifactId>
                 <version>${z-agent-kernel.version}</version>
             </dependency>
+
+            <!-- 【拒绝地板把版本往下改】地板这四格是 legacy 面值（objenesis 2.6 / asm 9.2 /
+                 json-smart+accessors-smart 2.4.9），低于本仓基线 dependency:tree 实测的
+                 3.2 / 9.3 / 2.4.11 —— 而后两支正是 mockito-core 4.5.1 与 json-path 链自己声明的依赖。
+                 地板往上抬的那些（jackson 2.13.5→2.18.6、spring 5.3.31→5.3.39、junit 5.8.2→5.9.3、
+                 json-path 2.7.0→2.9.0）是有意的统一与安全口径，不回退。写法照 z-skill（字面量、不新开键）。 -->
+            <dependency>
+                <groupId>org.objenesis</groupId>
+                <artifactId>objenesis</artifactId>
+                <version>3.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>9.3</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+                <version>2.4.11</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>accessors-smart</artifactId>
+                <version>2.4.11</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.15.0</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                </configuration>
-            </plugin>
+            <!-- maven-compiler-plugin 那一块（3.15.0 + source/target）删掉，改吃父链 pluginManagement
+                 的 3.11.0 + source/target 8 + UTF-8 + `-parameters`；surefire 2.22.2 / jar 3.3.0 /
+                 resources 3.3.1 / spring-boot-maven-plugin 2.7.18 同样跟着父链（本仓原本没有它们的声明）。 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
@@ -142,6 +203,12 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
+                <!-- 常开、且必须留在本 pom：z-boot-parent 那条 flatten 是 <inherited>false</inherited>
+                     （z-boot-parent/pom.xml:261），不下发插件声明；本仓版本写 ${revision}，没有 flatten
+                     发出去的 pom 上那行就是字面的 ${revision} —— z-agent-proxy:0.1.0 在中央上正是这个形状。
+                     flattenMode 保持本仓自己的 resolveCiFriendliesOnly：repo1 回读 z-agent 0.1.2 五份的形状是
+                     根 parent=0、四个叶子 parent=1，形状不由这一刀改（同 z-skill 那一类）。
+                     版本钉 1.7.2（父链属性是 1.7.3）：统一 parent 不顺手换构建插件版本。 -->
                 <version>1.7.2</version>
                 <configuration>
                     <updatePomFile>true</updatePomFile>
