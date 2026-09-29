@@ -68,7 +68,7 @@
     </modules>
 
     <properties>
-        <revision>0.1.3</revision>
+        <revision>0.1.4</revision>
 
         <!-- 版本口径由父链下发：maven.compiler.source/target=8、project.build.sourceEncoding=UTF-8、
              spring-boot.version=2.7.18 三格与父链面值逐字相同，已删（根 pom 一次 + api/core/starter/admin
@@ -203,16 +203,18 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
-                <!-- 常开、且必须留在本 pom：z-boot-parent 那条 flatten 是 <inherited>false</inherited>
+                <!-- 常开、且必须留在本 pom：z-boot-parent 那条 flatten 是 `<inherited>false</inherited>`
                      （z-boot-parent/pom.xml:261），不下发插件声明；本仓版本写 ${revision}，没有 flatten
                      发出去的 pom 上那行就是字面的 ${revision} —— z-agent-proxy:0.1.0 在中央上正是这个形状。
-                     flattenMode 保持本仓自己的 resolveCiFriendliesOnly：repo1 回读 z-agent 0.1.2 五份的形状是
-                     根 parent=0、四个叶子 parent=1，形状不由这一刀改（同 z-skill 那一类）。
+                     flattenMode=oss（2026-09-29 从 resolveCiFriendliesOnly 改）：旧模式下四个叶子发布 pom
+                     留着 <parent>z-agent</parent> 且依赖不带版本，外部工程要顺着 z-agent → z-boot-parent →
+                     z-boot-fleet 才能补齐版本 ⇒ 我们的 parent 链成了消费者的一部分。oss 模式把 parent 剥掉、
+                     版本落成字面量，和 z-mq/z-cache/z-gw/z-llm 同形状（判据：中央 starter pom 的 parent 计数=0）。
                      版本钉 1.7.2（父链属性是 1.7.3）：统一 parent 不顺手换构建插件版本。 -->
                 <version>1.7.2</version>
                 <configuration>
                     <updatePomFile>true</updatePomFile>
-                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                    <flattenMode>oss</flattenMode>
                 </configuration>
                 <executions>
                     <execution>
