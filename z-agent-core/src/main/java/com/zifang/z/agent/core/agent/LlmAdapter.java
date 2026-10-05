@@ -28,36 +28,96 @@ import java.util.concurrent.ConcurrentHashMap;
  * LLM 提供方路由器. 把 model id 路由到对应 LlmProvider bean.
  *
  * <p>registerProvider(name, provider): 业务方注入 kernel.llm 6 provider 默认实现.
- * <p>supportsModel(model): 遍历所有 provider, 命中即返回.
- * <p>chat / streamChat: 转给对应 provider.
+ * <p>resolve 的优先级:
+ * <ol>
+ *   <li><b>显式映射</b> {@code z.agent.providers.<model>=<provider bean 名>}——
+ *       {@link AgentProperties#getProviders()}。映射到的 bean 没注册就<b>直接报错</b>，
+ *       不回落。</li>
+ *   <li>回落 {@code supportsModel} 扫描，<b>按注册顺序</b>。</li>
+ * </ol>
+ *
+ * <p>为什么第 2 步必须按注册顺序：此前直接遍历 {@code ConcurrentHashMap.values()}，
+ * 而它的迭代序由 <b>bean 名的 {@code String.hashCode()}</b> 决定，与注册顺序无关。
+ * 两个 provider 都 {@code supportsModel} 同一个 model（OpenAI 兼容代理与官方
+ * openai 共存是常态）时，赢家不可控、任何配置都改不动，且没有任何日志。
+ * 实测注册 {@code b,a} 与 {@code a,b} 都由 {@code a} 胜出，{@code m1,m2} 由
+ * {@code m1}、{@code azure-openai,openai} 由 {@code openai} 胜出——就是哈希序。
+ * 现在按注册顺序扫描，并在多命中时打 WARN 点名冲突者。</p>
  */
 public class LlmAdapter {
 
+    private static final org.slf4j.Logger log =
+            org.slf4j.LoggerFactory.getLogger(LlmAdapter.class);
+
     private final AgentProperties props;
     private final Map<String, LlmProvider> providers = new ConcurrentHashMap<String, LlmProvider>();
+    /** 注册顺序；resolve 的回落扫描按它走，不用 ConcurrentHashMap 的哈希序。 */
+    private final List<String> registrationOrder =
+            new java.util.concurrent.CopyOnWriteArrayList<String>();
     private final ObjectMapper mapper = new ObjectMapper();
 
     public LlmAdapter(AgentProperties props) {
-        this.props = props;
+        this.props = props == null ? new AgentProperties() : props;
     }
 
     public void registerProvider(LlmProvider provider) {
         if (provider == null) return;
-        providers.put(provider.name(), provider);
+        registerProvider(provider.name(), provider);
     }
 
     public void registerProvider(String name, LlmProvider provider) {
         if (provider == null) return;
-        providers.put(name, provider);
+        if (providers.put(name, provider) == null) {
+            registrationOrder.add(name);   // 只有首次注册才占一个位置
+        }
     }
 
     public LlmProvider resolve(String modelId) {
         if (modelId == null) modelId = props.getDefaultModel();
-        for (LlmProvider p : providers.values()) {
-            if (p.supportsModel(modelId)) return p;
+
+        // ① 显式映射优先
+        String mapped = mappedProviderName(modelId);
+        if (mapped != null) {
+            LlmProvider p = providers.get(mapped);
+            if (p == null) {
+                throw new AgentException(AgentException.RUN_FAILED,
+                        "z.agent.providers[" + modelId + "] 指定了 provider '" + mapped
+                                + "'，但没有注册同名的 LlmProvider。已注册: " + registrationOrder
+                                + "。映射表是显式配置，不回落 supportsModel 扫描"
+                                + "（回落会让配置静默失效，正是本改动要修的）。");
+            }
+            return p;
         }
-        throw new AgentException(AgentException.RUN_FAILED,
-                "no provider supports model: " + modelId);
+
+        // ② 回落 supportsModel 扫描，按注册顺序
+        LlmProvider hit = null;
+        List<String> conflicts = new ArrayList<String>();
+        for (String name : registrationOrder) {
+            LlmProvider p = providers.get(name);
+            if (p == null || !p.supportsModel(modelId)) continue;
+            if (hit == null) {
+                hit = p;
+            }
+            conflicts.add(name);
+        }
+        if (hit == null) {
+            throw new AgentException(AgentException.RUN_FAILED,
+                    "no provider supports model: " + modelId
+                            + "（已注册: " + registrationOrder + "）");
+        }
+        if (conflicts.size() > 1) {
+            log.warn("model '{}' 同时被 {} 个 provider 声明支持 {}；按注册顺序取 {}。"
+                            + "要精确指定，配 z.agent.providers.{} = <provider bean 名>",
+                    modelId, conflicts.size(), conflicts, hit.name(), modelId);
+        }
+        return hit;
+    }
+
+    private String mappedProviderName(String modelId) {
+        Map<String, String> table = props.getProviders();
+        if (table == null || table.isEmpty()) return null;
+        String v = table.get(modelId);
+        return (v == null || v.trim().isEmpty()) ? null : v.trim();
     }
 
     public ChatCompletionsResponse chat(ChatCompletionsRequest req) {
@@ -74,7 +134,10 @@ public class LlmAdapter {
 
     public List<String> listModels() {
         List<String> all = new ArrayList<String>();
-        for (LlmProvider p : providers.values()) {
+        // 按注册顺序，返回给调用方的模型列表顺序才是稳定的
+        for (String name : registrationOrder) {
+            LlmProvider p = providers.get(name);
+            if (p == null) continue;
             for (com.zifang.z.agent.kernel.llm.Model m : p.listModels()) {
                 all.add(m.getId());
             }
