@@ -1,0 +1,45 @@
+{
+  "name": "@yuku123/z-agent-component",
+  "private": false,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "z-agent 组件包（lead 005 §9 双包：api 客户端 + 全量 agent 页面，apiBase 参数化）。独立壳不发布 npm",
+  "main": "./dist/z-agent-component.js",
+  "module": "./dist/z-agent-component.js",
+  "exports": {
+    ".": "./dist/z-agent-component.js",
+    "./style.css": "./dist/z-agent-component.css",
+    "./pages": "./dist/z-agent-pages.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.1.0",
+    "@ant-design/pro-components": "^3.1.12-0",
+    "@logicflow/core": "^2.0.0",
+    "@logicflow/extension": "^2.0.0",
+    "antd": "^6.3.3",
+    "axios": "^1.7.0",
+    "echarts": "^5.5.0",
+    "echarts-for-react": "^3.0.2",
+    "react-markdown": "^9.0.0",
+    "remark-gfm": "^4.0.0"
+  },
+  "peerDependencies": {
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-router-dom": ">=6",
+    "@yuku123/z-frontend-common": ">=0.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^6.2.6"
+  }
+}
