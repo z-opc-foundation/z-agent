@@ -31,10 +31,11 @@
     "remark-gfm": "^4.0.0"
   },
   "peerDependencies": {
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
-    "react-router-dom": ">=6",
-    "@yuku123/z-frontend-common": "0.1.1"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.0",
+    "@yuku123/z-frontend-common": "0.1.1",
+    "antd": "^6.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.0",
