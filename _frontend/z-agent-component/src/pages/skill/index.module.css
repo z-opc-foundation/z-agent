@@ -1,0 +1,120 @@
+/* 技能市场：对齐扩展市场浅色风格（白底、tab 行、三列轻卡片） */
+.marketRoot {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    padding: 16px 20px 24px;
+    box-sizing: border-box;
+}
+
+.topRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 16px;
+}
+
+.tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.tab {
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    color: #676767;
+    padding: 5px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+}
+
+.tab:hover {
+    color: #0d0d0d;
+}
+
+.tabActive {
+    background: #f2f2f3;
+    color: #0d0d0d;
+    font-weight: 600;
+}
+
+.card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #fff;
+    border: 1px solid #ececf1;
+    border-radius: 12px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+    background: #fafafa;
+    border-color: #d9d9e3;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.cardIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cardBody {
+    flex: 1;
+    min-width: 0;
+}
+
+.cardTitleRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.cardTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0d0d0d;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cardDesc {
+    font-size: 13px;
+    color: #8e8ea0;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.installBtn {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.card:hover .installBtn {
+    opacity: 1;
+}
