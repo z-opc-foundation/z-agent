@@ -1,5 +1,5 @@
 /**
- * z-agent 页面清单（lead 005 §9）：menuItems + routeTable + 具名页面导出。
+ * z-agent 页面清单（lead 005 §9）：menuItems + routes + 具名页面导出。
  */
 import { AppstoreOutlined, BarChartOutlined, CloudOutlined, ClusterOutlined, CodeOutlined, DashboardOutlined, DeploymentUnitOutlined, EditOutlined, FileTextOutlined, HomeOutlined, KeyOutlined, NodeIndexOutlined, RobotOutlined, ShareAltOutlined, ShoppingOutlined } from '@ant-design/icons'
 import AgentHome from './agent/pages/agent/index.jsx'
@@ -63,7 +63,7 @@ export const menuItems = [
     { key: '/z-agent/usage', label: '用量统计', icon: <BarChartOutlined /> },
 ]
 
-export const routeTable = [
+export const routes = [
     { path: '/z-agent/home', Component: HomePage },
     { path: '/z-agent/overview', Component: AgentHome },
     { path: '/z-agent/agent/dashboard', Component: AgentDashboard },

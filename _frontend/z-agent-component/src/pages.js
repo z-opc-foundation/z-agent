@@ -1,2 +1,2 @@
 export {configureAgent} from './agent/api/request.js'
-export {menuItems, routeTable} from './pages-manifest.jsx'
+export {menuItems, routes} from './pages-manifest.jsx'
