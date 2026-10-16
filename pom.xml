@@ -81,6 +81,25 @@
 
     <dependencyManagement>
         <dependencies>
+
+        <!-- ⚠ z-util 三件必须同版本一起动：dependencyManagement 会连**传递依赖**一起改写，
+             只抬其中一件会被 BOM 把另外两件压回旧版（实测踩过）。JsonUtil.toPlainValue /
+             JsonCursor 需要 >= 1.2.2。 -->
+            <dependency>
+                <groupId>io.github.yuku123</groupId>
+                <artifactId>z-util-core</artifactId>
+                <version>1.2.4</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.yuku123</groupId>
+                <artifactId>z-util-parser-json</artifactId>
+                <version>1.2.4</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.yuku123</groupId>
+                <artifactId>z-util-dsl-kernel</artifactId>
+                <version>1.2.4</version>
+            </dependency>
             <!-- org.springframework.boot:spring-boot-dependencies 的 import 删掉：地板
                  z-boot-dependencies:1.0.19 自己 import 同版本那一格，本仓第三方坐标
                  （spring-web/webmvc/boot/autoconfigure/starter-test/jackson-databind/slf4j-api/junit）

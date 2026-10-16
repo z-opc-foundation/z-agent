@@ -1,7 +1,6 @@
 package com.zifang.z.agent.core.agent;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zifang.util.json.JsonUtil;
 import com.zifang.z.agent.api.exception.AgentException;
 import com.zifang.z.agent.core.properties.AgentProperties;
 import com.zifang.z.agent.kernel.agent.Agent;
@@ -54,7 +53,6 @@ public class LlmAdapter {
     /** 注册顺序；resolve 的回落扫描按它走，不用 ConcurrentHashMap 的哈希序。 */
     private final List<String> registrationOrder =
             new java.util.concurrent.CopyOnWriteArrayList<String>();
-    private final ObjectMapper mapper = new ObjectMapper();
 
     public LlmAdapter(AgentProperties props) {
         this.props = props == null ? new AgentProperties() : props;
@@ -151,13 +149,24 @@ public class LlmAdapter {
 
     /**
      * 工具调用参数 JSON → Map 解析.
+     * <p>
+     * 不能直接用 {@code fromJson(json, Map.class)}：Map 是接口，走 POJO 分支拿不到无参构造器会抛；
+     * 也不能只用 {@code parse()}，它的嵌套容器是 z-util 自己的 JsonObject/JsonArray，
+     * 工具参数下游要按 Map/List 取值，必须 toPlainValue 摊平。
      */
     public Map<String, Object> parseArguments(String argumentsJson) {
         if (argumentsJson == null || argumentsJson.isEmpty()) {
             return Collections.emptyMap();
         }
         try {
-            return mapper.readValue(argumentsJson, new TypeReference<Map<String, Object>>() {});
+            Object plain = JsonUtil.toPlainValue(JsonUtil.parse(argumentsJson));
+            if (!(plain instanceof Map)) {
+                throw new AgentException(AgentException.INVALID_REQUEST,
+                        "tool arguments json is not an object: " + argumentsJson);
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> args = (Map<String, Object>) plain;
+            return args;
         } catch (Exception e) {
             throw new AgentException(AgentException.INVALID_REQUEST,
                     "invalid tool arguments json: " + argumentsJson, e);
