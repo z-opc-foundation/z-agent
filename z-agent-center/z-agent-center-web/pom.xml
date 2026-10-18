@@ -11,6 +11,10 @@
 
     <artifactId>z-agent-center-web</artifactId>
 
+    <name>z-agent-center-web</name>
+
+    <description>z-agent center Web 层：REST 控制器与装配</description>
+
     <dependencies>
         <!-- Jackson databind (本模块 src/main/java 用 ObjectMapper / JsonNode 等) -->
         <dependency>
