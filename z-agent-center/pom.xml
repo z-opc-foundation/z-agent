@@ -22,7 +22,11 @@
     </modules>
 
     <properties>
-        <revision>1.0.0</revision>
+        <!-- 这里曾有一格 <revision>1.0.0</revision>，是错的：Maven 先算本 pom 的有效模型再
+             找 parent，本 pom 自己的 properties 优先于继承来的，所以这一格把根 pom 的
+             ${revision} 遮成了 1.0.0 —— 根 pom 抬到 1.0.1 后，本聚合件仍发 1.0.0，
+             Central 直接以 "already exists" 打回（deployment 9929b133）。
+             ${revision} 从根 pom 一路继承即可，本级不得再声明。 -->
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
