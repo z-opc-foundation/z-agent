@@ -16,11 +16,11 @@ import com.zifang.z.agent.center.core.app.service.AgentAppService;
 import com.zifang.z.agent.common.entity.AgentApp;
 import com.zifang.z.agent.common.entity.AgentAppVersion;
 import com.zifang.z.agent.engine.agent.observe.AgentTracer;
-import com.zifang.z.llm.api.dto.UnifiedMessage;
-import com.zifang.z.llm.api.dto.UnifiedRequest;
-import com.zifang.z.llm.api.dto.UnifiedResponse;
+import com.zifang.z.llm.gateway.api.dto.UnifiedMessage;
+import com.zifang.z.llm.gateway.api.dto.UnifiedRequest;
+import com.zifang.z.llm.gateway.api.dto.UnifiedResponse;
 
-import com.zifang.z.llm.core.service.ChatGatewayService;
+import com.zifang.z.llm.gateway.core.service.ChatGatewayService;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
