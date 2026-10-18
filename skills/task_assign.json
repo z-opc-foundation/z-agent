@@ -1,0 +1,22 @@
+{
+  "name": "task_assign",
+  "description": "Assign a user (the 'assignee' / 'executor') to an existing task in z-task. A task can have multiple assignees. Backed by POST /api/task/assignees/add. Use this when the CEO agent needs to delegate a task to a dev agent / human / sub-team. Note: 'userId' is the z-ctc username (not a numeric id), typically in the form 'staff_no' like 'zifang' or 'dev-agent-01'. Returns success boolean. To UN-assign, use the corresponding removeAssignee endpoint (not wrapped as a skill yet).",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "taskId": {
+        "type": "integer",
+        "description": "Numeric task id. Use task_create (response) or list endpoints to obtain."
+      },
+      "userId": {
+        "type": "string",
+        "description": "z-ctc username of the assignee. Examples: 'zifang' (CEO), 'dev-agent-001', 'content-agent'."
+      }
+    },
+    "required": [
+      "taskId",
+      "userId"
+    ]
+  },
+  "is_composite": false
+}

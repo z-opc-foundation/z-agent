@@ -1,0 +1,23 @@
+{
+  "name": "llm_usage_overview",
+  "description": "Query LLM usage statistics from z-agent-llm-gateway. Returns total call count, input/output token counts, and estimated cost. Use this to monitor LLM spending, audit AI usage per app/user, or detect abnormal consumption. Can filter by appCode, userId, or accessKey. Daily trend data is also available via the /usage/trend endpoint (not covered by this skill; use llm_usage_overview for summary).",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "appCode": {
+        "type": "string",
+        "description": "Filter by application code. e.g. 'ceo-agent' for all CEO agent LLM calls."
+      },
+      "userId": {
+        "type": "string",
+        "description": "Filter by user ID. e.g. 'admin'."
+      },
+      "accessKey": {
+        "type": "string",
+        "description": "Filter by access key (alternative to userId). The LLM gateway records usage per access key."
+      }
+    },
+    "required": []
+  },
+  "is_composite": false
+}

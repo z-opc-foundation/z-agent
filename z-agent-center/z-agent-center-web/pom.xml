@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.yuku123</groupId>
+        <artifactId>z-agent-center</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>z-agent-center-web</artifactId>
+
+    <dependencies>
+        <!-- Jackson databind (本模块 src/main/java 用 ObjectMapper / JsonNode 等) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <!-- Log4j2 API (本模块 src/main/java 含 LogManager.getLogger 调用) -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-agent-center-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-boot-web-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-boot-datasource-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-util-core</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-util-parser-json</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <!-- 2026-10-03: McpToolRegistryBindConfig 已归 z-mcp 仓 (z-mcp-starter bridge 包),
+             本模块不再需要 z-mcp-starter 依赖. -->
+    </dependencies>
+
+</project>

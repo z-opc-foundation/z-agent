@@ -1,0 +1,27 @@
+{
+  "name": "meta_update",
+  "description": "Create or update a metadata record in z-meta. Use this when the CEO agent needs to register a new API, add a dictionary entry, or register a new application. The operation is idempotent (POST creates new or updates existing based on natural key). Returns the created/updated record. Backed by /api/interface (POST), /api/dict/item (POST), /api/meta-app (POST). Requires z-ctc 'meta:write' permission.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "metaType": {
+        "type": "string",
+        "enum": [
+          "interface",
+          "dict",
+          "app"
+        ],
+        "description": "Which metadata type to write."
+      },
+      "data": {
+        "type": "object",
+        "description": "The metadata record. Schema depends on metaType. e.g. for 'interface': {path, method, appName, description, requestSchema, responseSchema}. For 'dict': {dictType, itemKey, itemValue, description}. For 'app': {appCode, appName, appSecret, owner}."
+      }
+    },
+    "required": [
+      "metaType",
+      "data"
+    ]
+  },
+  "is_composite": false
+}

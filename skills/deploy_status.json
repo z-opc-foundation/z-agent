@@ -1,0 +1,21 @@
+{
+  "name": "deploy_status",
+  "description": "Query the status of a deployment unit in z-ops. Use this when the CEO agent (or human) needs to check if a deploy finished, or to see error logs on failure. Returns the current status (pending/running/succeeded/failed/rolled_back), progress percentage, start/finish timestamps, and any error messages. Backed by GET /api/ops/deployment/{id} and GET /api/ops/record/list (for historical records).",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "description": "Deployment id returned by deploy_create."
+      },
+      "includeRecords": {
+        "type": "boolean",
+        "description": "If true, also return historical records for this deployment (succeeded/failed attempts). Default false."
+      }
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "is_composite": false
+}

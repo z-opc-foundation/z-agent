@@ -1,0 +1,29 @@
+{
+  "name": "task_status",
+  "description": "Query the status of tasks in z-task. Returns Task objects with id, title, status (0=todo, 1=in_progress, 2=done), priority, dueDate, creatorId, listId, projectId, timestamps. Backed by GET /api/task/assignee/list (filter by owner) or GET /api/task/project/list (filter by project). Use this when the CEO agent needs to know 'what's the dev agent working on', 'which tasks are overdue', or 'how many tasks are pending in project X'. Note: 'status' field on each returned task reflects individual task state, not the query filter.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": [
+          "assignee",
+          "project"
+        ],
+        "description": "How to filter tasks. 'assignee' = tasks owned by a user; 'project' = all tasks in a project."
+      },
+      "userId": {
+        "type": "string",
+        "description": "Required when mode='assignee'. z-ctc username. Examples: 'zifang', 'dev-agent-001'."
+      },
+      "projectId": {
+        "type": "integer",
+        "description": "Required when mode='project'. Numeric project id."
+      }
+    },
+    "required": [
+      "mode"
+    ]
+  },
+  "is_composite": false
+}

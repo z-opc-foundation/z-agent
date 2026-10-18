@@ -1,0 +1,35 @@
+{
+  "name": "oss_upload",
+  "description": "Upload a file to z-oss (S3-compatible object storage) under a bucket and key. Use this when the CEO agent needs to persist binary content: a screenshot of a dashboard, a generated PDF, an exported CSV, a log file. The file is passed as base64 (or referenced via path if uploading from local disk). Returns the object's URL. Backed by POST /api/v1/object/{bucket}/{key}. Requires z-ctc 'oss:write' permission. Buckets are created on first use if the account has createBucket authority.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "bucket": {
+        "type": "string",
+        "description": "Bucket name. Use semantic names like 'ceo-screenshots', 'ceo-exports', 'operation-logs'. Lowercase + hyphens."
+      },
+      "key": {
+        "type": "string",
+        "description": "Object key (path within bucket). Use forward slashes for hierarchy. e.g. '2026/06/screenshot-001.png' or 'logs/2026-06-24/app.log'."
+      },
+      "contentBase64": {
+        "type": "string",
+        "description": "Base64-encoded file content. For text files, encode the UTF-8 bytes. For binary, encode raw bytes."
+      },
+      "contentType": {
+        "type": "string",
+        "description": "MIME type. e.g. 'image/png', 'application/pdf', 'text/csv'. Default 'application/octet-stream'."
+      },
+      "metadata": {
+        "type": "object",
+        "description": "Optional key-value metadata to attach to the object. e.g. {'source':'e2e-test','operator':'admin'}."
+      }
+    },
+    "required": [
+      "bucket",
+      "key",
+      "contentBase64"
+    ]
+  },
+  "is_composite": false
+}

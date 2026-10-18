@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.yuku123</groupId>
+        <artifactId>z-agent</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>z-agent-engine</artifactId>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- Log4j2 API (本模块 src/main/java 含 LogManager.getLogger 调用) -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-util-core</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+
+        <!--
+          z-agent-engine 设计原则: 纯引擎, 零持久化
+          - 不依赖 mybatis-plus / jdbc / jpa / data-jdbc
+          - 状态由调用方决定 (内存 / 文件 / Redis / MySQL)
+          - 历史遗留: 之前有 observe/persistence 和 conversation/persistence 用 MyBatis-Plus 存 trace/metric/conversation
+                       这些功能移到了 z-agent-center (业务模块, 自带 DB)
+          - 引擎内可观测: agent.observe.AgentTracer / AgentTrace (in-memory POJO), 零 DB 依赖
+        -->
+
+        <!-- Spring Boot Starter (不含 jdbc/jpa) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-jdbc</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- OkHttp + Okio + SSE (explicit version to avoid 2.x/3.x conflict) -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp-sse</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okio</groupId>
+            <artifactId>okio</artifactId>
+        </dependency>
+
+        <!-- Commons -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+
+        <!-- z-boot-base -->
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-boot-base</artifactId>
+        </dependency>
+
+        <!-- z-agent-common 共享模块 -->
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-agent-common</artifactId>
+            <version>${project.version}</version>
+
+        </dependency>
+
+        <!-- 工具 SPI 已迁移到 z-agent-kernel-tool (FEATURE066) -->
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-agent-kernel-tool</artifactId>
+            <version>0.2.1</version>
+        </dependency>
+
+        <!-- LangChain4j核心 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-core</artifactId>
+            <version>0.32.0</version>
+        </dependency>
+
+        <!-- Reactor Core (for reactive streams) -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+        </dependency>
+
+        <!-- Protobuf -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.25.5</version>
+        </dependency>
+
+        <!-- gRPC -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+            <version>1.59.0</version>
+        </dependency>
+
+        <!-- FastJSON (used by ToolArguments and other tool framework classes) -->
+        <!-- z-util-parser-json -->
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-util-parser-json</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

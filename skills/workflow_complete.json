@@ -1,0 +1,35 @@
+{
+  "name": "workflow_complete",
+  "description": "Complete a workflow task in z-camuda with a decision. Use this when the CEO agent (or human via agent) finishes a step in a business process: approves a deployment, accepts a 5-look evaluation score, rejects an opportunity, etc. The task advances to the next node in the BPMN flow (or terminates if it's the last task). The `decision` field is stored as a process variable; the `comment` field is stored in the task's audit log.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "taskId": {
+        "type": "string",
+        "description": "Task id from workflow_todo."
+      },
+      "decision": {
+        "type": "string",
+        "enum": [
+          "approved",
+          "rejected",
+          "needs_revision"
+        ],
+        "description": "Outcome of this task. Approved/rejected usually advance/terminate; needs_revision routes back to the previous node."
+      },
+      "comment": {
+        "type": "string",
+        "description": "Free-text comment from the approver. Required for rejected/needs_revision, optional for approved. Stored in task history."
+      },
+      "variables": {
+        "type": "object",
+        "description": "Optional additional variables to set as part of this task completion. e.g. {\"score\": 4.2, \"weight\": 0.25}."
+      }
+    },
+    "required": [
+      "taskId",
+      "decision"
+    ]
+  },
+  "is_composite": false
+}

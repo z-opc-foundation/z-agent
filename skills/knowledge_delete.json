@@ -1,0 +1,17 @@
+{
+  "name": "knowledge_delete",
+  "description": "Delete a document from z-agent-knowledge by its numeric id. Use this when a lesson is no longer valid, contains sensitive information, or was ingested by mistake. Returns success status. WARNING: this is a hard delete — the document AND its embeddings are removed permanently. For 'soft invalidation', prefer to update the document via knowledge_ingest with a new content. Requires the caller to have z-ctc 'knowledge:write' permission (FEATURE025).",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "description": "Numeric document id returned by knowledge_ingest or knowledge_list."
+      }
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "is_composite": false
+}

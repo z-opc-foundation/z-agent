@@ -1,0 +1,40 @@
+{
+  "name": "meta_query",
+  "description": "Query metadata from z-meta (interface/dict/app/tenant/config). Returns a list of records matching the filter. Use this when the CEO agent needs to discover what APIs/services exist, look up a dictionary value, or audit a project's metadata. Supports 5+ metadata types via the `metaType` parameter. Backed by /api/interface/*, /api/dict/*, /api/meta-app/*, /api/meta-tenant/*, /api/private-config/*. Requires z-ctc 'meta:read' permission.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "metaType": {
+        "type": "string",
+        "enum": [
+          "interface",
+          "dict",
+          "app",
+          "tenant",
+          "config"
+        ],
+        "description": "Which metadata type to query. 'interface' for API metadata, 'dict' for business dictionaries, 'app' for application registrations, 'tenant' for tenants, 'config' for private config."
+      },
+      "appName": {
+        "type": "string",
+        "description": "Optional: filter by application name. e.g. 'z-biz-news' to find all interfaces belonging to that app."
+      },
+      "keyword": {
+        "type": "string",
+        "description": "Optional: fuzzy search keyword. Searches path/name/description."
+      },
+      "page": {
+        "type": "integer",
+        "description": "Page number, 0-indexed. Default 0."
+      },
+      "size": {
+        "type": "integer",
+        "description": "Page size. Default 20."
+      }
+    },
+    "required": [
+      "metaType"
+    ]
+  },
+  "is_composite": false
+}

@@ -1,0 +1,25 @@
+{
+  "name": "script_run",
+  "description": "Execute a registered script immediately and return its output. Use this when the CEO agent needs to run an ad-hoc task: a crawler, a data transformer, a one-shot migration, a health check. The script is identified by `scriptCode` (e.g. 'z-biz-news-crawler', 'db-backup', 'reindex-knowledge'). Pass parameters as a JSON object — these become the script's CLI args or env vars. Returns the script output (stdout + stderr combined) and exit code. WARNING: scripts run in a sandbox with the executor's permissions — only run trusted scripts. For repeated/scheduled execution, use schedule_register with this scriptCode as the executorHandler.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "scriptCode": {
+        "type": "string",
+        "description": "Identifier of a registered script. List available via script_register (returns list of registered scripts) or GET /api/script/list."
+      },
+      "parameters": {
+        "type": "object",
+        "description": "Script-specific parameters as JSON. The script decides how to interpret. e.g. {\"hours_back\": 1, \"channels\": [\"hn\", \"tc\"]} for a news crawler."
+      },
+      "timeout": {
+        "type": "integer",
+        "description": "Max execution time in seconds. Default 300 (5 min). 0 = no limit (use with caution)."
+      }
+    },
+    "required": [
+      "scriptCode"
+    ]
+  },
+  "is_composite": false
+}

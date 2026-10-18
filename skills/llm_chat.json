@@ -1,0 +1,88 @@
+{
+  "name": "llm_chat",
+  "description": "Send a chat message to an LLM via z-agent-llm-gateway. Use this when the CEO agent needs to reason, analyze, summarize, or generate content using an LLM (e.g. analyze an opportunity, draft a report, classify a signal). Supports multi-provider routing (OpenAI/Claude/DeepSeek), function calling (tools), temperature/maxTokens control, and automatic usage recording. The response includes `content` (text), `usage` (input/output tokens), and `finishReason`. For streaming responses use llm_chat_async instead.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "providerCode": {
+        "type": "string",
+        "description": "LLM provider code. Examples: 'openai', 'claude', 'deepseek', 'qwen'. Use llm_list_providers to discover available providers first."
+      },
+      "modelCode": {
+        "type": "string",
+        "description": "Model code. Examples: 'gpt-4o-mini', 'claude-3-haiku', 'deepseek-chat', 'qwen-turbo'. Must be supported by the provider."
+      },
+      "messages": {
+        "type": "array",
+        "description": "Chat message history. Each message has 'role' (system/user/assistant) and 'content' (text). System messages set the persona/context.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "type": "string",
+              "enum": [
+                "system",
+                "user",
+                "assistant"
+              ],
+              "description": "Message role. 'system' for instructions, 'user' for user input, 'assistant' for model responses."
+            },
+            "content": {
+              "type": "string",
+              "description": "Message text content."
+            }
+          },
+          "required": [
+            "role",
+            "content"
+          ]
+        }
+      },
+      "temperature": {
+        "type": "number",
+        "description": "Sampling temperature. Range 0.0-2.0. Lower = more deterministic. Default 0.7. Use 0.0-0.3 for factual/Q&A tasks, 0.7-1.0 for creative tasks."
+      },
+      "maxTokens": {
+        "type": "integer",
+        "description": "Maximum tokens in the response. Range 1-8000. Default 2000. Set lower for concise answers, higher for long outputs."
+      },
+      "appCode": {
+        "type": "string",
+        "description": "Application code for usage tracking. Default 'ceo-agent'."
+      },
+      "userId": {
+        "type": "string",
+        "description": "User ID for rate limiting and usage attribution. Default 'admin'."
+      },
+      "tools": {
+        "type": "array",
+        "description": "Function calling tools. Each tool has 'name', 'description', and 'parameters' (JSON Schema). The model will decide when to call a tool.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Tool function name, e.g. 'get_weather', 'search_knowledge'."
+            },
+            "description": {
+              "type": "string",
+              "description": "Natural-language description of what the tool does."
+            },
+            "parameters": {
+              "type": "object",
+              "description": "JSON Schema describing the tool's input parameters."
+            }
+          },
+          "required": [
+            "name",
+            "description"
+          ]
+        }
+      }
+    },
+    "required": [
+      "messages"
+    ]
+  },
+  "is_composite": false
+}

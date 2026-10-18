@@ -1,0 +1,55 @@
+{
+  "name": "knowledge_ingest",
+  "description": "Ingest a document into z-agent-knowledge RAG knowledge base. The document is automatically chunked, embedded, and indexed for semantic search + RAG. Use this when the CEO agent needs to persist: a lesson learned (05_memory/what_works or what_fails), a strategy decision, a spec snippet, or any text that should be retrievable later via semantic search. The knowledge base is identified by `knowledgeBaseCode` (use 'ceo_lessons' for ceo_room's memory layer). Returns the new document id. Note: ingestion is synchronous but embedding/indexing is async — allow a few seconds before the new doc is queryable.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "knowledgeBaseCode": {
+        "type": "string",
+        "description": "Knowledge base identifier. For ceo_room memory layer use 'ceo_lessons'. Other valid codes can be discovered via knowledge_list skill (FEATURE024 follow-up)."
+      },
+      "docCode": {
+        "type": "string",
+        "description": "Unique document code within the knowledge base. Suggested format: '{section}/{slug}', e.g. 'what_works/rag-vec-cost' or 'what_fails/over-engineering-1'."
+      },
+      "title": {
+        "type": "string",
+        "description": "Document title, shown in search results. Keep it short and descriptive."
+      },
+      "content": {
+        "type": "string",
+        "description": "Full document body, plain text or markdown. Will be chunked automatically (default 500 tokens/chunk with 50 token overlap)."
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Optional tags for filtering. e.g. ['rag', 'cost', '2026Q2']."
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "what_works",
+          "what_fails",
+          "decision",
+          "spec",
+          "strategy",
+          "other"
+        ],
+        "description": "Categorical type. For ceo_room memory layer, use 'what_works' for 05_memory/what_works/* and 'what_fails' for 05_memory/what_fails/*. Default 'other'."
+      },
+      "source": {
+        "type": "string",
+        "description": "Optional provenance. e.g. 'ceo_room/05_memory/what_works/rag-vec-cost.md' or 'decision 2026-06-24'."
+      }
+    },
+    "required": [
+      "knowledgeBaseCode",
+      "docCode",
+      "title",
+      "content"
+    ]
+  },
+  "is_composite": false
+}

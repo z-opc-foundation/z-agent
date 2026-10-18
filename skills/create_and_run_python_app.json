@@ -1,0 +1,20 @@
+{
+  "name": "create_and_run_python_app",
+  "description": "Create a Python file and run it",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "filename": {
+        "type": "string"
+      },
+      "code": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "filename",
+      "code"
+    ]
+  },
+  "is_composite": true
+}

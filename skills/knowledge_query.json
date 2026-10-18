@@ -1,0 +1,37 @@
+{
+  "name": "knowledge_query",
+  "description": "Ask a natural-language question against the z-agent-knowledge RAG system. Returns an LLM-generated answer WITH citations to source documents (FEATURE013 R5: AnswerWithCitation). Use this when the CEO agent needs to retrieve lessons/strategies/specs semantically. Example queries: 'What did we learn about RAG costs?', 'Any past failures with over-engineering?', 'How did we handle z-mist audit log?'. The result includes `answer` (text), `citations` (array of source docCodes with chunk text), and `confidence` score. The base is identified by `knowledgeBaseCode` (default 'ceo_lessons' for ceo_room memory layer).",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "question": {
+        "type": "string",
+        "description": "Natural-language question. Should be a real question (not a keyword search). e.g. '上次做 RAG 踩过什么坑？' or 'how to handle rate limit in z-mist?'"
+      },
+      "knowledgeBaseCode": {
+        "type": "string",
+        "description": "Knowledge base to query. Default 'ceo_lessons' for ceo_room memory."
+      },
+      "topK": {
+        "type": "integer",
+        "description": "Number of top chunks to retrieve before LLM generation. Default 5, max 20. Higher = more context but slower + costlier."
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "what_works",
+          "what_fails",
+          "decision",
+          "spec",
+          "strategy",
+          "other"
+        ],
+        "description": "Optional: filter by category. e.g. 'what_fails' to only get failure lessons."
+      }
+    },
+    "required": [
+      "question"
+    ]
+  },
+  "is_composite": false
+}

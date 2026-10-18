@@ -1,0 +1,25 @@
+{
+  "name": "workflow_todo",
+  "description": "Get the list of pending workflow tasks assigned to a user. Use this when the CEO agent needs to show the human 'what needs your decision right now' or when an agent needs to find a task to act on. Each task has: id, name, processInstanceId, createTime, dueDate (optional), and the current process variables. Tasks come from z-camuda's Camunda engine. By default returns tasks in 'todo' state (not yet started).",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "userId": {
+        "type": "string",
+        "description": "z-ctc username to filter tasks. e.g. 'admin', 'ceo', 'dev-lead'."
+      },
+      "processCode": {
+        "type": "string",
+        "description": "Optional: filter by process definition key. e.g. '5-look-evaluation' to only show evaluation tasks."
+      },
+      "limit": {
+        "type": "integer",
+        "description": "Max number of tasks to return. Default 20."
+      }
+    },
+    "required": [
+      "userId"
+    ]
+  },
+  "is_composite": false
+}

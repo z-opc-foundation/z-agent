@@ -1,0 +1,21 @@
+{
+  "name": "schedule_trigger",
+  "description": "Manually fire a scheduled task immediately, bypassing its cron schedule. Use this when the CEO agent wants to test a job before its next scheduled run, or to force an out-of-band execution (e.g. 'run the ref scanner right now, don't wait until 3 AM'). The task must exist and have a registered executor handler. Returns a ReturnT with success/fail and the triggered log ID.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "description": "The numeric task ID obtained from schedule_list. Required."
+      },
+      "executorParam": {
+        "type": "string",
+        "description": "Optional override for the executorParam at trigger time. If omitted, the registered executorParam is used."
+      }
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "is_composite": false
+}

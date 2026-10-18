@@ -65,19 +65,46 @@
         <module>z-agent-core</module>
         <module>z-agent-starter</module>
         <module>z-agent-admin</module>
+
+        <!-- 2026-10-18 自 z-opc/z-agent 迁入: 这三个模块原先寄生在 z-opc 仓的 reactor 里,
+             只活在本机 ~/.m2 (z-opc 从来不发 Central), 外部仓连解析都解析不到。
+             迁入后与上面四个模块同父同版本线, 可独立构建与发布。 -->
+        <module>z-agent-common</module>
+        <module>z-agent-engine</module>
+        <module>z-agent-center</module>
     </modules>
 
     <properties>
-        <revision>0.1.4</revision>
+        <revision>1.0.0</revision>
 
         <!-- 版本口径由父链下发：maven.compiler.source/target=8、project.build.sourceEncoding=UTF-8、
              spring-boot.version=2.7.18 三格与父链面值逐字相同，已删（根 pom 一次 + api/core/starter/admin
              各一次；spring-boot.version 的唯一引用点就是下面删掉的那条 import，删键即删引用点）。
-             z-agent-kernel.version=0.1.0 是**与父链不同值的刻意分歧**：fleet:1.0.0 的 z-agent-kernel-*
-             槽位是 0.1.1，而本仓基线一直在 0.1.0 上编译测试 ⇒ 删键就是悄悄换实现。留键的同时必须按坐标
-             写直接 DM 条目（继承来的直接 DM 顶得住子 pom 的 BOM import）。升 0.1.1 归兼容性决定，不在这刀。 -->
-        <z-agent-kernel.version>0.1.0</z-agent-kernel.version>
+             z-agent-kernel.version 这一格原先钉 0.1.0，与父链下发值刻意分歧。2026-10-18 迁入
+             z-agent-engine 后本仓出现两条 kernel 线：迁入的 engine 早已在 z-agent-kernel-tool
+             0.2.1 上编译，而本仓原有四个模块还停在 0.1.0 —— 同一 reactor 里两套 kernel jar
+             同名共类，谁先在 classpath 上谁赢，是不能留的隐患。统一抬到 0.2.1（Central 上已发的
+             当前线），本仓从此只跟一条 kernel 线。 -->
+        <z-agent-kernel.version>0.2.1</z-agent-kernel.version>
     </properties>
+
+    <!-- repo id 必须叫 maven-central（不能是 Maven 内建的 central）：本仓迁入的
+         z-agent-engine / z-agent-center 三个模块原先寄生在 z-opc 仓的 reactor 里，
+         它们在 ~/.m2 里的构件一律记着 "from maven-central"。id 对不上时即便 jar 在本地，
+         离线解析也会报 "has not been downloaded from it before"。 -->
+    <repositories>
+        <repository>
+            <id>maven-central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <dependencyManagement>
         <dependencies>

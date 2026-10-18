@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.yuku123</groupId>
+        <artifactId>z-agent</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>z-agent-center</artifactId>
+    <packaging>pom</packaging>
+    <modules>
+        <module>z-agent-center-starter</module>
+        <module>z-agent-center-core</module>
+        <module>z-agent-center-web</module>
+    </modules>
+
+    <properties>
+        <revision>1.0.0</revision>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-boot-parent</artifactId>
+                <scope>import</scope>
+                <type>pom</type>
+                <version>1.1.0</version>
+            </dependency>
+
+
+
+            <dependency>
+                <groupId>io.github.yuku123</groupId>
+                <artifactId>z-agent-center-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.yuku123</groupId>
+                <artifactId>z-agent-center-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.yuku123</groupId>
+                <artifactId>z-agent-center-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>

@@ -1,0 +1,53 @@
+{
+  "name": "deploy_create",
+  "description": "Create a new deployment unit in z-ops. A deployment unit represents a single release being pushed to a specific environment. Use this when the CEO agent needs to push a build: e.g. 'deploy v1.2.0 to staging'. The deployment will be queued and processed asynchronously by the configured runner. Returns the new deployment id and initial status. Backed by POST /api/ops/deployment. Requires z-ctc 'ops:deploy' permission.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "appName": {
+        "type": "string",
+        "description": "Application being deployed. e.g. 'z-biz-news', 'z-biz-game-2048-ios'."
+      },
+      "version": {
+        "type": "string",
+        "description": "Version tag or build id. e.g. 'v1.2.0' or 'git-sha-abc123'."
+      },
+      "environment": {
+        "type": "string",
+        "enum": [
+          "dev",
+          "staging",
+          "prod"
+        ],
+        "description": "Target environment. Determines URL, DB, signing keys."
+      },
+      "targetId": {
+        "type": "integer",
+        "description": "Deployment target id (from meta_query metaType=target). Specifies the cluster/region."
+      },
+      "buildArtifact": {
+        "type": "string",
+        "description": "URL or path to the build artifact. e.g. 'ghcr.io/zifang/z-biz-news:v1.2.0' or 's3://builds/z-biz-news-v1.2.0.apk'."
+      },
+      "rollbackOn": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Optional: list of health-check conditions to monitor. If any fails, auto-rollback. e.g. ['http_5xx_rate<0.1%', 'p99_latency<500ms']."
+      },
+      "approver": {
+        "type": "string",
+        "description": "z-ctc username who approved this deploy. e.g. 'admin'."
+      }
+    },
+    "required": [
+      "appName",
+      "version",
+      "environment",
+      "targetId",
+      "buildArtifact"
+    ]
+  },
+  "is_composite": false
+}

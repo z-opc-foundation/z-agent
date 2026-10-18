@@ -1,0 +1,29 @@
+{
+  "name": "workflow_start",
+  "description": "Start a new workflow instance in z-camuda (Camunda BPMN engine). Use this when the CEO agent needs to kick off a business process: a 5-look evaluation for a new opportunity, a deployment approval, a product launch gate, etc. The process is identified by `processCode` (e.g. '5-look-evaluation', 'deployment-approval'). Pass initial variables as a JSON object — these flow through the BPMN as process variables. Returns the new process instance id and the first task id. Requires z-ctc 'workflow:execute' permission (FEATURE025).",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "processCode": {
+        "type": "string",
+        "description": "BPMN process definition key. Must be deployed first (see z-camuda/z-camuda-starter/src/main/resources/processes/). Common values: '5-look-evaluation' (FEATURE024), 'deployment-approval' (FEATURE031), 'product-launch' (FEATURE032)."
+      },
+      "businessKey": {
+        "type": "string",
+        "description": "Optional business identifier for traceability. e.g. 'OPP-007' for opportunity #7, or 'release/v1.2.0' for a release."
+      },
+      "variables": {
+        "type": "object",
+        "description": "Initial process variables as JSON. Each key becomes a process variable available to all tasks. e.g. {\"opportunityId\":\"OPP-007\",\"marketScore\":4.5,\"competitorScore\":3.2}."
+      },
+      "starter": {
+        "type": "string",
+        "description": "Username of who is starting the process (for audit). e.g. 'ceo-agent' or 'zifang'."
+      }
+    },
+    "required": [
+      "processCode"
+    ]
+  },
+  "is_composite": false
+}

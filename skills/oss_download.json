@@ -1,0 +1,26 @@
+{
+  "name": "oss_download",
+  "description": "Download a file from z-oss by bucket and key. Use this when the CEO agent needs to retrieve binary content: a previously uploaded screenshot, an exported report, an archived log. Returns the file content as base64 (or a presigned URL if directUrl=true). Backed by GET /api/v1/object/{bucket}/{key}. Requires z-ctc 'oss:read' permission. For very large files (>10MB), prefer directUrl=true to get a presigned URL instead of pulling the content through the agent.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "bucket": {
+        "type": "string",
+        "description": "Bucket name."
+      },
+      "key": {
+        "type": "string",
+        "description": "Object key within bucket."
+      },
+      "directUrl": {
+        "type": "boolean",
+        "description": "If true, return a presigned URL instead of the content. Use for files >10MB. Default false."
+      }
+    },
+    "required": [
+      "bucket",
+      "key"
+    ]
+  },
+  "is_composite": false
+}

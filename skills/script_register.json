@@ -1,0 +1,45 @@
+{
+  "name": "script_register",
+  "description": "Register a new script in z-script and publish it (make it executable). Use this when the CEO agent needs to onboard a new automation: a new data fetcher, a deployment hook, a CI helper. Provide the script content (Python, shell, JS) inline. After registration, the script is callable via script_run by its `scriptCode`. Returns the script id. For one-time scripts, prefer publishing=false (default) and just run via script_run. For long-lived scripts you want to invoke repeatedly, set publish=true so the script is queryable in /api/script/list.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "scriptCode": {
+        "type": "string",
+        "description": "Unique script identifier. Lowercase + hyphens. e.g. 'z-biz-news-crawler', 'reindex-knowledge', 'db-backup'."
+      },
+      "name": {
+        "type": "string",
+        "description": "Human-readable name. e.g. 'Z-Biz-News Hourly Crawler'."
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "python",
+          "shell",
+          "javascript",
+          "groovy"
+        ],
+        "description": "Scripting language. Default 'python'."
+      },
+      "content": {
+        "type": "string",
+        "description": "The script source code. For Python: standard library + aiohttp/requests (no arbitrary packages). For shell: bash-compatible."
+      },
+      "description": {
+        "type": "string",
+        "description": "What this script does. 1-2 sentences. Used in /api/script/list."
+      },
+      "publish": {
+        "type": "boolean",
+        "description": "Make this script queryable and executable immediately. Default true. Set false to register as draft."
+      }
+    },
+    "required": [
+      "scriptCode",
+      "name",
+      "content"
+    ]
+  },
+  "is_composite": false
+}

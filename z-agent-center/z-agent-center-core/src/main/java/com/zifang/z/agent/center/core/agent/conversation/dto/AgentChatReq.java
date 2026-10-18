@@ -1,0 +1,42 @@
+package com.zifang.z.agent.center.core.agent.conversation.dto;
+
+import java.io.Serializable;
+
+public class AgentChatReq implements Serializable {
+    private String instanceCode;
+    private String message;
+    private String userId;
+    private String userName;
+
+    public String getInstanceCode() {
+        return instanceCode;
+    }
+
+    public void setInstanceCode(String instanceCode) {
+        this.instanceCode = instanceCode;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "llm_list_providers",
+  "description": "List all available LLM providers and their models registered in z-agent-llm-gateway. Use this before calling llm_chat to discover which providers (openai, claude, deepseek, qwen, etc.) and models are currently configured and available. The response is a list of provider names. Each provider must be configured with an API key via the provider config endpoint before it can be used for chat.",
+  "parameters": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "is_composite": false
+}

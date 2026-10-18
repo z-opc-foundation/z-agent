@@ -1,0 +1,76 @@
+{
+  "name": "schedule_register",
+  "description": "Register a new cron-based scheduled task in z-schedule (XXL-Job style distributed scheduler). Use this when the CEO agent needs to automate a recurring job (daily standup, nightly scanner, hourly fetcher, etc). The task is persisted in MySQL and dispatched by the z-schedule-admin on port 8080. Returns the new task's numeric ID. The task will NOT auto-execute until the corresponding executor handler is registered in a z-schedule-executor instance; use schedule_trigger to manually fire it for testing.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "jobCron": {
+        "type": "string",
+        "description": "Quartz-compatible cron expression. Examples: '0 0 9 * * ?' (every day 09:00), '0 0 3 * * ?' (every day 03:00), '0 0/10 * * * ?' (every 10 minutes)."
+      },
+      "jobDesc": {
+        "type": "string",
+        "description": "Human-readable task name. Will be visible in z-schedule-admin dashboard and execution logs."
+      },
+      "executorHandler": {
+        "type": "string",
+        "description": "Name of the @JobHandler annotation value in the executor service. Must be unique within the executor group. Example: 'refScannerJobHandler' or 'ceoMorningMeetingHandler'."
+      },
+      "executorParam": {
+        "type": "string",
+        "description": "JSON string passed to the executor at runtime. Use this to parameterize the task (e.g. project path, target domain, namespace)."
+      },
+      "jobGroup": {
+        "type": "integer",
+        "description": "Executor group ID. Default 1. Set to 0 to list all groups. Use the group that matches your executor's app name."
+      },
+      "executorRouteStrategy": {
+        "type": "string",
+        "enum": [
+          "FIRST",
+          "LAST",
+          "ROUND",
+          "RANDOM",
+          "CONSISTENT_HASH",
+          "LEAST_FREQUENTLY_USED",
+          "LEAST_RECENTLY_USED",
+          "FAILOVER",
+          "BUSYOVER",
+          "SHARDING_BROADCAST"
+        ],
+        "description": "How to pick an executor instance when multiple are registered. Default ROUND. Use SHARDING_BROADCAST for parallel fan-out."
+      },
+      "executorBlockStrategy": {
+        "type": "string",
+        "enum": [
+          "SERIAL_EXECUTION",
+          "DISCARD_LATER",
+          "COVER_EARLY"
+        ],
+        "description": "What to do if a new trigger fires while the previous run is still going. Default SERIAL_EXECUTION (queue)."
+      },
+      "executorTimeout": {
+        "type": "integer",
+        "description": "Task timeout in seconds. 0 means no timeout. Recommended 600 (10 min) for typical jobs."
+      },
+      "executorFailRetryCount": {
+        "type": "integer",
+        "description": "How many times to retry on failure. 0 = no retry. Common: 2-3."
+      },
+      "author": {
+        "type": "string",
+        "description": "Who registered this task. Use 'ceo-agent' for AI-registered tasks."
+      },
+      "alarmEmail": {
+        "type": "string",
+        "description": "Email to notify on failure. Optional."
+      }
+    },
+    "required": [
+      "jobCron",
+      "jobDesc",
+      "executorHandler"
+    ]
+  },
+  "is_composite": false
+}

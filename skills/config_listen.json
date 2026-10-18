@@ -1,0 +1,27 @@
+{
+  "name": "config_listen",
+  "description": "Listen / read configurations from z-config center. Use this when the CEO agent (or a service) starts up and needs to load its required configurations. Returns the current value of a config (by key + group + namespace) or lists all configs in a namespace. Configs can be application settings, feature flags, environment-specific URLs, etc. Backed by GET /api/config/listConfig, /api/config/getConfig, /api/config/namespaceList. Requires z-ctc 'config:read' permission.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "key": {
+        "type": "string",
+        "description": "Specific config key. If provided, returns just this config value. If omitted, returns list."
+      },
+      "group": {
+        "type": "string",
+        "description": "Config group, e.g. 'database', 'redis', 'feature-flag', 'url'. Default 'DEFAULT_GROUP'."
+      },
+      "namespace": {
+        "type": "string",
+        "description": "Environment namespace: 'dev', 'staging', 'prod'. Default '' (default namespace)."
+      },
+      "listAll": {
+        "type": "boolean",
+        "description": "If true, return all configs in the namespace (not just one key). Default false."
+      }
+    },
+    "required": []
+  },
+  "is_composite": false
+}

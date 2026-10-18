@@ -1,0 +1,62 @@
+{
+  "name": "task_create",
+  "description": "Create a new task in z-task (project collaboration platform). The task is persisted in MySQL table z_task_task. Backed by POST /api/task. The caller is automatically set as the task creator (from z-ctc SSO user). Use this when the CEO agent needs to convert an opportunity into an actionable task, log a follow-up, or create a checklist item. Returns the new Task object including the assigned numeric id. Note: requires the caller to be authenticated via z-ctc SSO.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string",
+        "description": "Task title. Concise, action-oriented, e.g. 'Refactor user-service to use z-mist for DB password'."
+      },
+      "description": {
+        "type": "string",
+        "description": "Markdown-formatted task body. May include acceptance criteria, links to spec, related opportunity id (e.g. 'OPP-001')."
+      },
+      "projectId": {
+        "type": "integer",
+        "description": "Numeric project id. Required. Use ProjectController GET /api/task/project/list to discover available projects."
+      },
+      "boardId": {
+        "type": "integer",
+        "description": "Board id within the project. Default 1 if omitted."
+      },
+      "listId": {
+        "type": "integer",
+        "description": "Initial list/column id (e.g. 'To Do', 'In Progress'). Required. Use TaskListController to discover available lists for the board."
+      },
+      "priority": {
+        "type": "integer",
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "description": "Priority: 0=low, 1=medium, 2=high, 3=urgent. Default 1."
+      },
+      "status": {
+        "type": "integer",
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "description": "Status: 0=todo, 1=in_progress, 2=done. Default 0."
+      },
+      "dueDate": {
+        "type": "string",
+        "description": "Optional ISO 8601 date, e.g. '2026-07-01'. Mapped to DB column 'deadline' (DATETIME)."
+      },
+      "position": {
+        "type": "string",
+        "description": "Optional sort position within the list. Lower = top. Default: appended to end."
+      }
+    },
+    "required": [
+      "title",
+      "projectId",
+      "listId"
+    ]
+  },
+  "is_composite": false
+}

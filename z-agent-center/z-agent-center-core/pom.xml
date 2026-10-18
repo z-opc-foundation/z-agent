@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.yuku123</groupId>
+        <artifactId>z-agent-center</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>z-agent-center-core</artifactId>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- Log4j2 API (本模块 src/main/java 含 LogManager.getLogger 调用) -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+        </dependency>
+        <!-- 数据源统一收口为 z-boot-datasource-starter（替代 mysql + mybatis-plus） -->
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-boot-datasource-starter</artifactId>
+        </dependency>
+
+        <!-- Commons Lang3 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+
+        <!-- Servlet API -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- OkHttp (统一版本 4.12.0, 托管的 okio) -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.squareup.okio</groupId>
+                    <artifactId>okio</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Okio (统一版本, 匹配 Engine 的 okio 2.10.0) -->
+        <dependency>
+            <groupId>com.squareup.okio</groupId>
+            <artifactId>okio</artifactId>
+        </dependency>
+
+        <!-- Jackson -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Starter (仅用于注解扫描) —— 版本交给 z-boot-dependencies import 的
+             spring-boot-dependencies(2.7.18)。原来这里字面钉 2.7.12，是全 reactor 最后一处
+             Boot 家族两套版本的残根（其余 8 个模块的字面量本轮已收掉）。 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Slf4j -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <!-- z-agent-common 共享模块 -->
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-agent-common</artifactId>
+            <version>${project.version}</version>
+
+        </dependency>
+
+        <!-- z-agent-engine 依赖 (用于 IN_PROCESS 模式) -->
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-agent-engine</artifactId>
+            <version>${project.version}</version>
+
+        </dependency>
+
+        <!-- 2026-10-18: 移除 z-agent-knowledge-core 依赖, RAG 检索归 z-kb 独立仓 -->
+
+        <!-- z-mcp 依赖 (MCP 工具支持，独立件，版本由 z-boot-fleet 下发) -->
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-mcp-core</artifactId>
+            <version>0.2.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- FEATURE066 迁移 (2026-09-23): 替代 z-agent-llm-gateway-core 0.1.0 (Netty HTTP Server)
+             使用 z-llm (Spring MVC + 6 provider 默认实现 + OpenAI/Anthropic Controller).
+             版本走根 pom 的 ${z-llm.version}, 不再硬写 —— 硬写会让升版只改到一半.
+             老 z-agent-llm-gateway-core 保留作为 fallback. -->
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-llm-api</artifactId>
+            <version>0.1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-llm-core</artifactId>
+            <version>0.1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-llm-starter</artifactId>
+            <version>0.1.7</version>
+        </dependency>
+
+        <!-- z-util-wf-kernel (工作流核心：持久化插件接口 + BPMN 模型)。
+             1.0.14 -> 1.0.19 (Central latest)：1.0.14 不在 Central, 净室构建断; WorkflowPersistencePlugin
+             / WorkflowSnapshot 接口 1.0.18/1.0.19 字节一致。 -->
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-util-wf-kernel</artifactId>
+            <version>1.0.19</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-util-parser-json</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

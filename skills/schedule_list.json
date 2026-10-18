@@ -1,0 +1,15 @@
+{
+  "name": "schedule_list",
+  "description": "List all registered scheduled tasks in z-schedule, optionally filtered by executor group. Returns a JSON array of JobInfo objects with id, jobDesc, jobCron, triggerStatus (0=stopped, 1=running), triggerLastTime, triggerNextTime, executorHandler, and executorParam. Use this when the CEO agent needs an overview of what's running, to find a task ID before triggering/removing it, or to audit the schedule inventory.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "jobGroup": {
+        "type": "integer",
+        "description": "Executor group ID to filter by. 0 (default) returns all groups. Use a specific group ID to narrow down."
+      }
+    },
+    "required": []
+  },
+  "is_composite": false
+}

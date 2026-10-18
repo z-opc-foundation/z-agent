@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Agent 应用管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                        ring: 'hsl(var(--ring))',
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        primary: {
+                            DEFAULT: 'hsl(var(--primary))',
+                            foreground: 'hsl(var(--primary-foreground))',
+                        },
+                        secondary: {
+                            DEFAULT: 'hsl(var(--secondary))',
+                            foreground: 'hsl(var(--secondary-foreground))',
+                        },
+                        muted: {
+                            DEFAULT: 'hsl(var(--muted))',
+                            foreground: 'hsl(var(--muted-foreground))',
+                        },
+                        accent: {
+                            DEFAULT: 'hsl(var(--accent))',
+                            foreground: 'hsl(var(--accent-foreground))',
+                        },
+                        card: {
+                            DEFAULT: 'hsl(var(--card))',
+                            foreground: 'hsl(var(--card-foreground))',
+                        }
+                    },
+                    borderRadius: {
+                        lg: 'var(--radius)',
+                        md: 'calc(var(--radius) - 2px)',
+                        sm: 'calc(var(--radius) - 4px)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --primary: 221.2 83.2% 53.3%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%;
+            --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%;
+            --accent-foreground: 222.2 47.4% 11.2%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 221.2 83.2% 53.3%;
+            --radius: 0.5rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50/50">
+<!-- Header -->
+<header class="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+    <div class="container mx-auto flex h-16 items-center justify-between px-4">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                <span class="text-white text-sm">🤖</span>
+            </div>
+            <span class="font-semibold text-lg">Agent 应用管理</span>
+        </div>
+        <nav class="flex items-center gap-4 text-sm text-gray-600">
+            <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs">智能中心</span>
+        </nav>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight">我的 Agent 应用</h1>
+            <p class="text-gray-500 text-sm mt-1">创建和管理您的 AI 智能体应用</p>
+        </div>
+        <button class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 transition-colors"
+                onclick="createAgent()">
+            <span>+</span>
+            <span>创建 Agent</span>
+        </button>
+    </div>
+
+    <!-- Agent List Card -->
+    <div class="rounded-xl border bg-white shadow-sm">
+        <!-- Toolbar -->
+        <div class="flex flex-col gap-4 md:flex-row md:items-center justify-between p-4 border-b">
+            <div class="relative">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none"
+                     stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round"
+                          stroke-width="2"/>
+                </svg>
+                <input class="pl-9 h-9 rounded-md border border-input bg-white px-3 text-sm w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                       placeholder="搜索应用..."
+                       type="text">
+            </div>
+            <div class="flex gap-2">
+                <select class="h-9 rounded-md border border-input bg-white px-3 text-sm">
+                    <option>全部状态</option>
+                    <option>运行中</option>
+                    <option>已停止</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Agent Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4" id="agentList">
+            <!-- Loading State -->
+            <div class="flex items-center justify-center py-12 text-gray-400 col-span-full">
+                <svg class="animate-spin w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor"></path>
+                </svg>
+                加载中...
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    const API_BASE = window.API_BASE || '/api/agent';
+
+    async function loadAgents() {
+        try {
+            const res = await fetch(`${API_BASE}/app/list`);
+            const data = await res.json();
+            renderAgentList(data);
+        } catch (e) {
+            // Demo mode - show sample agents
+            renderAgentList([
+                {
+                    appCode: 'demo-1',
+                    appName: '小红书写作助手',
+                    description: '专业的种草文案生成器，支持多平台风格',
+                    status: 1,
+                    model: 'GPT-4'
+                },
+                {
+                    appCode: 'demo-2',
+                    appName: '抖音文案专家',
+                    description: '短视频脚本创作，提升完播率',
+                    status: 1,
+                    model: 'GPT-4'
+                },
+                {
+                    appCode: 'demo-3',
+                    appName: '客服机器人',
+                    description: '基于知识库的智能客服，支持多轮对话',
+                    status: 1,
+                    model: 'Claude-3'
+                },
+                {
+                    appCode: 'demo-4',
+                    appName: 'AI套壳工具箱',
+                    description: '聚合多个 AI 模型，一键切换',
+                    status: 0,
+                    model: '混合'
+                },
+            ]);
+        }
+    }
+
+    function renderAgentList(agents) {
+        const container = document.getElementById('agentList');
+        if (!agents || agents.length === 0) {
+            container.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-12 text-gray-400">
+                        <svg class="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                        </svg>
+                        <p class="text-sm">暂无 Agent 应用</p>
+                        <button onclick="createAgent()" class="mt-3 text-blue-600 hover:underline text-sm">创建一个</button>
+                    </div>
+                `;
+            return;
+        }
+        container.innerHTML = agents.map(agent => `
+                <div onclick="editAgent('${agent.appCode}')" class="group relative rounded-xl border bg-white p-5 hover:border-blue-200 hover:shadow-md transition-all cursor-pointer">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white text-lg">
+                            🤖
+                        </div>
+                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${agent.status === 1 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
+                            ${agent.status === 1 ? '运行中' : '已停止'}
+                        </span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">${agent.appName}</h3>
+                    <p class="text-sm text-gray-500 line-clamp-2 mb-3">${agent.description || '暂无描述'}</p>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                            ${agent.model || '默认模型'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+    }
+
+    function createAgent() {
+        window.location.href = '/agent/app/create';
+    }
+
+    function editAgent(appCode) {
+        window.location.href = `/agent/app/edit?code=${appCode}`;
+    }
+
+    // Initialize
+    loadAgents();
+</script>
+</body>
+</html>
