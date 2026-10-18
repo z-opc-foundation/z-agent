@@ -34,7 +34,7 @@ import {
 } from '@ant-design/icons'
 import request from '../../api'
 import AkUsageDrawer from './AkUsageDrawer'
-import {PageHeader} from '@/common/components/ui'
+import {PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {confirm} = Modal
 

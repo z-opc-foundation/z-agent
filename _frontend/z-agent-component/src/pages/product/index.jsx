@@ -37,7 +37,7 @@ import {
     TagOutlined
 } from '@ant-design/icons'
 import {productApi} from '../../api'
-import {PageHeader, SearchInput} from '@/common/components/ui'
+import {PageHeader, SearchInput} from '@yuku123/z-frontend-common/ui'
 
 const {TextArea} = Input
 const {Option} = Select

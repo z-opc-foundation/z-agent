@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons'
 import ReactECharts from 'echarts-for-react'
 import {agentApi, statsApi} from '@/agent/api'
-import {PageHeader} from '@/common/components/ui'
+import {PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {Text} = Typography
 const {TabPane} = Tabs

@@ -34,7 +34,7 @@ import {scriptApi} from '../../api'
 import CurlImportModal from './CurlImportModal'
 import OpenApiImportModal from './OpenApiImportModal'
 import ApiBridgeEditor from './ApiBridgeEditor'
-import {PageHeader} from '@/common/components/ui'
+import {PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {TextArea} = Input
 const {Text, Paragraph} = Typography

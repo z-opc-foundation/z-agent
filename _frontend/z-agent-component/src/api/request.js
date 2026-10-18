@@ -12,7 +12,7 @@
  *   - 业务 {code, data, message} 自动解包
  *   - 支持 umi 风格: (url, {method, params, body, data})
  */
-import {createRequest} from '@/common'
+import {createRequest} from '@yuku123/z-frontend-common'
 
 const request = createRequest({baseURL: '/api', timeout: 15000})
 const authRequest = createRequest({baseURL: '/api', timeout: 15000})

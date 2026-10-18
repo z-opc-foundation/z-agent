@@ -3,7 +3,7 @@ import {Card, Col, Row, Select, Statistic, Table, Tabs, Tag, Typography} from 'a
 import {BarChartOutlined, DollarOutlined, RocketOutlined} from '@ant-design/icons'
 import request from '@/agent/api/request'
 import ReactECharts from 'echarts-for-react'
-import {PageHeader} from '@/common/components/ui'
+import {PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {Text} = Typography
 const {TabPane} = Tabs

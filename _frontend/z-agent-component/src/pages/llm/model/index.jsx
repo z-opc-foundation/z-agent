@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react'
 import {Button, Col, Form, Input, InputNumber, message, Modal, Row, Select, Space, Table, Tag} from 'antd'
 import {DeleteOutlined, EditOutlined, PlusOutlined} from '@ant-design/icons'
 import request from '../../../api'
-import {EmptyState, PageHeader} from '@/common/components/ui'
+import {EmptyState, PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {confirm} = Modal
 

@@ -33,7 +33,7 @@ import {
     ThunderboltOutlined
 } from '@ant-design/icons'
 import WorkflowEditor from './WorkflowEditor'
-import {ErrorBoundary} from '@/common'
+import {ErrorBoundary} from '@yuku123/z-frontend-common'
 import {agentApi} from '../../../api'
 
 const {TextArea} = Input

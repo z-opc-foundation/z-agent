@@ -1,8 +1,16 @@
 import {defineConfig} from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
     plugins: [react()],
+    resolve: {
+        // 仓内仍有 @/ 引用 (如 src/pages/product/execute.jsx → @/agent/api),
+        // standalone 构建时必须自己解析; LOCAL_SIBLINGS 模式下宿主 alias 会接管。
+        alias: {
+            '@': path.resolve(__dirname, 'src'),
+        },
+    },
     build: {
         lib: {
             entry: {

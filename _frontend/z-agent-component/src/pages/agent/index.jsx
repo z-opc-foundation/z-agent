@@ -53,7 +53,7 @@ import {
 } from '@ant-design/icons'
 import {agentApi, llmApi} from '../../api'
 import AgentAppEditor from './editor/AgentAppEditor'
-import {SearchInput} from '@/common/components/ui'
+import {SearchInput} from '@yuku123/z-frontend-common/ui'
 
 // 本文件读写的行键一律 snake_case（2026-09-25 逐字段实测，别"顺手改回 camelCase"）：
 //   POST /api/agent/app/page   → {app_name, app_code, group_code, model_provider, gmt_create, share_enabled ...}

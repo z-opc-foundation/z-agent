@@ -38,7 +38,7 @@ import {
 } from '@ant-design/icons'
 import {ossApi} from '../../api'
 import request from '../../api/request.js'
-import {SearchInput} from '@/common/components/ui'
+import {SearchInput} from '@yuku123/z-frontend-common/ui'
 
 const fmtSize = (size) => {
     if (!size || size === 0) return '-'

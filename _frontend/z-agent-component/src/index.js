@@ -47,7 +47,7 @@ export {default as AgentDashboard} from './pages/agent/dashboard/index.jsx'
 export {default as TemplateMarket} from './pages/template/index.jsx'
 
 // FEATURE014: 多 Agent 实例管理 + Skill 绑定
-export {default as AgentInstanceManager} from '../pages/ai/agent-instances/index.jsx'
+export {default as AgentInstanceManager} from './pages/ai/agent-instances/index.jsx'
 
 export {
     agentApi,

@@ -36,7 +36,7 @@ import {
     ThunderboltOutlined
 } from '@ant-design/icons'
 import {productApi, sceneApi} from '@/agent/api'
-import {SearchInput} from '@/common/components/ui'
+import {SearchInput} from '@yuku123/z-frontend-common/ui'
 
 const {TextArea} = Input
 const {Option} = Select
