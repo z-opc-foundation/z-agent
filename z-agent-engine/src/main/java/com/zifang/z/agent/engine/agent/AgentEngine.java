@@ -3,7 +3,6 @@ package com.zifang.z.agent.engine.agent;
 import com.zifang.util.json.JsonUtil;
 import com.zifang.z.agent.engine.agent.llm.model.define.Model;
 import com.zifang.z.agent.engine.agent.llm.model.define.ModelMessage;
-import com.zifang.z.agent.engine.agent.llm.provider.OllamaModel;
 import com.zifang.z.agent.engine.agent.skill.ExecutionPlan;
 import com.zifang.z.agent.engine.agent.skill.SelectedSkill;
 import com.zifang.z.agent.engine.agent.skill.Skill;
@@ -21,7 +20,7 @@ public class AgentEngine {
     private final Model model;
 
     // JDK1.8 构造器
-    public AgentEngine(List<Skill> skills, OllamaModel ollama, Model model) {
+    public AgentEngine(List<Skill> skills, Model model) {
         this.skills = skills;
         this.model = model;
     }

@@ -75,7 +75,9 @@
     </modules>
 
     <properties>
-        <revision>1.0.0</revision>
+        <!-- 1.0.1 = KernelOllamaModel 换上 kernel 的 OllamaProvider + AgentEngine 去掉死的
+             OllamaModel 构造参数。1.0.0 已在 Central（不可覆盖），故抬号。 -->
+        <revision>1.0.1</revision>
 
         <!-- 版本口径由父链下发：maven.compiler.source/target=8、project.build.sourceEncoding=UTF-8、
              spring-boot.version=2.7.18 三格与父链面值逐字相同，已删（根 pom 一次 + api/core/starter/admin
@@ -83,9 +85,10 @@
              z-agent-kernel.version 这一格原先钉 0.1.0，与父链下发值刻意分歧。2026-10-18 迁入
              z-agent-engine 后本仓出现两条 kernel 线：迁入的 engine 早已在 z-agent-kernel-tool
              0.2.1 上编译，而本仓原有四个模块还停在 0.1.0 —— 同一 reactor 里两套 kernel jar
-             同名共类，谁先在 classpath 上谁赢，是不能留的隐患。统一抬到 0.2.1（Central 上已发的
-             当前线），本仓从此只跟一条 kernel 线。 -->
-        <z-agent-kernel.version>0.2.1</z-agent-kernel.version>
+             同名共类，谁先在 classpath 上谁赢，是不能留的隐患。统一抬到 0.2.2（Central 上已发的
+             当前线；0.2.2 才有 OllamaProvider，z-agent-center-core 的 KernelOllamaModel 依赖它），
+             本仓从此只跟一条 kernel 线。 -->
+        <z-agent-kernel.version>0.2.2</z-agent-kernel.version>
     </properties>
 
     <!-- repo id 必须叫 maven-central（不能是 Maven 内建的 central）：本仓迁入的

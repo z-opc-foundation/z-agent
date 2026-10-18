@@ -1,15 +1,12 @@
 package com.zifang.z.agent.center.core.agent.executor;
 
+import com.zifang.z.agent.center.core.agent.llm.KernelOllamaModel;
 import com.zifang.z.agent.engine.agent.AgentEngine;
-import com.zifang.z.agent.engine.agent.llm.model.define.*;
-import com.zifang.z.agent.engine.agent.llm.provider.LlmCallerConfig;
-import com.zifang.z.agent.engine.agent.llm.provider.OllamaModel;
-import com.zifang.z.agent.engine.agent.llm.tool.core.ToolSchema;
+import com.zifang.z.agent.engine.agent.llm.model.define.Model;
 import com.zifang.z.agent.engine.agent.skill.Skill;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
@@ -21,7 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * 内存中的 Agent 工厂 - 直接在 JVM 中创建 AgentEngine
  * 不依赖外部服务，不走 HTTP
  * <p>
- * 历史: 之前用 LocalModelClient (demo 包, 已移到 test), 现改用引擎正式 OllamaModel
+ * LLM 调用走 kernel 的 OllamaProvider（见 {@link KernelOllamaModel}），
+ * 不再走 engine 自带的 OllamaModel。
  */
 @Component
 public class InMemoryAgentFactory {
@@ -29,6 +27,9 @@ public class InMemoryAgentFactory {
     private static final Logger log = LogManager.getLogger(InMemoryAgentFactory.class);
 
     private static final String DEFAULT_MODEL = "qwen:7b";
+
+    /** kernel 的 OpenAIProvider 把 baseUrl 当 API 前缀，Ollama 侧必须带 /v1 后缀。 */
+    private static final String OLLAMA_BASE_URL = "http://localhost:11434/v1";
 
     // AgentEngine 实例缓存 (appCode -> AgentEngine)
     private final Map<String, AgentEngine> engineCache = new ConcurrentHashMap<String, AgentEngine>();
@@ -61,14 +62,8 @@ public class InMemoryAgentFactory {
     }
 
     private AgentEngine createEngine(String appCode, List<Skill> skills) {
-        // 引擎正式 OllamaModel (替代之前的 demo LocalModelClient)
-        OllamaModel ollama = new OllamaModel();
-        ollama.init(LlmCallerConfig.builder().modelName(DEFAULT_MODEL).build());
-
-        // Model 装饰器
-        Model model = new OllamaModelAdapter(ollama);
-
-        return new AgentEngine(skills, ollama, model);
+        Model model = new KernelOllamaModel(OLLAMA_BASE_URL, DEFAULT_MODEL);
+        return new AgentEngine(skills, model);
     }
 
     private List<Skill> buildDefaultSkills() {
@@ -103,47 +98,5 @@ public class InMemoryAgentFactory {
 
     public int getEngineCount() {
         return engineCache.size();
-    }
-
-    /**
-     * OllamaModel 适配器 (将 OllamaModel 适配为 Model 接口给 AgentEngine 用)
-     */
-    private static class OllamaModelAdapter implements Model {
-
-        private final OllamaModel ollama;
-
-        public OllamaModelAdapter(OllamaModel ollama) {
-            this.ollama = ollama;
-        }
-
-        @Override
-        public String chat(List<ModelMessage> modelMessages) {
-            return ollama.generate(modelMessages);
-        }
-
-        @Override
-        public String generate(List<ModelMessage> modelMessages) {
-            return ollama.generate(modelMessages);
-        }
-
-        @Override
-        public String identity() {
-            return "OllamaModelAdapter(" + ollama.identity() + ")";
-        }
-
-        @Override
-        public Flux<ModelResponse> stream(ModelRequest modelRequest) {
-            return Flux.empty();
-        }
-
-        @Override
-        public Flux<ModelResponse> stream(List<ModelMessage> modelMessages, List<ToolSchema> tools, ModelOptions options) {
-            return Flux.empty();
-        }
-
-        @Override
-        public List<ModelMessage> adapter() {
-            return new ArrayList<ModelMessage>();
-        }
     }
 }
