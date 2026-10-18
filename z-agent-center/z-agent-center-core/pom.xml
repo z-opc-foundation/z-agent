@@ -117,17 +117,17 @@
              老 z-agent-llm-gateway-core 保留作为 fallback. -->
         <dependency>
             <groupId>io.github.yuku123</groupId>
-            <artifactId>z-llm-api</artifactId>
+            <artifactId>z-llm-gateway-api</artifactId>
             <version>0.1.7</version>
         </dependency>
         <dependency>
             <groupId>io.github.yuku123</groupId>
-            <artifactId>z-llm-core</artifactId>
+            <artifactId>z-llm-gateway-core</artifactId>
             <version>0.1.7</version>
         </dependency>
         <dependency>
             <groupId>io.github.yuku123</groupId>
-            <artifactId>z-llm-starter</artifactId>
+            <artifactId>z-llm-gateway-starter</artifactId>
             <version>0.1.7</version>
         </dependency>
 
