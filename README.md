@@ -1,14 +1,16 @@
 # z-agent
 
 > 云端 Agent 平台的**库与 starter** —— ReAct / Plan 两种 agent 默认实现 + 内存版注册中心 + REST 网关 + 只读控制面
+> （2026-10-18 起另含从 z-opc 迁入的 `z-agent-common` / `z-agent-engine` / `z-agent-center` 三个模块，见「项目结构」）
 
 `z-agent-kernel` 只给抽象（`Agent` / `LlmProvider` / `Msg` / `Tool` 这些 SPI），一个业务应用要真正"跑一个 agent 并被 HTTP 调到"，
 还缺实现与装配那一段：推理循环、模型→provider 路由、注册表、REST 网关、控制台。本仓补的就是这一段，
 并以 Spring Boot starter 的形式交付。
 
-> **本仓不产出可执行应用**：全仓没有 `@SpringBootApplication`、没有 `main()`、没有任何 `application*.yml`。
-> 复算：`rg --no-ignore -n "SpringBootApplication|public static void main" --glob '*.java' .` ⇒ 只命中 javadoc 里一句；
-> `find . -name 'application*.yml' -o -name 'application*.properties'` ⇒ 空。跑起来由宿主 boot 应用引 `z-agent-starter`（见「怎么接」）。
+> **原有四模块（`api` / `core` / `starter` / `admin`）不产出可执行应用**；但 2026-10-18 迁入的 `z-agent-center`
+> 里已有一个可执行入口 —— `z-agent-center/z-agent-center-starter/.../starter/Main.java` 带 `@SpringBootApplication` + `main()`。
+> 复算：`rg --no-ignore -n "SpringBootApplication|public static void main" --glob '*.java' .` ⇒ 命中 1 个真实 main（`z-agent-center-starter`）；
+> `find . -name 'application*.yml' -o -name 'application*.properties'` ⇒ 仍为空。库形态那部分的跑法不变：宿主 boot 应用引 `z-agent-starter`（见「怎么接」）。
 
 ---
 
@@ -18,13 +20,13 @@
 |------|-----|
 | **仓库** | `z-agent`（`z-opc-foundation/z-agent`，分支 `main`） |
 | **Maven 坐标** | `io.github.yuku123:z-agent:${revision}`（根 POM `packaging=pom` 聚合） |
-| **当前版本** | `0.1.4`（根 POM `<revision>`；CI-friendly versions + flatten-maven-plugin `1.7.2`，`flattenMode=oss`） |
-| **父项目** | `io.github.yuku123:z-boot-parent:1.0.21`（`<relativePath/>` 留空，parent 在 repo1 不在磁盘） |
-| **Maven Central** | 2026-09-30 ranged GET 实测全部 200/206：`z-agent` / `z-agent-api` / `z-agent-core` / `z-agent-starter` / `z-agent-admin` 五个坐标的 `0.1.0`、`0.1.1`、`0.1.2`、`0.1.3`、`0.1.4` 都在；`z-agent` 是 pom 聚合，**没有 jar**（`.jar` 路径 404）。`maven-metadata.xml`：`latest=release=0.1.4`，`lastUpdated=20260929054528` |
-| **内核依赖** | `io.github.yuku123:z-agent-kernel-{agent,llm,message,tool,types,memory,event,middleware}:0.1.0` —— 根 POM 属性 `z-agent-kernel.version=0.1.0` + 8 条按坐标写的直接 DM 条目 |
-| **默认端口** | 无。本仓不监听端口、不产出 boot jar；`server.port` 与 context-path 由宿主应用决定 |
-| **运行口径** | Java 8 · Spring Boot 2.7.18 —— 两格都由父链下发，本仓 POM 里没有 `maven.compiler.*` / `spring-boot.version` 声明（复算：`rg -n "spring-boot.version|maven.compiler" pom.xml */pom.xml` ⇒ 只命中注释） |
-| **最近更新** | 2026-09-30 |
+| **当前版本** | `1.0.1`（根 POM `<revision>`；CI-friendly versions + flatten-maven-plugin `1.7.2`，`flattenMode=oss`） |
+| **父项目** | `io.github.yuku123:z-boot-parent:1.1.0`（`<relativePath/>` 留空，parent 在 repo1 不在磁盘） |
+| **Maven Central** | 2026-10-20 实测：`z-agent` / `z-agent-api` / `z-agent-core` / `z-agent-starter` 四个坐标的 `0.1.0`–`0.1.4` / `1.0.0` / `1.0.1` 都在；`z-agent-common` / `z-agent-engine` / `z-agent-center` 已发 `1.0.0` / `1.0.1`；`z-agent-admin` **只到 `0.1.4`**（1.0.x 起被根 POM `central` profile 的 `excludeArtifacts` 排除，见「项目结构」末尾）。`maven-metadata.xml`：`latest=release=1.0.1`，`lastUpdated=20261018235906`；`z-agent` 是 pom 聚合，**没有 jar** |
+| **内核依赖** | `io.github.yuku123:z-agent-kernel-{agent,llm,message,tool,types,memory,event,middleware}:0.2.3` —— 根 POM 属性 `z-agent-kernel.version=0.2.3` + 8 条按坐标写的直接 DM 条目 |
+| **默认端口** | 无。**原有四模块**不监听端口、不产出 boot jar；`z-agent-center-starter` 用 `spring-boot-maven-plugin` 的 `<classifier>boot</classifier>` 产出可启动 fat jar，端口由部署侧下发。`server.port` 与 context-path 不在本仓钉死 |
+| **运行口径** | Java 8 · Spring Boot 2.7.18 —— 两格都由父链下发。**原有四模块**的 POM 里没有 `maven.compiler.*` / `spring-boot.version` 声明（复算：`rg -n "spring-boot.version|maven.compiler" pom.xml z-agent-api/pom.xml z-agent-core/pom.xml z-agent-starter/pom.xml z-agent-admin/pom.xml` ⇒ 只命中注释）；迁入的 `z-agent-common` / `z-agent-engine` / `z-agent-center` 各自声明了 `maven.compiler.source/target`（`8` / `8` / `1.8`），值与父链同格 |
+| **最近更新** | 2026-10-19（仓内最后一次提交 `8a2f870` "kernel 版本线抬到 0.2.3"） |
 
 ---
 
@@ -33,7 +35,7 @@
 | | 归属 | 内容 |
 |---|---|---|
 | SPI 与协议类型 | `z-agent-kernel`（**25 个子模块**，本仓只吃其中 8 个） | `kernel.agent.Agent/AgentRequest/AgentResponse`、`kernel.llm.LlmProvider/ChatCompletionsRequest/ChatCompletionsResponse/Model`、`kernel.message.Msg/ToolCall`、`kernel.tool.Tool/ToolResult`、`kernel.types.MessageRole/TokenUsage`、memory/event/middleware |
-| 默认实现 + 装配 + HTTP 面 | **本仓** | `ReActAgent` / `PlanAgent` 推理循环、`LlmAdapter` 模型路由、`AgentRegistry` 内存注册中心、`AgentRunner` 门面、`AgentController` / `AdminController`、`ZAgentAutoConfiguration` |
+| 默认实现 + 装配 + HTTP 面 | **本仓** | `ReActAgent` / `PlanAgent` 推理循环、`LlmAdapter` 模型路由、`AgentRegistry` 内存注册中心、`AgentRunner` 门面、`AgentController` / `AdminController`、`ZAgentAutoConfiguration`；另有 2026-10-18 从 z-opc 迁入的 `z-agent-common` / `z-agent-engine` / `z-agent-center`（后者含 `z-agent-center-starter` 的可执行 `Main`） |
 
 三个必须知道的边界：
 
@@ -41,24 +43,26 @@
    rag / tts / realtime / skill / mcp / credential / permission / exception / classifier / console / tui / app）本仓没有声明依赖。
 2. **内核是纯 POJO，不带 Spring 注解**，所以 provider 不会被自动装配。复算：
    `rg --no-ignore -l "org.springframework" --glob '*.java' ../z-agent-kernel/z-agent-kernel-llm` ⇒ `0` 个文件。
-   内核 `z-agent-kernel-llm` 现树里有 6 个 provider 类（`OpenAI`/`Anthropic`/`Gemini`/`DashScope` 直接实现 `LlmProvider`，
-   `DeepSeek`/`Qwen` 继承 `OpenAIProvider`），要用的得自己 `@Bean` 出来（见「怎么接」）。
-3. **版本分歧是刻意的**：本仓钉 `0.1.0`，而父链 `z-boot-parent:1.0.21` import 的 `z-boot-fleet:1.0.1` 里
-   `z-agent-kernel.version` 槽位是 `0.2.1`（`0.1.1` 那一格属于 fleet `1.0.0`）。中央上 `z-agent-core:0.1.4` 的发布 POM
-   把 8 条 kernel 直接依赖落成字面 `0.1.0`（复算：`curl -s https://repo1.maven.org/maven2/io/github/yuku123/z-agent-core/0.1.4/z-agent-core-0.1.4.pom`）。
-   ⇒ 消费方若继承了 fleet 的 DM，Maven 会用 DM 覆盖传递版本、把 kernel 抬到 `0.2.1`，与本仓的编译基线不一致；跨版本联调前先对齐这一格。
+   内核 `z-agent-kernel-llm` 现树里有 **7** 个 provider 类（`OpenAI`/`Anthropic`/`Gemini`/`DashScope` 直接实现 `LlmProvider`，
+   `DeepSeek`/`Qwen`/`Ollama` 继承 `OpenAIProvider`），要用的得自己 `@Bean` 出来（见「怎么接」）。
+3. **版本分歧是刻意的**：本仓钉 `0.2.3`，而父链 `z-boot-parent:1.1.0` 的 `z-agent-kernel.version` 槽位是 `0.2.1`
+   （1.1.0 这一版 parent 已不再 import `z-boot-fleet`，该格直接由 parent 自身属性下发）。中央上 `z-agent-core:1.0.1`
+   的发布 POM 把 8 条 kernel 直接依赖落成字面 `0.2.2`（复算：`curl -s https://repo1.maven.org/maven2/io/github/yuku123/z-agent-core/1.0.1/z-agent-core-1.0.1.pom`）——
+   即已发布的那一版比本仓当前 `0.2.3` 低一格。中央上 `0.2.3` 已发（`z-agent-kernel` 的 `maven-metadata.xml` 实测列 `0.1.0 / 0.1.1 / 0.2.1 / 0.2.2 / 0.2.3`）。
+   ⇒ 消费方若继承了 parent 的 DM，Maven 会用 DM 覆盖传递版本、把 kernel 压回 `0.2.1`，与本仓的编译基线不一致；跨版本联调前先对齐这一格。
 
 ---
 
 ## 🎯 能力清单
 
-每一条都能对应到本仓的一个类：
+每一条都能对应到本仓的一个类（本表覆盖原有四模块 `api` / `core` / `starter` / `admin`；2026-10-18 迁入的
+`z-agent-common` / `z-agent-engine` / `z-agent-center` 见「项目结构」与「API 一览」）：
 
 | 能力 | 实现 | 说明 |
 |------|------|------|
 | ReAct 推理循环 | `core/agent/ReActAgent.java`（203 行） | `think → tool_calls → tool_result` 迭代，上限 `z.agent.default-max-steps`，超出置 `finishedReason="max_steps"`（`:161`）；可选 `EventListener` 工具回调 |
 | Plan 两阶段推理 | `core/agent/PlanAgent.java`（191 行） | 先出编号计划（正则 `^\s*(\d+)[.\)、]\s*(.+)$`，支持中英文括号）再逐步执行、末尾综合；解析不出编号就把整段当一步 |
-| 模型→provider 路由 | `core/agent/LlmAdapter.java`（134 行） | `resolve()` 遍历 `supportsModel`，无人支持即抛 `AgentException(RUN_FAILED, "no provider supports model: …")`；另管工具参数 JSON 解析、`ToolResult→Msg`、usage 累加 |
+| 模型→provider 路由 | `core/agent/LlmAdapter.java`（206 行） | `resolve()` 两级：① 先查 `z.agent.providers` 显式映射（映射到未注册的 provider 直接报错，不回落）；② 回落遍历 `supportsModel`，无人支持即抛 `AgentException(RUN_FAILED, "no provider supports model: …")`（`:103`）；另管工具参数 JSON 解析、`ToolResult→Msg`、usage 累加 |
 | 调用门面 | `core/runner/AgentRunner.java`（166 行） | `RunRequest → kernel AgentRequest`、`AgentResponse → RunResponse/StreamChunk` 回转，`steps`/`usage`/`durationMs` 都在这里成形 |
 | Agent 注册中心 | `core/registry/AgentRegistry.java`（86 行） | `ConcurrentHashMap` 内存版：`register/unregister/get/describe/list/names/has/size`，未知名字抛 `NOT_FOUND` |
 | REST 网关 | `core/controller/AgentController.java` | `/agent/list`、`/agent/{name}`、`/agent/{name}/run`、`/agent/{name}/stream` |
@@ -81,43 +85,64 @@ grep -A1 '@Bean' z-agent-starter/src/main/java/com/zifang/z/agent/starter/autoco
 
 ```
 z-agent/
-├── pom.xml                    # 聚合根 POM：parent z-boot-parent:1.0.21、<revision>0.1.4</revision>、4 个 <module>、central profile
+├── pom.xml                    # 聚合根 POM：parent z-boot-parent:1.1.0、<revision>1.0.1</revision>、7 个 <module>、central profile
 ├── LICENSE                    # MIT（Copyright (c) 2026 z-opc-foundation）
 ├── README.md
+├── _doc/                      # 文档收口目录（001_arch/ 内含项目总览 00-overview.md）
+├── _frontend/                 # 前端子工程暂存位（z-agent-component / z-agent-suit，不被 Maven 构建读取）
+├── _sql-migrated/             # 历史 SQL 迁移脚本（.sql，只读归档）
+├── skills/                    # 插件/技能定义（JSON）
 ├── z-agent-api/               # 零依赖 DTO + 异常（POM 无 <dependencies>）
 │   └── src/main/java/com/zifang/z/agent/api/
 │       ├── dto/               # AgentDto / RunRequest / RunResponse / StreamChunk / TokenUsageDto
 │       └── exception/         # AgentException
-├── z-agent-core/              # 全部逻辑与全部测试
+├── z-agent-core/              # 原有四模块的全部逻辑与全部测试
 │   ├── src/main/java/com/zifang/z/agent/core/
 │   │   ├── agent/             # LlmAdapter / ReActAgent / PlanAgent
 │   │   ├── controller/        # AgentController（/agent/**）
 │   │   ├── properties/        # AgentProperties（@ConfigurationProperties("z.agent")）
 │   │   ├── registry/          # AgentRegistry
 │   │   └── runner/            # AgentRunner
-│   └── src/test/java/…/core/  # AgentRegistryTest / LlmAdapterTest / PlanAgentTest / AgentEndToEndTest
+│   └── src/test/java/…/core/  # AgentRegistryTest / LlmAdapterTest / LlmAdapterRoutingTest / PlanAgentTest / AgentEndToEndTest
 ├── z-agent-starter/           # 自动装配
 │   └── src/main/
 │       ├── java/…/starter/autoconfig/ZAgentAutoConfiguration.java
 │       └── resources/META-INF/spring.factories
-└── z-agent-admin/             # 控制面（REST + 静态页）
-    └── src/main/
-        ├── java/…/admin/{controller/AdminController,service/AdminQueryService}.java
-        └── resources/index.html          # 该模块 resources 下只有这一个文件，没有 application*.yml
+├── z-agent-admin/             # 控制面（REST + 静态页）
+│   └── src/main/
+│       ├── java/…/admin/{controller/AdminController,service/AdminQueryService}.java
+│       └── resources/index.html          # 该模块 resources 下只有这一个文件，没有 application*.yml
+├── z-agent-common/            # 2026-10-18 从 z-opc 迁入：公共 DTO / 实体 / 工具
+│   └── src/main/java/…/common/
+├── z-agent-engine/            # 2026-10-18 从 z-opc 迁入：agent 运行时（react / plan / multi / flow 节点 / llm / tool / mcp …）
+│   └── src/{main,test}/java/…/engine/
+└── z-agent-center/            # 2026-10-18 从 z-opc 迁入：控制面（聚合 3 个子模块）
+    ├── z-agent-center-core/   # 领域核心：实例 / 记忆 / 插件 / 模板 / flow 定义 / 分享 / AK …
+    ├── z-agent-center-web/    # REST 层：18 个 Controller（/api/agent/** 等）
+    └── z-agent-center-starter/# 可执行入口：Main（@SpringBootApplication + main()）
 ```
 
-规模实测：main 16 个 `.java` / test 4 个，合计 2137 行。
+规模实测：main **383** 个 `.java` / test **26** 个，合计 **48004** 行。
 
 ```bash
-find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/main/'   # ⇒ 16
-find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/test/'    # ⇒ 4
+find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/main/'   # ⇒ 383
+find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/test/'    # ⇒ 26
+find . -path '*/target' -prune -o -name '*.java' -print | xargs wc -l | tail -1  # ⇒ 48004 total
 ```
 
-本仓**没有** `_doc/`、`deploy/`、`k8s/`、`Dockerfile*`、`docker-compose*.yml`、`Makefile`、`_frontend/`（逐个 `ls -d` 实测均不存在），
-因此这里不写部署章节，也不写「文档目录」章节 —— 按 `lead/008_组织规范/002_项目文档收口规范`，无 `_doc/` 的仓不开这一节。
+分模块（main / test / @Test）：`z-agent-center` 204/1/6 · `z-agent-engine` 159/20/147 · `z-agent-core` 7/5/47 ·
+`z-agent-api` 6/0/0 · `z-agent-common` 4/0/0 · `z-agent-admin` 2/0/0 · `z-agent-starter` 1/0/0 —— **仓级 200 支 `@Test`**。
 
-四个模块都留在 reactor 里，且**全仓没有一处 `maven.deploy.skip`**（复算：`rg --no-ignore -n "maven.deploy.skip" .` ⇒ 空）
-⇒ 与 `z-ctc-admin` 不同，`z-agent-admin` 也一起上 Maven Central（已实测 200）。
+本仓**没有** `deploy/`、`k8s/`、`Dockerfile*`、`docker-compose*.yml`、`Makefile`（逐个 `ls -d` 实测均不存在），
+因此这里不写部署章节。文档按 `lead/008_组织规范/002_项目文档收口规范` 收口在 `_doc/` 下，见文末「文档目录」章节。
+
+**7 个模块都留在 reactor 里**（`grep -c '<module>' pom.xml` ⇒ `7`），且**全仓没有一处 `maven.deploy.skip`**
+（复算：`rg --no-ignore -n "maven.deploy.skip" --include='pom.xml' .` ⇒ 空；根 POM 里那处 `maven.deploy.skip`
+只是 `excludeArtifacts` 的注释文本，不是属性）。
+⇒ `z-agent-admin` **不在** `1.0.x` 的发布集里：根 POM `central` profile 用 `central-publishing-maven-plugin`
+的 `<excludeArtifacts><excludeArtifact>z-agent-admin</excludeArtifact></excludeArtifacts>` 把它点名排除
+（该插件不认 `maven.deploy.skip`，`excludeArtifacts` 才是生效的那道）。实测 Central：`z-agent-admin` 只发到 `0.1.4`，
+其余六个坐标（含新增的 `z-agent-common` / `z-agent-engine` / `z-agent-center`）都有 `1.0.0` / `1.0.1`。
 
 ---
 
@@ -125,21 +150,27 @@ find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/test/'  
 
 | 层级 | 技术 | 出处 |
 |------|------|------|
-| 语言 / 运行时 | Java 8 | 父链 `z-boot-parent:1.0.21` 的 `pluginManagement` |
-| 框架 | Spring Boot 2.7.18（`spring-boot` / `spring-boot-autoconfigure`） | 版本由 `z-boot-dependencies` 地板供给；中央发布 POM 实测 `2.7.18` |
-| Web 层 | `spring-web` / `spring-webmvc` `5.3.39` | `z-agent-core:0.1.4` 发布 POM 实测 |
+| 语言 / 运行时 | Java 8 | 父链 `z-boot-parent:1.1.0` 的 `pluginManagement` |
+| 框架 | Spring Boot 2.7.18（`spring-boot` / `spring-boot-autoconfigure`） | 版本由父链属性 `spring-boot.version` 供给；中央发布 POM 实测 `2.7.18` |
+| Web 层 | `spring-web` / `spring-webmvc` `5.3.39` | `z-agent-core:1.0.1` 发布 POM 实测 |
 | 序列化 | `jackson-databind` `2.18.6` | 同上 |
 | 日志门面 | `slf4j-api` `1.7.36` | 同上 |
-| Agent 抽象 | `z-agent-kernel-*` `0.1.0`（8 个 artifact） | 根 POM `z-agent-kernel.version` |
+| Agent 抽象 | `z-agent-kernel-*` `0.2.3`（8 个 artifact） | 根 POM `z-agent-kernel.version` |
 | 测试 | JUnit 4（`junit:junit`，`z-agent-starter` 另加 `spring-boot-starter-test` + `junit-vintage-engine`，均 test scope） | 各模块 POM |
 | 构建 | Maven + flatten-maven-plugin `1.7.2`（`flattenMode=oss`）+ maven-release-plugin `3.1.1`（`tagNameFormat=v@{project.version}`） | 根 POM |
-| 发布 | `central` profile：`maven-source-plugin` 3.3.1 / `maven-javadoc-plugin` 3.11.2 / `maven-gpg-plugin` 3.2.7 / `central-publishing-maven-plugin` 0.8.0（`autoPublish=true`） | 根 POM `<profiles>` |
+| 发布 | `central` profile：`maven-source-plugin` 3.3.1 / `maven-javadoc-plugin` 3.11.2 / `maven-gpg-plugin` 3.2.7 / `central-publishing-maven-plugin` 0.8.0（`autoPublish=true`，`excludeArtifacts=z-agent-admin`） | 根 POM `<profiles>` |
 
-本仓不依赖 `z-util`，也不依赖任何数据库/ORM（`rg -n "z-util|mybatis" pom.xml */pom.xml` ⇒ 空）。
+**`z-util` 与 ORM 依赖现状**（复算：逐个模块 POM 的 `<dependencies>` 段）——
+`z-agent-core` 依赖 `z-util-parser-json`；`z-agent-common` 依赖 `mybatis-plus-annotation`；
+`z-agent-engine` 依赖 `z-util-core` + `z-util-parser-json`；`z-agent-center-core` 依赖 `z-util-wf-kernel` + `z-util-parser-json`；
+`z-agent-center-web` 依赖 `z-util-core` + `z-util-parser-json`；根 POM 的 DM 钉 `z-util-core` / `z-util-parser-json` / `z-util-dsl-kernel`。
+`z-agent-engine` / `z-agent-center-*` 另带 `z-boot-base` / `z-boot-datasource-starter` / `spring-boot-starter-jdbc`。
+只有 `z-agent-api` / `z-agent-starter` / `z-agent-admin` 三个模块是真零依赖。
 
 `flattenMode=oss` 是 2026-09-29 从 `resolveCiFriendliesOnly` 改的（commit `63d340b`），效果可回读验证：
-中央 `z-agent-starter:0.1.3` 的发布 POM 里还有 `<parent>`，`0.1.4` 的没有 ⇒ 消费方不再需要顺着
-`z-agent → z-boot-parent → z-boot-fleet` 才能补齐版本。
+中央 `z-agent-starter:0.1.3` 的发布 POM 里还有 `<parent>`，`0.1.4` / `1.0.0` / `1.0.1` 的都没有
+（复算：`curl -s …/z-agent-starter/1.0.1/z-agent-starter-1.0.1.pom | grep -c '<parent>'` ⇒ `0`）
+⇒ 消费方不再需要顺着 `z-agent → z-boot-parent` 才能补齐版本。
 
 ---
 
@@ -152,7 +183,7 @@ mvn clean install -DskipTests
 ```
 
 版本口径全部由父链下发；构建报找不到版本时，先确认能从 repo1 解析到
-`io.github.yuku123:z-boot-parent:1.0.21` 与 `z-agent-kernel-*:0.1.0`（两者都已实测存在）。
+`io.github.yuku123:z-boot-parent:1.1.0` 与 `z-agent-kernel-*:0.2.3`（两者都已实测存在）。
 
 ### 怎么接（三步，缺一不可）
 
@@ -160,7 +191,7 @@ mvn clean install -DskipTests
 <dependency>
   <groupId>io.github.yuku123</groupId>
   <artifactId>z-agent-starter</artifactId>
-  <version>0.1.4</version>
+  <version>1.0.1</version>
 </dependency>
 ```
 
@@ -184,9 +215,10 @@ public LlmProvider openAiProvider() {
 }
 ```
 
-**第三步：自己把 agent 注册进注册中心。** 全仓生产代码里没有任何 `registry.register(...)` 调用，
-也没有按 `AgentDto.kind` 分流的工厂（复算：`rg --no-ignore -n "\.register\(|new ReActAgent|new PlanAgent" --glob '*.java' */src/main` ⇒ 空，
+**第三步：自己把 agent 注册进注册中心。** 原有四模块的生产代码里没有任何 `registry.register(...)` 调用，
+也没有按 `AgentDto.kind` 分流的工厂（复算：`rg --no-ignore -n "\.register\(|new ReActAgent|new PlanAgent" --glob '*.java' z-agent-api/src/main z-agent-core/src/main z-agent-starter/src/main z-agent-admin/src/main` ⇒ 空，
 只有测试在调）。`kind` 目前只是展示用元数据：
+（注意：`z-agent-engine` 里另有一套自己的 `ReActAgent` 与 `WorkerAgentRegistry`，与本表说的 `core` 那套不是同一个东西。）
 
 ```java
 @Bean
@@ -206,16 +238,17 @@ public ApplicationRunner registerAgents(AgentRegistry registry, AgentProperties 
 | 键 | 缺省值 | 实际读取点 | 生效 |
 |---|---|---|---|
 | `z.agent.enabled` | 无（必须显式 `true`） | `ZAgentAutoConfiguration` 类注解 | 是（总开关） |
-| `z.agent.default-model` | `gpt-4o-mini` | `ReActAgent:175` / `PlanAgent:171` / `LlmAdapter:55` | 是（三级回退末端：`config.model` → `AgentDto.model` → 本键） |
+| `z.agent.default-model` | `gpt-4o-mini` | `ReActAgent:175` / `PlanAgent:171` / `LlmAdapter:74` | 是（三级回退末端：`config.model` → `AgentDto.model` → 本键） |
 | `z.agent.default-max-steps` | `8` | `ReActAgent:182` | 是（只约束 ReAct；`PlanAgent` 步数 = 计划条目数，不读这个键） |
 | `z.agent.default-temperature` | `0.7` | `ReActAgent:106` / `PlanAgent:100,123,143` | 是 |
 | `z.agent.default-top-p` | `0.0` | 同上 | 是 |
 | `z.agent.default-max-tokens` | `2048` | 同上 | 是 |
 | `z.agent.default-timeout-ms` | `300000` | **无**：除自身 getter/setter 外全仓零引用 | 否（死键；单次调用没有超时控制） |
-| `z.agent.providers` | 空 map | **无**：同上 | 否（死键；路由走 `LlmAdapter.supportsModel`，与本 map 无关） |
+| `z.agent.providers` | 空 map | `LlmAdapter:115`（`mappedProviderName`） | 是（"模型 → provider bean 名"显式映射表；命中时**不回落** `supportsModel` 扫描，映射到未注册的 provider 直接抛 `RUN_FAILED`） |
 
 复算：`grep -n 'private \|public ' z-agent-core/src/main/java/com/zifang/z/agent/core/properties/AgentProperties.java`，
-再 `rg --no-ignore -n "getProviders|getDefaultTimeoutMs" --glob '*.java' .` ⇒ 只命中该类自身。
+再 `rg --no-ignore -n "getProviders|getDefaultTimeoutMs" --glob '*.java' .` ⇒ `getProviders` 命中 `LlmAdapter:115`（另有测试命中），
+`getDefaultTimeoutMs` 只命中该类自身。
 
 单次请求还能覆盖 `config` 里的 **驼峰** 键（`{"config":{"maxSteps":3,"model":"gpt-4o"}}`，
 `ReActAgent:171-182`）—— 这一处**不是** relaxed binding，写 `max-steps` 不生效；且 `maxSteps` 必须是 JSON 整数
@@ -223,7 +256,9 @@ public ApplicationRunner registerAgents(AgentRegistry registry, AgentProperties 
 
 ### 环境变量
 
-本仓**不读任何环境变量**，也没有任何 profile 差异（无 `application*.yml`、无 `@Value("${…:ENV"}`）。
+本仓**不读任何环境变量**（`System.getenv` 实测 0 命中），也没有任何 profile 差异（仓内**无** `application*.yml` / `application*.yaml`）。
+`z-agent-center-core` 里有 3 处 `@Value("${z.skill-center.base-url:…}")` / `@Value("${z.skill-center.timeout-ms:5000}")` /
+`@Value("${z-lc.tool.base-url:…}")`，占位符的缺省值是**字面量**、不是环境变量引用。
 API key 之类由宿主应用自己注入到 provider bean 的构造参数里，不落本仓；因此这里没有需要覆盖的机密项。
 
 ### 起控制面
@@ -237,7 +272,8 @@ starter 的 `@ComponentScan` 只扫 `core.controller / core.registry / core.runn
 
 ## 🔌 API 一览
 
-全仓 `@RequestMapping` 实测就 9 行（2 个类级 + 7 个方法级）：
+本表覆盖**原有四模块**（`core` / `admin`）的 HTTP 面：`@RequestMapping` 实测就 9 行（2 个类级 + 7 个方法级）。
+仓级另有 `z-agent-center-web` 的 **18 个 Controller / 135 个方法级端点**（`/api/agent/**` 等），合计类级 20 / 方法级 142 —— 那部分不属本表口径。
 
 | 方法 | 路径 | 干什么 | 出处 |
 |---|---|---|---|
@@ -252,26 +288,31 @@ starter 的 `@ComponentScan` 只扫 `core.controller / core.registry / core.runn
 `POST /agent/{name}/run` 的请求体字段（`AgentController.parseRequest`，全部可省）：`input`、`history`（对象数组）、
 `toolNames`（数组）、`config`（对象）。路径无 context-path 前缀，无鉴权拦截 —— 认证/租户隔离由宿主应用负责。
 
-复算整张表：`rg --no-ignore -n "Mapping\(" --glob '*.java' .`；只数方法级：
-`grep -rhE '@(Get|Post|Put|Delete)Mapping' --include='*.java' . | wc -l` ⇒ `7`。
+复算整张表：`rg --no-ignore -n "Mapping\(" --glob '*.java' z-agent-core z-agent-admin`；只数方法级：
+`grep -rhE '@(Get|Post|Put|Delete)Mapping' --include='*.java' z-agent-core z-agent-admin | wc -l` ⇒ `7`。
 
 ---
 
 ## 🧪 测试
 
 ```bash
-mvn test          # 37 支 @Test，全程 mock provider：不发真网络请求、不起 Spring 上下文
+mvn test          # z-agent-core 47 支 @Test，全程 mock provider：不发真网络请求、不起 Spring 上下文
 ```
+
+本节覆盖 `z-agent-core`（仓级总量见下）：
 
 | 测试类 | 支数 | 覆盖 |
 |---|---|---|
 | `core/agent/AgentEndToEndTest` | 10 | ReAct 工具链多步、`max_steps`、tool not found、LLM 异常、按 model id 路由；Plan 正常计划与"解析不出→整段当一步" |
 | `core/agent/LlmAdapterTest` | 10 | provider 路由与未知模型抛错、`parseArguments`、`findTool`、`toolResultMsg`、usage 累加、`listModels`/`providerCount` |
+| `core/agent/LlmAdapterRoutingTest` | 10 | `z.agent.providers` 显式映射优先：映射命中、映射到未注册 provider 直接抛错、空白值不生效、回落 `supportsModel` |
 | `core/registry/AgentRegistryTest` | 10 | register/get/describe/list/unregister/覆盖同名、空 name 与 null 入参拒绝 |
 | `core/agent/PlanAgentTest` | 7 | 编号计划解析（点号、中英文括号、全角、部分编号、空/null） |
 
 分模块复算：`for m in z-agent-*; do printf "%-16s %s\n" "$m" "$(grep -rho '@Test' --include='*.java' $m 2>/dev/null | wc -l | tr -d ' ')"; done`
-⇒ `z-agent-core` 37，`z-agent-api` / `z-agent-starter` / `z-agent-admin` 各 0。
+⇒ `z-agent-engine` 147、`z-agent-core` 47、`z-agent-center` 6，`z-agent-api` / `z-agent-starter` / `z-agent-admin` / `z-agent-common` 各 0
+—— **仓级 200 支**（测试类合计 26 个 `.java`）。测试框架：core / engine 用 JUnit 4（`org.junit.Test`），
+`z-agent-center` 用 JUnit 5（`org.junit.jupiter.api.Test`）。
 
 如实说明的缺口：全仓没有一支 `@SpringBootTest` / `@WebMvcTest` / `MockMvc`
 （复算：`rg --no-ignore -n "SpringBootTest|MockMvc|WebMvcTest" --glob '*.java' .` ⇒ 空），
@@ -285,19 +326,28 @@ mvn test          # 37 支 @Test，全程 mock provider：不发真网络请求�
 - **`/agent/{name}/stream` 是占位。** 它不进 runner，直接返回
   `{status:"sse-ready", agent:<name>, note:"SSE streaming endpoint placeholder; production wires runner.stream() to SseEmitter"}`
   （`AgentController:65-74`）。类注释里"POST /agent/{name}/stream — SSE 流式"这一句**当前不成立**。
-- **整条链路都没有真流式。** `AgentRunner.stream(...)` 在生产里没有任何调用方（全仓对它的引用只有上面那句 `note`）；
+- **整条链路都没有真流式。** `AgentRunner.stream(...)` 在生产里没有任何调用方（对它的引用只有上面那句 `note`）；
   更下一层，`ReActAgent.streamRun` / `PlanAgent.streamRun` 都只是调 `run()` 后触发 `onComplete`，
-  回调入参 `onStep` 从未被调用（复算：`rg --no-ignore -n "onStep" --glob '*.java' */src/main` ⇒ 只命中两处参数声明）。
+  回调入参 `onStep` 从未被调用（复算：`rg --no-ignore -n "onStep" --glob '*.java' z-agent-core/src/main z-agent-api/src/main z-agent-starter/src/main z-agent-admin/src/main` ⇒ 只命中两处参数声明）。
   ⇒ `StreamChunk`（api 模块，58 行）没有任何生产出口。
 - **请求级 `toolNames` 是死参。** `AgentRunner:105` 把它塞进 `config`，但 `core` 里没有任何读取点
   （复算：`rg --no-ignore -n "toolNames" --glob '*.java' */src/main` ⇒ 只有 DTO、Controller 解析、Runner 写入三处）。
   工具只能在构造 `ReActAgent` 时通过 `List<Tool>` 绑定。
-- **两个配置键不生效**：`z.agent.default-timeout-ms`、`z.agent.providers`（详见上表"生效"列）。
+- **一个配置键不生效**：`z.agent.default-timeout-ms`（详见上表"生效"列）。`z.agent.providers` **已生效** ——
+  `LlmAdapter.resolve()` 把它当"模型 → provider bean 名"的显式映射表，命中时不再回落 `supportsModel` 扫描。
 - **注册中心是内存版**：`ConcurrentHashMap`，进程重启即空，没有持久化、没有多实例同步。
 - **控制面 `models` 的口径 = `LlmAdapter.listModels()`**，即"注册进来的 provider 声称支持什么"，
   不是平台真的可用的模型清单；一个 provider 都没注册时它就是空列表（`providerCount` 同步为 0）。
-- **`z-boot-fleet:1.0.1` 里 `z-agent.version` 槽位已是 `0.1.4`**，与本仓 `<revision>` 同号；
-  下一刀抬版本时本仓必须晚于 fleet，否则 fleet 会指向一个还没上的版本。
+- **父链 `z-boot-parent:1.1.0` 里 `z-agent.version` 槽位仍是 `0.1.4`**，比本仓 `<revision>`（`1.0.1`）低两格；
+  下一刀抬版本时本仓必须晚于 parent，否则 parent 会指向一个还没上的版本。
+
+---
+
+## 文档目录
+
+本项目文档统一收口在 `_doc/` 下（八类固定编号表，桶按需存在）:
+
+- [`_doc/001_arch/`](_doc/001_arch/) — 架构、接口、DB schema、协议、路线图
 
 ---
 
