@@ -87,8 +87,8 @@
              0.2.1 上编译，而本仓原有四个模块还停在 0.1.0 —— 同一 reactor 里两套 kernel jar
              同名共类，谁先在 classpath 上谁赢，是不能留的隐患。统一抬到 0.2.2（Central 上已发的
              当前线；0.2.2 才有 OllamaProvider，z-agent-center-core 的 KernelOllamaModel 依赖它），
-             本仓从此只跟一条 kernel 线。 -->
-        <z-agent-kernel.version>0.2.2</z-agent-kernel.version>
+             本仓从此只跟一条 kernel 线。2026-10-19 抬到 0.2.3（承载群聊编排与 LlmAgent）。 -->
+        <z-agent-kernel.version>0.2.3</z-agent-kernel.version>
     </properties>
 
     <!-- repo id 必须叫 maven-central（不能是 Maven 内建的 central）：本仓迁入的

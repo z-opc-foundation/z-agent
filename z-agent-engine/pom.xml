@@ -94,11 +94,14 @@
 
         </dependency>
 
-        <!-- 工具 SPI 已迁移到 z-agent-kernel-tool (FEATURE066) -->
+        <!-- 工具 SPI 已迁移到 z-agent-kernel-tool (FEATURE066)
+             这里原来硬钉 0.2.1，是同一 reactor 里两条 kernel 线的又一处入口：
+             直接依赖在 Maven 的 nearest-wins 下会压过传递进来的 ${z-agent-kernel.version}，
+             编译期毫无症状，运行期 classpath 上拿到的是旧 kernel。 -->
         <dependency>
             <groupId>io.github.yuku123</groupId>
             <artifactId>z-agent-kernel-tool</artifactId>
-            <version>0.2.1</version>
+            <version>${z-agent-kernel.version}</version>
         </dependency>
 
         <!-- LangChain4j核心 -->
