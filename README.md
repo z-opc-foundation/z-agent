@@ -122,16 +122,16 @@ z-agent/
     └── z-agent-center-starter/# 可执行入口：Main（@SpringBootApplication + main()）
 ```
 
-规模实测：main **383** 个 `.java` / test **26** 个，合计 **48004** 行。
+规模实测：main **383** 个 `.java`（现读，尺子可钉）；test **26** 个 / 合计 **48004** 行是 **2026-10-20 快照**（**不含本仓 README 自守卫** —— 守卫落在 `z-agent-core/src/test`，这两个数必然漂，故只作快照不作断言）。
 
 ```bash
 find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/main/'   # ⇒ 383
-find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/test/'    # ⇒ 26
-find . -path '*/target' -prune -o -name '*.java' -print | xargs wc -l | tail -1  # ⇒ 48004 total
+find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/test/'    # ⇒ 26（2026-10-20 快照，不含本仓 README 自守卫）
+find . -path '*/target' -prune -o -name '*.java' -print | xargs wc -l | tail -1  # ⇒ 48004 total（同上快照口径）
 ```
 
 分模块（main / test / @Test）：`z-agent-center` 204/1/6 · `z-agent-engine` 159/20/147 · `z-agent-core` 7/5/47 ·
-`z-agent-api` 6/0/0 · `z-agent-common` 4/0/0 · `z-agent-admin` 2/0/0 · `z-agent-starter` 1/0/0 —— **仓级 200 支 `@Test`**。
+`z-agent-api` 6/0/0 · `z-agent-common` 4/0/0 · `z-agent-admin` 2/0/0 · `z-agent-starter` 1/0/0 —— **仓级 200 支 `@Test`**（main 计数现读、尺子可钉；test 与 `@Test` 计数是 **2026-10-20 快照**，同样不含本仓 README 自守卫）。
 
 本仓**没有** `deploy/`、`k8s/`、`Dockerfile*`、`docker-compose*.yml`、`Makefile`（逐个 `ls -d` 实测均不存在），
 因此这里不写部署章节。文档按 `lead/008_组织规范/002_项目文档收口规范` 收口在 `_doc/` 下，见文末「文档目录」章节。
@@ -165,7 +165,7 @@ find . -path '*/target' -prune -o -name '*.java' -print | xargs wc -l | tail -1 
 `z-agent-engine` 依赖 `z-util-core` + `z-util-parser-json`；`z-agent-center-core` 依赖 `z-util-wf-kernel` + `z-util-parser-json`；
 `z-agent-center-web` 依赖 `z-util-core` + `z-util-parser-json`；根 POM 的 DM 钉 `z-util-core` / `z-util-parser-json` / `z-util-dsl-kernel`。
 `z-agent-engine` / `z-agent-center-*` 另带 `z-boot-base` / `z-boot-datasource-starter` / `spring-boot-starter-jdbc`。
-只有 `z-agent-api` / `z-agent-starter` / `z-agent-admin` 三个模块是真零依赖。
+只有 `z-agent-api` / `z-agent-starter` / `z-agent-admin` 三个模块**不碰 z-util / ORM**（`z-agent-api` 的 POM 更是连 `<dependencies>` 段都没有，真·零依赖；`z-agent-starter` / `z-agent-admin` 各自只依赖 `z-agent-core` + Spring 那几件，不含 z-util / mybatis-plus）。
 
 `flattenMode=oss` 是 2026-09-29 从 `resolveCiFriendliesOnly` 改的（commit `63d340b`），效果可回读验证：
 中央 `z-agent-starter:0.1.3` 的发布 POM 里还有 `<parent>`，`0.1.4` / `1.0.0` / `1.0.1` 的都没有
@@ -296,7 +296,7 @@ starter 的 `@ComponentScan` 只扫 `core.controller / core.registry / core.runn
 ## 🧪 测试
 
 ```bash
-mvn test          # z-agent-core 47 支 @Test，全程 mock provider：不发真网络请求、不起 Spring 上下文
+mvn test          # z-agent-core 47 支 @Test（2026-10-20 快照，不含本仓 README 自守卫），全程 mock provider：不发真网络请求、不起 Spring 上下文
 ```
 
 本节覆盖 `z-agent-core`（仓级总量见下）：
@@ -309,9 +309,11 @@ mvn test          # z-agent-core 47 支 @Test，全程 mock provider：不发真
 | `core/registry/AgentRegistryTest` | 10 | register/get/describe/list/unregister/覆盖同名、空 name 与 null 入参拒绝 |
 | `core/agent/PlanAgentTest` | 7 | 编号计划解析（点号、中英文括号、全角、部分编号、空/null） |
 
+（表里的「支数」是 **2026-10-20 快照**，不含本仓 README 自守卫。）
+
 分模块复算：`for m in z-agent-*; do printf "%-16s %s\n" "$m" "$(grep -rho '@Test' --include='*.java' $m 2>/dev/null | wc -l | tr -d ' ')"; done`
 ⇒ `z-agent-engine` 147、`z-agent-core` 47、`z-agent-center` 6，`z-agent-api` / `z-agent-starter` / `z-agent-admin` / `z-agent-common` 各 0
-—— **仓级 200 支**（测试类合计 26 个 `.java`）。测试框架：core / engine 用 JUnit 4（`org.junit.Test`），
+—— **仓级 200 支**（测试类合计 26 个 `.java`）。**这组数是 2026-10-20 快照，不含本仓 README 自守卫**（守卫落在 `z-agent-core/src/test`，落地后本命令会多出守备用例数）。测试框架：core / engine 用 JUnit 4（`org.junit.Test`），
 `z-agent-center` 用 JUnit 5（`org.junit.jupiter.api.Test`）。
 
 如实说明的缺口：全仓没有一支 `@SpringBootTest` / `@WebMvcTest` / `MockMvc`
