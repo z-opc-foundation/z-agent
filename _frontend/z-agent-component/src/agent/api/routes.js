@@ -8,14 +8,16 @@
 import {reg} from './apiRouter.js'
 
 // =============================================================
-// llmApi (LLM 模型)
+// llmApi (LLM 模型 / 工具模板)
 // =============================================================
-reg('llmApi', 'knowledgeList', 'GET', '/llm-gateway/knowledge/list')
-reg('llmApi', 'skillTemplateList', 'GET', '/llm-gateway/skill/template-list')
-reg('llmApi', 'toolTemplateList', 'GET', '/llm-gateway/tool/template-list')
-reg('llmApi', 'appConfig', 'GET', '/llm-gateway/app/config')
-reg('llmApi', 'appSkillAdd', 'POST', '/llm-gateway/app/skill-add')
-reg('llmApi', 'appToolAdd', 'POST', '/llm-gateway/app/tool-add')
+// ⚠️ 2026-10-22 TASK-20260925-037 R2：旧路由表里的 /llm-gateway/** 四条**全是 404** ——
+//    实测（本机 :8888 运行实例 /actuator/mappings，1377 条 predicate）llm-gateway 前缀**一条都没有**；
+//    z-llm-gateway 实际装配的前缀是 **/api/z-llm/config/**（LlmConfigController，16 条在册）。
+//    ⇒ 工具模板目录改接真实端点；技能目录 / 知识库目录**本 JVM 无对应端点** ⇒ 不注册，
+//      调用即抛 __missing_route（页面显式写「本 JVM 未装配 z-llm」，不再显示成"暂无可用项"）。
+//    应用自己的绑定关系不走这里：由 agentApi.appGet / appUpdate 读写（应用记录里的
+//    tools / skill_codes / knowledge_ids 三列）。
+reg('llmApi', 'toolTemplateList', 'GET', '/z-llm/config/tool-template/list')
 
 // =============================================================
 // mcpApi

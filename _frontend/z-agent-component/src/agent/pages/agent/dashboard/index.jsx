@@ -11,6 +11,8 @@ import {
 import ReactECharts from 'echarts-for-react'
 import {agentApi, statsApi} from '../../../api'
 import {PageHeader} from '../../../ui'
+// 页面可见的失败面（TASK-20260925-037 R1-2）
+import {ErrorState} from '@yuku123/z-frontend-common/ui'
 
 const {Text} = Typography
 const {TabPane} = Tabs
@@ -41,6 +43,8 @@ const AgentDashboard = () => {
     const [appFilter, setAppFilter] = useState(null)
     const [apps, setApps] = useState([])
     const [trendDays, setTrendDays] = useState(7)
+    // R1-2：失败必须画在页面上 —— 旧实现用 allSettled 把失败吞成 null/[]，KPI 恒 0 看不出是失败还是真没数据
+    const [loadErrors, setLoadErrors] = useState([])
 
     // 加载应用下拉
     useEffect(() => {
@@ -55,6 +59,7 @@ const AgentDashboard = () => {
         setLoading(true)
         try {
             const params = appCode ? {appCode} : {}
+            const names = ['overview', 'trend', 'latency', 'byApp', 'byUser']
             const [ov, tr, lat, appR, userR] = await Promise.allSettled([
                 statsApi.overview(params),
                 statsApi.trend({...params, days: trendDays}),
@@ -62,6 +67,10 @@ const AgentDashboard = () => {
                 statsApi.byApp({...params, limit: 20}),
                 statsApi.byUser({...params, limit: 20}),
             ])
+            const results = [ov, tr, lat, appR, userR]
+            setLoadErrors(results
+                .map((r, i) => (r.status === 'rejected' ? {name: names[i], reason: r.reason} : null))
+                .filter(Boolean))
             setOverview(ov.status === 'fulfilled' ? (ov.value?.data || ov.value || null) : null)
             setTrend(tr.status === 'fulfilled' ? (tr.value?.data || tr.value || []) : [])
             setLatency(lat.status === 'fulfilled' ? (lat.value?.data || lat.value || []) : [])
@@ -233,6 +242,18 @@ const AgentDashboard = () => {
                 title="Agent 监控面板"
                 subtitle="实时监控 Agent 应用性能、对话趋势和延迟分布"
             />
+            {loadErrors.length > 0 && (
+                <ErrorState
+                    error={loadErrors[0].reason}
+                    title={`${loadErrors.length} 个统计接口失败，下面的数字不能当读数用`}
+                    description={
+                        `失败接口：${loadErrors.map(e => e.name).join('、')}。` +
+                        `KPI 与图表显示的是"没拿到数"，不是"真实为 0" —— 请先修接口。`
+                    }
+                    onRetry={() => fetchAll(appFilter)}
+                    style={{marginBottom: 16}}
+                />
+            )}
             {/* 维度筛选栏 */}
             <div style={{
                 display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',

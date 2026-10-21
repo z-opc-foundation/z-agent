@@ -137,7 +137,9 @@ const AgentAppEditor = ({app, onBack, onSaved}) => {
 
     const handlePublish = async () => {
         try {
-            await agentApi.appPublish(localApp.appCode)
+            // R1-3：@RequestParam 不走 Jackson 命名 ⇒ query 键保持 camelCase，且必须用 {params:{…}} 形状。
+            // appCode 取 snake（DTO 是全局 SNAKE_CASE 的 app_code），兼容 camel 是为了不砸已有本地数据。
+            await agentApi.appPublish({params: {appCode: localApp.app_code ?? localApp.appCode}})
             message.success('发布成功')
             onSaved?.()
         } catch (e) {
@@ -148,7 +150,7 @@ const AgentAppEditor = ({app, onBack, onSaved}) => {
     const handleUpgrade = async () => {
         try {
             setUpgrading(true)
-            const updated = await agentApi.appUpgrade(localApp.appCode)
+            const updated = await agentApi.appUpgrade({params: {appCode: localApp.app_code ?? localApp.appCode}})
             const appData = updated?.data || updated
             if (appData) {
                 setLocalApp(appData)

@@ -54,6 +54,9 @@ import {
 import {agentApi, llmApi} from '../../api'
 import AgentAppEditor from './editor/AgentAppEditor'
 import {SearchInput} from '../../ui'
+// 页面可见的失败面（TASK-20260925-037 R1-2）：apiRouter 不再把 404/非 2xx 洗成 {code:200}，
+// 失败必须**画在页面上**，不能只剩一行 console。
+import {ErrorState} from '@yuku123/z-frontend-common/ui'
 
 // 本文件读写的行键一律 snake_case（2026-09-25 逐字段实测，别"顺手改回 camelCase"）：
 //   POST /api/agent/app/page   → {app_name, app_code, group_code, model_provider, gmt_create, share_enabled ...}
@@ -264,7 +267,8 @@ const GroupTree = ({selectedGroupCode, onGroupSelect, onGroupRefresh}) => {
 
     const handleDelete = async (groupCode) => {
         try {
-            await agentApi.groupDelete(groupCode)
+            // R1-3：@RequestParam 不走 Jackson 命名 ⇒ query 键保持 camelCase，且必须用 {params:{…}} 形状
+            await agentApi.groupDelete({params: {groupCode}})
             message.success('删除成功')
             onGroupRefresh()
         } catch (e) {
@@ -684,6 +688,7 @@ const ShareDrawerContent = ({app, onDisable, onRefresh}) => {
 const AppListPage = ({selectedGroupCode, onEditApp}) => {
     const [dataSource, setDataSource] = useState([])
     const [loading, setLoading] = useState(false)
+    const [loadError, setLoadError] = useState(null)
     const [searchKey, setSearchKey] = useState('')
     const [statusFilter, setStatusFilter] = useState('')
     const [pageNum, setPageNum] = useState(1)
@@ -712,6 +717,7 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
 
     const fetchData = () => {
         setLoading(true)
+        setLoadError(null)
         agentApi.appPage({
             app_name: searchKey,
             status: statusFilter,
@@ -722,7 +728,12 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
                 setDataSource(pageData.records || [])
                 setTotal(pageData.total || 0)
             }
-        }).catch(e => message.error('加载失败')).finally(() => setLoading(false))
+        }).catch(e => {
+            // R1-2：失败必须画在页面上（ErrorState），不能再显示成"还没有应用"
+            setLoadError(e)
+            setDataSource([])
+            message.error('加载失败：' + (e?.message || e))
+        }).finally(() => setLoading(false))
     }
 
     const handleGroupRefresh = () => {
@@ -804,11 +815,11 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
 
     const handleUpgrade = async (record) => {
         try {
-            await agentApi.appUpgrade(record.app_code)
+            await agentApi.appUpgrade({params: {appCode: record.app_code}})
             message.success('已升级到新草稿版本，可编辑后发布')
             fetchData()
             // 重新拉取最新 app（含 status=DRAFT 和新 version）并跳到编辑器
-            const updated = await agentApi.appGet(record.app_code)
+            const updated = await agentApi.appGet({params: {appCode: record.app_code}})
             const appData = updated?.data || updated
             if (appData) onEditApp(appData)
         } catch (e) {
@@ -824,7 +835,7 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
 
     const handleToggleShare = async (record, enabled) => {
         try {
-            const res = await agentApi.appToggleShare(record.app_code, enabled)
+            const res = await agentApi.appToggleShare({params: {appCode: record.app_code, enabled}})
             const code = res?.data || res
             message.success(enabled ? '已开启分享' : '已关闭分享')
             // 本地更新 record 避免再次拉取
@@ -898,8 +909,22 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
                 <div style={{marginTop: 16, color: '#8c8c8c'}}>加载中...</div>
             </div>)}
 
+            {/* 失败面（R1-2）：接口 404 / 非 2xx 时，这里显示原因，不再显示"还没有应用" */}
+            {!loading && loadError && (
+                <ErrorState
+                    error={loadError}
+                    title="应用列表加载失败"
+                    description={
+                        `接口 /api/agent/app/page 没有返回可用数据（${loadError?.response?.status ? 'HTTP ' + loadError.response.status : '请求失败'}）。` +
+                        `这不再是"暂无数据"，而是真实失败 —— 请检查后端是否在跑、以及该应用的登录态是否有效。`
+                    }
+                    onRetry={fetchData}
+                    style={{marginBottom: 16}}
+                />
+            )}
+
             {/* 空状态 */}
-            {!loading && dataSource.length === 0 && (
+            {!loading && !loadError && dataSource.length === 0 && (
                 <div style={{textAlign: 'center', padding: '64px 24px', background: '#fafafa', borderRadius: 12}}>
                     <div style={{
                         width: 80,
@@ -1129,12 +1154,50 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
 }
 
 // ===== 工具配置页 =====
+//
+// 数据源归属（TASK-20260925-037 R2；2026-10-22 实测：本机 :8888 运行实例 /actuator/mappings 全量 1377 条路由表）
+//   · 「应用绑定了哪些工具/技能/知识库」由 **z-agent 的应用记录**承载：
+//     AgentAppDto.tools / skill_codes / knowledge_ids（JSON 文本）；
+//     读端点 GET /api/agent/app/get?appCode=（在册），写端点 POST /api/agent/app/update（在册）。
+//   · 工具候选目录：GET /api/z-llm/config/tool-template/list（**在册**）—— z-llm-gateway 其实是装配了的，
+//     只是前缀是 /api/z-llm/config；旧路由表里写的 /api/llm-gateway/** 才是那 4 条 404 的根因。
+//   · 技能候选目录 / 知识库候选目录：本 JVM **无**对应端点 ⇒ 显式占位，不接假数据。
+const NOT_ASSEMBLED_SKILL =
+    '本 JVM 未装配 z-llm 技能目录：/api/llm-gateway/skill/template-list 实测 404，' +
+    '当前进程路由表（1377 条）里没有任何技能模板端点。已绑定技能仍取自应用记录（skill_codes），' +
+    '但「可选技能清单」要等 z-llm 侧补出 /api/z-llm/config/skill-template/list 之后才能孵化。'
+
+const NOT_ASSEMBLED_KNOWLEDGE =
+    '本 JVM 未装配 z-llm 知识库目录：/api/llm-gateway/knowledge/list 实测 404，' +
+    '当前进程路由表里没有任何知识库目录端点；/api/knowledge-search/list 虽在册，但后端源码自述是兜底实现' +
+    '（固定返回 1 行 hitCount=0 的假数据），按 004「宁占位不接假数据」不接。'
+
+/** 应用记录里的三个字段是 JSON 文本；解析失败一律当空数组，绝不把字符串当数组用 */
+const parseJsonArray = (raw) => {
+    if (raw === null || raw === undefined || raw === '') return []
+    if (Array.isArray(raw)) return raw
+    if (typeof raw === 'string') {
+        try {
+            const v = JSON.parse(raw)
+            return Array.isArray(v) ? v : []
+        } catch (e) {
+            return []
+        }
+    }
+    return []
+}
+
+/** 工具条目取编码：应用记录里存的是 [{toolCode,toolName}]，目录里是全局 SNAKE_CASE 的 tool_code */
+const toolCodeOf = (item) => {
+    if (item === null || item === undefined) return ''
+    if (typeof item === 'string') return item
+    return item.toolCode ?? item.tool_code ?? ''
+}
+
 const ToolConfigPage = () => {
     const [apps, setApps] = useState([])
     const [selectedApp, setSelectedApp] = useState(null)
     const [tools, setTools] = useState([])
-    const [skills, setSkills] = useState([])
-    const [knowledge, setKnowledge] = useState([])
     const [boundTools, setBoundTools] = useState([])
     const [boundSkills, setBoundSkills] = useState([])
     const [boundKnowledge, setBoundKnowledge] = useState([])
@@ -1142,40 +1205,57 @@ const ToolConfigPage = () => {
     const [saving, setSaving] = useState(false)
     const [activeTab, setActiveTab] = useState('tools')
     const [appLoading, setAppLoading] = useState(false)
+    const [appError, setAppError] = useState(null)
+    const [toolError, setToolError] = useState(null)
+    const [boundError, setBoundError] = useState(null)
+
+    /** 拉一个应用的「已绑定项」+「工具候选目录」 */
+    const loadAppData = (appCode) => {
+        if (!appCode) return
+        setLoading(true)
+        setToolError(null)
+        setBoundError(null)
+        // 已绑定：GET /api/agent/app/get?appCode=（query 键 camelCase —— @RequestParam 不走 Jackson 改名）
+        agentApi.appGet({params: {appCode}}).then(res => {
+            const dto = res?.data || res || {}
+            setBoundTools(parseJsonArray(dto.tools).map(toolCodeOf).filter(Boolean))
+            setBoundSkills(parseJsonArray(dto.skill_codes ?? dto.skillCodes).map(String))
+            setBoundKnowledge(parseJsonArray(dto.knowledge_ids ?? dto.knowledgeIds).map(String))
+        }).catch(e => {
+            setBoundError(e)
+            setBoundTools([]); setBoundSkills([]); setBoundKnowledge([])
+        })
+        // 工具候选：GET /api/z-llm/config/tool-template/list（实测在册）
+        llmApi.toolTemplateList().then(res => {
+            const list = Array.isArray(res) ? res : (res?.data || [])
+            setTools(list.map(t => ({
+                toolCode: t.tool_code ?? t.toolCode ?? '',
+                toolName: t.tool_name ?? t.toolName ?? '',
+                description: t.description ?? '',
+            })).filter(t => t.toolCode))
+        }).catch(e => {
+            setToolError(e)
+            setTools([])
+        }).finally(() => setLoading(false))
+    }
 
     useEffect(() => {
         setAppLoading(true)
+        setAppError(null)
         agentApi.appPage({id: 1, pageSize: 100}).then(pageData => {
             setApps(pageData?.records || [])
+        }).catch(e => {
+            setAppError(e)
+            setApps([])
         }).finally(() => setAppLoading(false))
     }, [])
 
     useEffect(() => {
         if (!selectedApp) return
-        setLoading(true)
-        Promise.all([
-            llmApi.toolTemplateList(),
-            llmApi.skillTemplateList(),
-            llmApi.knowledgeList(),
-        ]).then(([tRes, sRes, kRes]) => {
-            setTools(tRes?.data || tRes || [])
-            setSkills(sRes?.data || sRes || [])
-            setKnowledge(kRes?.data || kRes || [])
-            loadBoundConfigs(selectedApp.app_code)
-        }).finally(() => setLoading(false))
+        loadAppData(selectedApp.app_code)
     }, [selectedApp])
 
-    const loadBoundConfigs = (appCode) => {
-        llmApi.appConfig({params: {appCode}}).then(res => {
-            const cfg = res?.data || res || {}
-            setBoundTools(cfg.tools || [])
-            setBoundSkills(cfg.skills || [])
-            setBoundKnowledge(cfg.knowledgeBases || [])
-        }).catch(() => {
-        })
-    }
-
-    const isBound = (list, code) => list.includes(code)
+    const isBound = (list, code) => list.some(c => String(c) === String(code))
 
     const toggleItem = (type, code) => {
         if (type === 'tool') setBoundTools(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code])
@@ -1187,19 +1267,18 @@ const ToolConfigPage = () => {
         if (!selectedApp) return
         setSaving(true)
         try {
-            for (const toolCode of boundTools) await llmApi.appToolAdd({
-                appCode: selectedApp.app_code,
-                toolCode
-            }).catch(() => {
-            })
-            for (const skillId of boundSkills) await llmApi.appSkillAdd({
-                appCode: selectedApp.app_code,
-                skillId: Number(skillId)
-            }).catch(() => {
+            // body 键用 snake_case（全局 ObjectMapper = SNAKE_CASE，只对 @RequestBody 的 bean 属性生效）；
+            // 三个字段给**真数组**：后端 toEntity 用 JsonUtil.toJsonExcludingNulls(req.getXxx()) 再存文本，
+            // 传字符串会被二次编码成带引号的 JSON 文本。
+            await agentApi.appUpdate({
+                app_code: selectedApp.app_code,
+                tools: boundTools.map(c => ({toolCode: c})),
+                skill_codes: boundSkills,
+                knowledge_ids: boundKnowledge,
             })
             message.success('工具配置已保存')
         } catch (e) {
-            message.error('保存失败')
+            message.error('保存失败：' + (e?.message || e))
         } finally {
             setSaving(false)
         }
@@ -1215,6 +1294,13 @@ const ToolConfigPage = () => {
                     {items.map(renderItem)}
                 </div>
             )}
+        </div>
+    )
+
+    if (appError) return (
+        <div style={{padding: 24}}>
+            <ErrorState error={appError} title="应用列表加载失败"
+                        description={`POST /api/agent/app/page 失败（${appError?.response?.status ? 'HTTP ' + appError.response.status : '请求失败'}），工具配置无法加载。`}/>
         </div>
     )
 
@@ -1237,7 +1323,8 @@ const ToolConfigPage = () => {
                             }}>
                                 <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
                                     <Avatar size="small" icon={<RobotOutlined/>}
-                                            style={{background: app.status === 'PUBLISHED' ? 'linear-gradient(135deg, #52c41a, #389e0d)' : 'linear-gradient(135deg, #667eea, #764ba2)'}}/>
+                                            style={{
+                                                background: app.status === 'PUBLISHED' ? 'linear-gradient(135deg, #52c41a, #389e0d)' : 'linear-gradient(135deg, #667eea, #764ba2)'}}/>
                                     <div>
                                         <div style={{fontWeight: 500, fontSize: 14}}>{app.app_name}</div>
                                         <div style={{fontSize: 11, color: '#8c8c8c'}}>{app.app_code}</div>
@@ -1264,116 +1351,83 @@ const ToolConfigPage = () => {
                                 <Button type="primary" icon={<CheckCircleFilled/>} onClick={handleSave}
                                         loading={saving}>保存配置</Button>
                             </div>
+                            {boundError && (
+                                <ErrorState error={boundError} title="读取已绑定配置失败"
+                                            description={`GET /api/agent/app/get?appCode=${selectedApp.app_code} 失败，已绑定项显示为空（不是"没有绑定"）。`}
+                                            onRetry={() => loadAppData(selectedApp.app_code)}
+                                            style={{marginBottom: 16}}/>
+                            )}
                             <Tabs activeKey={activeTab} onChange={setActiveTab}>
                                 <TabPane tab="工具" key="tools">
                                     <div style={{
                                         padding: 16,
                                         background: '#fafafa',
                                         borderRadius: 8
-                                    }}>{renderItemList('可用工具', <ToolOutlined/>, tools, boundTools, 'tool', (t) => (
-                                        <div key={t.toolCode} onClick={() => toggleItem('tool', t.toolCode)} style={{
-                                            padding: '10px 14px',
-                                            background: isBound(boundTools, t.toolCode) ? '#e6f7ff' : '#fff',
-                                            border: `1px solid ${isBound(boundTools, t.toolCode) ? '#91d5ff' : '#f0f0f0'}`,
-                                            borderRadius: 6,
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 10
-                                        }}>
-                                            <div style={{
-                                                width: 20,
-                                                height: 20,
-                                                borderRadius: 4,
-                                                background: isBound(boundTools, t.toolCode) ? '#1890ff' : '#d9d9d9',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}>{isBound(boundTools, t.toolCode) &&
-                                                <CheckCircleFilled style={{color: '#fff', fontSize: 12}}/>}</div>
-                                            <div>
-                                                <div style={{
-                                                    fontWeight: 500,
-                                                    fontSize: 13
-                                                }}>{t.toolName || t.toolCode}</div>
-                                                <div style={{
-                                                    fontSize: 11,
-                                                    color: '#8c8c8c'
-                                                }}>{t.description || t.toolCode}</div>
-                                            </div>
-                                        </div>))}</div>
+                                    }}>
+                                        {toolError ? (
+                                            <ErrorState error={toolError} title="工具目录加载失败"
+                                                        description={`GET /api/z-llm/config/tool-template/list 失败（${toolError?.response?.status ? 'HTTP ' + toolError.response.status : '请求失败'}）。` +
+                                                                    `这里显示的是失败，不是"暂无可用项"。`}
+                                                        onRetry={() => loadAppData(selectedApp.app_code)}/>
+                                        ) : (
+                                            renderItemList('可用工具', <ToolOutlined/>, tools, boundTools, 'tool', (t) => (
+                                                <div key={t.toolCode} onClick={() => toggleItem('tool', t.toolCode)} style={{
+                                                    padding: '10px 14px',
+                                                    background: isBound(boundTools, t.toolCode) ? '#e6f7ff' : '#fff',
+                                                    border: `1px solid ${isBound(boundTools, t.toolCode) ? '#91d5ff' : '#f0f0f0'}`,
+                                                    borderRadius: 6,
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 10
+                                                }}>
+                                                    <div style={{
+                                                        width: 20,
+                                                        height: 20,
+                                                        borderRadius: 4,
+                                                        background: isBound(boundTools, t.toolCode) ? '#1890ff' : '#d9d9d9',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}>{isBound(boundTools, t.toolCode) &&
+                                                        <CheckCircleFilled style={{color: '#fff', fontSize: 12}}/>}</div>
+                                                    <div>
+                                                        <div style={{
+                                                            fontWeight: 500,
+                                                            fontSize: 13
+                                                        }}>{t.toolName || t.toolCode}</div>
+                                                        <div style={{
+                                                            fontSize: 11,
+                                                            color: '#8c8c8c'
+                                                        }}>{t.description || t.toolCode}</div>
+                                                    </div>
+                                                </div>))
+                                        )}
+                                    </div>
                                 </TabPane>
                                 <TabPane tab="技能" key="skills">
-                                    <div style={{
-                                        padding: 16,
-                                        background: '#fafafa',
-                                        borderRadius: 8
-                                    }}>{renderItemList('可用技能',
-                                        <StarOutlined/>, skills, boundSkills, 'skill', (s) => (
-                                            <div key={s.id} onClick={() => toggleItem('skill', String(s.id))} style={{
-                                                padding: '10px 14px',
-                                                background: isBound(boundSkills, String(s.id)) ? '#fff7e6' : '#fff',
-                                                border: `1px solid ${isBound(boundSkills, String(s.id)) ? '#ffd591' : '#f0f0f0'}`,
-                                                borderRadius: 6,
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 10
-                                            }}>
-                                                <div style={{
-                                                    width: 20,
-                                                    height: 20,
-                                                    borderRadius: 4,
-                                                    background: isBound(boundSkills, String(s.id)) ? '#fa8c16' : '#d9d9d9',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center'
-                                                }}>{isBound(boundSkills, String(s.id)) &&
-                                                    <CheckCircleFilled style={{color: '#fff', fontSize: 12}}/>}</div>
-                                                <div>
-                                                    <div style={{fontWeight: 500, fontSize: 13}}>{s.name}</div>
-                                                    <div style={{
-                                                        fontSize: 11,
-                                                        color: '#8c8c8c'
-                                                    }}>{s.description || s.code}</div>
-                                                </div>
-                                            </div>))}</div>
+                                    <div style={{padding: 16, background: '#fafafa', borderRadius: 8}}>
+                                        <Alert type="warning" showIcon
+                                               title="本 JVM 未装配 z-llm 技能目录"
+                                               description={NOT_ASSEMBLED_SKILL}/>
+                                        {boundSkills.length > 0 && (
+                                            <div style={{marginTop: 12, fontSize: 12, color: '#8c8c8c'}}>
+                                                当前应用已绑定技能编码（取自应用记录 skill_codes）：{boundSkills.join('、')}
+                                            </div>
+                                        )}
+                                    </div>
                                 </TabPane>
                                 <TabPane tab="知识库" key="knowledge">
-                                    <div style={{
-                                        padding: 16,
-                                        background: '#fafafa',
-                                        borderRadius: 8
-                                    }}>{renderItemList('可用知识库',
-                                        <BookOutlined/>, knowledge, boundKnowledge, 'kb', (k) => (
-                                            <div key={k.id} onClick={() => toggleItem('kb', String(k.id))} style={{
-                                                padding: '10px 14px',
-                                                background: isBound(boundKnowledge, String(k.id)) ? '#f6ffed' : '#fff',
-                                                border: `1px solid ${isBound(boundKnowledge, String(k.id)) ? '#b7eb8f' : '#f0f0f0'}`,
-                                                borderRadius: 6,
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 10
-                                            }}>
-                                                <div style={{
-                                                    width: 20,
-                                                    height: 20,
-                                                    borderRadius: 4,
-                                                    background: isBound(boundKnowledge, String(k.id)) ? '#52c41a' : '#d9d9d9',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center'
-                                                }}>{isBound(boundKnowledge, String(k.id)) &&
-                                                    <CheckCircleFilled style={{color: '#fff', fontSize: 12}}/>}</div>
-                                                <div>
-                                                    <div style={{fontWeight: 500, fontSize: 13}}>{k.name}</div>
-                                                    <div style={{
-                                                        fontSize: 11,
-                                                        color: '#8c8c8c'
-                                                    }}>{k.description || `ID: ${k.id}`}</div>
-                                                </div>
-                                            </div>))}</div>
+                                    <div style={{padding: 16, background: '#fafafa', borderRadius: 8}}>
+                                        <Alert type="warning" showIcon
+                                               title="本 JVM 未装配 z-llm 知识库目录"
+                                               description={NOT_ASSEMBLED_KNOWLEDGE}/>
+                                        {boundKnowledge.length > 0 && (
+                                            <div style={{marginTop: 12, fontSize: 12, color: '#8c8c8c'}}>
+                                                当前应用已绑定知识库（取自应用记录 knowledge_ids）：{boundKnowledge.join('、')}
+                                            </div>
+                                        )}
+                                    </div>
                                 </TabPane>
                             </Tabs>
                         </div>
