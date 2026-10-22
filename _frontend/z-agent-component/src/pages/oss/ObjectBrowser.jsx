@@ -383,7 +383,17 @@ export default function ObjectBrowser() {
                         rowKey="key"
                         columns={columns}
                         dataSource={filtered}
-                        pagination={false}
+                        // 分页按 lead 008 §2 规则 2 补齐四件套（原来只有 pagination={false}）：
+                        // 桶里的对象是用户自己上传的，行数会随上传量增长，
+                        // 不能按「≤10 行且不变」豁免。
+                        // 这页页头自带搜索框（SearchInput，客户端过滤），所以不接基座
+                        // ListTable 的 searchKeys —— 否则页面上会出现两个搜索框。
+                        pagination={{
+                            pageSize: 20,
+                            showSizeChanger: true,
+                            pageSizeOptions: ['10', '20', '50', '100'],
+                            showTotal: (total) => `共 ${total} 条`,
+                        }}
                         size="middle"
                         rowSelection={{
                             selectedRowKeys,

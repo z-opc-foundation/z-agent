@@ -974,7 +974,22 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
                     dataSource={dataSource}
                     rowKey="id"
                     size="small"
-                    pagination={false}
+                    // 【服务端分页，不套客户端分页】这页的数据来自 POST /api/agent/app/page
+                    // （后端 AgentAppController#page：请求体里的 req.id 兼作页码，
+                    //  每页条数由后端写死 12），翻页必须重新请求后端 ⇒ 不能用基座
+                    //  ListTable 那套客户端分页，所以把分页状态直接绑到服务端分页上，
+                    //  并按 lead 008 §2 规则 2 补上 showTotal / pageSizeOptions。
+                    pagination={{
+                        current: pageNum,
+                        pageSize,
+                        total,
+                        // 后端把每页条数写死 12，前端给了 size changer 也改不动后端 ⇒ 关掉；
+                        // pageSizeOptions 只声明后端唯一支持的每页条数。
+                        showSizeChanger: false,
+                        pageSizeOptions: [String(pageSize)],
+                        showTotal: (t) => `共 ${t} 个应用`,
+                        onChange: (page) => setPageNum(page),
+                    }}
                     columns={[
                         {
                             title: '名称',
@@ -1033,8 +1048,9 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
                 />
             )}
 
-            {/* 分页 */}
-            {!loading && total > pageSize && (
+            {/* 分页 —— 卡片视图没有表格，页码靠这排按钮；列表视图由表格底部的 antd
+                分页条负责（同一份服务端分页状态），两处不要同时出现。 */}
+            {!loading && viewMode === 'card' && total > pageSize && (
                 <div style={{textAlign: 'center', marginTop: 16}}>
                     <Button onClick={() => setPageNum(p => Math.max(1, p - 1))} disabled={pageNum === 1}>上一页</Button>
                     <span style={{margin: '0 16px'}}>第 <Text strong>{pageNum}</Text> / {Math.ceil(total / pageSize)} 页</span>
