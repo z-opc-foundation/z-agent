@@ -21,7 +21,7 @@
 #   cd z-agent
 #   mvn -pl z-agent-center/z-agent-center-starter -am clean package -DskipTests
 #   cp z-agent-center/z-agent-center-starter/target/z-agent-center-starter-1.0.3-boot.jar app.jar
-#   docker build --platform linux/amd64 -t zopc/z-agent:1.0.3-r2 -f deploy/Dockerfile .
+#   docker build --platform linux/amd64 -t zopc/z-agent:1.0.3-zboot112 -f deploy/Dockerfile .
 #
 # 【tag 铁律】
 #   产出的 tag 必须与 deploy/k8s/02-deployment.yaml 的 `image:` 逐字一致 ——

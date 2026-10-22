@@ -39,7 +39,7 @@
             <artifactId>z-boot-parent</artifactId>
                 <scope>import</scope>
                 <type>pom</type>
-                <version>1.1.0</version>
+                <version>1.1.2</version>
             </dependency>
 
 
