@@ -612,13 +612,13 @@ public class ReadmeClaimsTest {
         String real = read(repoRoot().resolve("README.md"));
         Facts f = recomputed();
         String[][] mutations = {
-                {"当前版本", "**当前版本** | `1.0.1`", "**当前版本** | `9.9.9`"},
+                {"当前版本", "**当前版本** | `1.0.2`", "**当前版本** | `9.9.9`"},
                 {"父项目版本", "z-boot-parent:1.1.0", "z-boot-parent:1.0.0"},
                 {"模块数", "7 个 <module>", "6 个 <module>"},
                 {"内核属性版本", "z-agent-kernel.version=0.2.3", "z-agent-kernel.version=0.2.2"},
                 {"内核 DM 条目", "8 条按坐标写的直接 DM 条目", "9 条按坐标写的直接 DM 条目"},
                 {"@Bean 数", "产出 3 个 `@Bean`", "产出 4 个 `@Bean`"},
-                {"main .java 数", "main **383** 个 `.java`", "main **380** 个 `.java`"},
+                {"main .java 数", "main **384** 个 `.java`", "main **380** 个 `.java`"},
                 {"类行数", "`core/agent/ReActAgent.java`（203 行）", "`core/agent/ReActAgent.java`（205 行）"},
                 {"方法级端点", "2 个类级 + 7 个方法级", "2 个类级 + 8 个方法级"},
                 {"center-web Controller", "**18 个 Controller / 135 个方法级端点**", "**17 个 Controller / 135 个方法级端点**"},
@@ -642,9 +642,9 @@ public class ReadmeClaimsTest {
         String real = read(repoRoot().resolve("README.md"));
         Facts f = recomputed();
         String[][] deletions = {
-                {"当前版本", "**当前版本** | `1.0.1`", "**当前版本** | 待定"},
+                {"当前版本", "**当前版本** | `1.0.2`", "**当前版本** | 待定"},
                 {"@Bean 数", "产出 3 个 `@Bean`", "产出若干 `@Bean`"},
-                {"main .java 数", "main **383** 个 `.java`", "main 若干个 `.java`"},
+                {"main .java 数", "main **384** 个 `.java`", "main 若干个 `.java`"},
         };
         for (String[] del : deletions) {
             String broken = real.replace(del[1], del[2]);

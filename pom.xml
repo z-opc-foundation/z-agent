@@ -76,8 +76,13 @@
 
     <properties>
         <!-- 1.0.1 = KernelOllamaModel 换上 kernel 的 OllamaProvider + AgentEngine 去掉死的
-             OllamaModel 构造参数。1.0.0 已在 Central（不可覆盖），故抬号。 -->
-        <revision>1.0.1</revision>
+             OllamaModel 构造参数。1.0.0 已在 Central（不可覆盖），故抬号。
+             1.0.2（2026-10-22）= 上游模型「把思考混进 content」的兼容层：
+             新增 UpstreamThinkingTagSplitter（流式思考标签状态机），
+             OpenAiCompletionsStreamProvider 的 delta.content 经它分流
+             （正文段直推、思考段走既有 [REASONING:] 协议）⇒
+             裸 <think>…</think> 不再被当正文推给前端（实测 MiniMax-M2.7 会把思考混进 content）。 -->
+        <revision>1.0.2</revision>
 
         <!-- 版本口径由父链下发：maven.compiler.source/target=8、project.build.sourceEncoding=UTF-8、
              spring-boot.version=2.7.18 三格与父链面值逐字相同，已删（根 pom 一次 + api/core/starter/admin

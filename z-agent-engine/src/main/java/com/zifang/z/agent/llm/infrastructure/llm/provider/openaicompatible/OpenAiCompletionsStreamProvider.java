@@ -24,7 +24,8 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * <p>stream() 同步阻塞直到 LLM 流结束（onClosed / onFailure / readTimeout）：
  * <ul>
- *   <li>逐 token 通过 callbacks.onToken 推回（delta.content 直接推；delta.reasoning_content 加 [REASONING:] 前缀推）</li>
+ *   <li>逐 token 通过 callbacks.onToken 推回（delta.content 经 {@link UpstreamThinkingTagSplitter}
+ *       切分：正文段直推，思考段加 [REASONING:] 前缀推；delta.reasoning_content 同样加 [REASONING:] 前缀推）</li>
  *   <li>正常结束通过 callbacks.onComplete(fullText) 报告</li>
  *   <li>中途错误通过 callbacks.onError 报告，并解除阻塞</li>
  * </ul>
@@ -94,6 +95,9 @@ public class OpenAiCompletionsStreamProvider implements LlmStreamProvider {
         CountDownLatch done = new CountDownLatch(1);
         AtomicReference<Throwable> failureRef = new AtomicReference<>();
 
+        // ⚠ 每条流一个实例（splitter 有状态：跨增量维持「思考态」与被切开的标签残片）
+        UpstreamThinkingTagSplitter thinkingSplitter = new UpstreamThinkingTagSplitter();
+
         EventSources.createFactory(httpClient).newEventSource(request,
                 new EventSourceListener() {
                     @Override
@@ -134,9 +138,20 @@ public class OpenAiCompletionsStreamProvider implements LlmStreamProvider {
                                 if (!contentNode.isMissing() && contentNode.value() instanceof String) {
                                     String token = contentNode.asText();
                                     if (!token.isEmpty()) {
-                                        accumulated.append(token);
-                                        if (callbacks != null) {
-                                            callbacks.onToken(token);
+                                        // ⚠ 上游可能把思考过程以**裸标签**塞进正文
+                                        //   （实测 MiniMax-M2.7：content = "<think>…</think>\n\n收到"）
+                                        //   ⇒ 思考被当正文推给前端 ⇒ 主群直接显示思考过程。
+                                        // 这里用 splitter 把思考分流走既有 [REASONING:] 协议，
+                                        // 与「上游提供独立 reasoning_content 字段」走同一条路（不新增协议）。
+                                        UpstreamThinkingTagSplitter.Split split = thinkingSplitter.split(token);
+                                        if (split.hasText()) {
+                                            accumulated.append(split.getText());
+                                            if (callbacks != null) {
+                                                callbacks.onToken(split.getText());
+                                            }
+                                        }
+                                        if (split.hasReasoning() && callbacks != null) {
+                                            callbacks.onToken("[REASONING:]" + split.getReasoning());
                                         }
                                     }
                                 }
@@ -161,6 +176,17 @@ public class OpenAiCompletionsStreamProvider implements LlmStreamProvider {
                     @Override
                     public void onClosed(EventSource eventSource) {
                         log.info("[OpenAI-Compat] SSE closed, accumulatedLen={}", accumulated.length());
+                        // 收尾：把被切开的标签残片交还（否则尾部残片会静默丢失）
+                        UpstreamThinkingTagSplitter.Split tail = thinkingSplitter.flush();
+                        if (tail.hasText()) {
+                            accumulated.append(tail.getText());
+                            if (callbacks != null) {
+                                callbacks.onToken(tail.getText());
+                            }
+                        }
+                        if (tail.hasReasoning() && callbacks != null) {
+                            callbacks.onToken("[REASONING:]" + tail.getReasoning());
+                        }
                         if (failureRef.get() == null && callbacks != null) {
                             callbacks.onComplete(accumulated.toString());
                         }

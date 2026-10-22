@@ -20,7 +20,7 @@
 |------|-----|
 | **仓库** | `z-agent`（`z-opc-foundation/z-agent`，分支 `main`） |
 | **Maven 坐标** | `io.github.yuku123:z-agent:${revision}`（根 POM `packaging=pom` 聚合） |
-| **当前版本** | `1.0.1`（根 POM `<revision>`；CI-friendly versions + flatten-maven-plugin `1.7.2`，`flattenMode=oss`） |
+| **当前版本** | `1.0.2`（根 POM `<revision>`；CI-friendly versions + flatten-maven-plugin `1.7.2`，`flattenMode=oss`） |
 | **父项目** | `io.github.yuku123:z-boot-parent:1.1.0`（`<relativePath/>` 留空，parent 在 repo1 不在磁盘） |
 | **Maven Central** | 2026-10-20 实测：`z-agent` / `z-agent-api` / `z-agent-core` / `z-agent-starter` 四个坐标的 `0.1.0`–`0.1.4` / `1.0.0` / `1.0.1` 都在；`z-agent-common` / `z-agent-engine` / `z-agent-center` 已发 `1.0.0` / `1.0.1`；`z-agent-admin` **只到 `0.1.4`**（1.0.x 起被根 POM `central` profile 的 `excludeArtifacts` 排除，见「项目结构」末尾）。`maven-metadata.xml`：`latest=release=1.0.1`，`lastUpdated=20261018235906`；`z-agent` 是 pom 聚合，**没有 jar** |
 | **内核依赖** | `io.github.yuku123:z-agent-kernel-{agent,llm,message,tool,types,memory,event,middleware}:0.2.3` —— 根 POM 属性 `z-agent-kernel.version=0.2.3` + 8 条按坐标写的直接 DM 条目 |
@@ -85,7 +85,7 @@ grep -A1 '@Bean' z-agent-starter/src/main/java/com/zifang/z/agent/starter/autoco
 
 ```
 z-agent/
-├── pom.xml                    # 聚合根 POM：parent z-boot-parent:1.1.0、<revision>1.0.1</revision>、7 个 <module>、central profile
+├── pom.xml                    # 聚合根 POM：parent z-boot-parent:1.1.0、<revision>1.0.2</revision>、7 个 <module>、central profile
 ├── LICENSE                    # MIT（Copyright (c) 2026 z-opc-foundation）
 ├── README.md
 ├── _doc/                      # 文档收口目录（001_arch/ 内含项目总览 00-overview.md）
@@ -122,15 +122,15 @@ z-agent/
     └── z-agent-center-starter/# 可执行入口：Main（@SpringBootApplication + main()）
 ```
 
-规模实测：main **383** 个 `.java`（现读，尺子可钉）；test **26** 个 / 合计 **48004** 行是 **2026-10-20 快照**（**不含本仓 README 自守卫** —— 守卫落在 `z-agent-core/src/test`，这两个数必然漂，故只作快照不作断言）。
+规模实测：main **384** 个 `.java`（现读，尺子可钉）；test **28** 个 / 合计 **48004** 行是 **2026-10-20 快照**（**不含本仓 README 自守卫** —— 守卫落在 `z-agent-core/src/test`，这两个数必然漂，故只作快照不作断言）。
 
 ```bash
-find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/main/'   # ⇒ 383
+find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/main/'   # ⇒ 384
 find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/test/'    # ⇒ 26（2026-10-20 快照，不含本仓 README 自守卫）
 find . -path '*/target' -prune -o -name '*.java' -print | xargs wc -l | tail -1  # ⇒ 48004 total（同上快照口径）
 ```
 
-分模块（main / test / @Test）：`z-agent-center` 204/1/6 · `z-agent-engine` 159/20/147 · `z-agent-core` 7/5/47 ·
+分模块（main / test / @Test）：`z-agent-center` 204/1/6 · `z-agent-engine` 160/21/161 · `z-agent-core` 7/5/47 ·
 `z-agent-api` 6/0/0 · `z-agent-common` 4/0/0 · `z-agent-admin` 2/0/0 · `z-agent-starter` 1/0/0 —— **仓级 200 支 `@Test`**（main 计数现读、尺子可钉；test 与 `@Test` 计数是 **2026-10-20 快照**，同样不含本仓 README 自守卫）。
 
 本仓**没有** `deploy/`、`k8s/`、`Dockerfile*`、`docker-compose*.yml`、`Makefile`（逐个 `ls -d` 实测均不存在），
