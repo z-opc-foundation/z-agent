@@ -28,6 +28,13 @@ export default defineConfig({
                 '@logicflow/core', '@logicflow/extension',
                 'react-markdown', 'remark-gfm',
             ].includes(id)
+                // @yuku123/z-frontend-common 的**子路径**（/ui、/ui/echarts）同样要 external。
+                // vite/rollup 的 external 是**精确字符串**匹配，不是前缀匹配 ⇒ 只写主桶
+                // '@yuku123/z-frontend-common' 时，源码里的
+                // `import {EmptyState} from '@yuku123/z-frontend-common/ui'` 不会被 external，
+                // 基座的 UI 组件会被**复制进本包的 dist**，破坏「共享基座单一真源」。
+                // 2026-10-22: 改用前缀判定，基座各子路径一律 external，由消费方解析。
+                || id.startsWith('@yuku123/z-frontend-common')
                 // echarts/* 与 echarts-for-react/lib/* 同样要 external。
                 // 2026-10-22: 图表改成 tree-shaken 后源码引的是子路径
                 // （echarts/core、echarts/charts、echarts/components、echarts/renderers、
