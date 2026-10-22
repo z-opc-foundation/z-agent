@@ -49,6 +49,7 @@ import {
     SettingOutlined,
     ShareAltOutlined,
     StarOutlined,
+    ToolOutlined,
     UnorderedListOutlined
 } from '@ant-design/icons'
 import {agentApi, llmApi} from '../../api'
