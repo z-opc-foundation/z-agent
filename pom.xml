@@ -347,6 +347,19 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
                         <version>3.2.7</version>
+                        <configuration>
+                            <!-- ⚠ 2026-10-22 补：maven-gpg-plugin 不读 -Dgpg.passphrase /
+                                 -Dgpg.passphraseFile，默认走 gpg-agent；headless 会话里 agent
+                                 没有缓存口令（实测 gpg 的 detach-sign 直接报
+                                 "cannot open '/dev/tty'：Device not configured"）
+                                 ⇒ 签名阶段必然失败。
+                                 改用仓内 wrapper 预喂 passphrase + 强制 loopback
+                                 （与 z-team 仓 _doc/003_script/gpg-with-passphrase.sh 同款，
+                                 那边是 z-team 1.0.3 首次发布实测撞出来的）。
+                                 ⚠ wrapper 自己会从仓根 .env 兜底加载 CENTRAL_GPG_PASSPHRASE；
+                                 本仓没有 .env ⇒ 须由调用方 export 该变量。 -->
+                            <executable>${maven.multiModuleProjectDirectory}/_doc/003_script/gpg-with-passphrase.sh</executable>
+                        </configuration>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
