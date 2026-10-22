@@ -280,3 +280,52 @@ kubectl -n z-agent rollout status deploy/z-agent-center
 **⇒ 在定夺之前，不要把 31893 暴露到公网入口（ingress / ECS 反代）**，
 那会把「LAN 内网可写」升级成「公网可写」。
 
+
+## 8. ⚠️ 纪律：命令式改完，**必须用清单 apply 收口**（2026-10-22 落地 · 卡 `TASK-20261022-054` 第 3 项）
+
+### 8.1 为什么
+
+`kubectl set image` / `kubectl scale` / `kubectl edit` **按构造不会更新**
+`kubectl.kubernetes.io/last-applied-configuration` 注解 ⇒
+**线上 spec 已经变了，注解还停在「上一个被 apply 过的版本」** ⇒ 注解与实况失同步。
+
+活标本（本域，2026-10-22 22:4x 只读实测）：
+
+| 口径 | 值 |
+|---|---|
+| 线上 live | `image=zopc/z-agent:1.0.3-r2`、`replicas=1` |
+| last-applied 注解 | **仍写** `image=zopc/z-agent:local`、`replicas=0`（2026-10-19 手工 scale down 那个时代的值）|
+| 仓内清单 `origin/main` | `image=zopc/z-agent:1.0.3-r2`、`replicas=1`（与线上 spec **逐字段一致**，见 §5）|
+
+⇒ 20:26 那次修复是用命令式上去的（`kubectl set image` + `kubectl scale`）⇒ 注解没被收口。
+
+### 8.2 危害分两档（**别混读**）
+
+| 档 | 判据 | 危害 |
+|---|---|---|
+| **注解陈旧、清单已对齐**（本域现状）| `repo_target_state=aligned` | **低危** —— 用本清单 apply 是**幂等**的，不改业务；注解反而被顺手刷新成正确值 |
+| **清单落后于线上**（`z-oss` 那种）| `repo_target_state=repo_behind_live` | **高危** —— 任何一次例行 apply 都会把线上回滚 |
+
+⇒ **读漂移报告先看 `repo_target_state`**：别把「N 个注解陈旧」读成「N 个会被 apply 回滚」。
+
+### 8.3 纪律（三条）
+
+1. **能用清单改的，就不用命令式改**；发布走 lead 仓 `006_部署方案/010_发版收尾清单.md` 的完整链路。
+2. **命令式改完必须用清单 apply 收口**（**唯一能止血的动作**）——
+   命令式修复是**递归**的：每做一次命令式改动，就再造一个「last-applied 落后于线上」的实例 ⇒
+   **只修当前这一个实例不能止血**，必须把「收口」写进纪律。
+   ```bash
+   # ⚠ 写生产对象 ⇒ 需人工确认后再执行；本仓只产出清单，不代跑。
+   kubectl apply -f deploy/k8s/02-deployment.yaml
+   ```
+3. **收口后自查注解与实况一致**（只读）：
+   ```bash
+   kubectl -n z-agent get deploy z-agent-center \
+     -o jsonpath='{.metadata.annotations.kubectl\.kubernetes\.io/last-applied-configuration}' \
+     | python3 -c "import sys,json; d=json.load(sys.stdin); print('last-applied image=',d['spec']['template']['spec']['containers'][0]['image'],'replicas=',d['spec'].get('replicas'))"
+   ```
+   期望：`image` == `zopc/z-agent:1.0.3-r2` 且 `replicas` == 1（与 §5 表里的清单一致）。
+   ⚠ **注解里可能带明文 env 值**（本域实测注解里就有 DB host / 用户名）⇒
+   **只摘 `image` / `replicas` 字段入库**，不要把注解全文贴进卡、报告或提交记录。
+
+> 通用版纪律见 lead 仓 `006_部署方案/010_发版收尾清单.md` §三·十八。
