@@ -14,7 +14,7 @@
 |---|---|---|
 | `00-namespace.yaml` | Namespace `z-agent` | 已存在 |
 | `01-service.yaml` | Service `z-agent-center`（NodePort 31893 → 8080） | 已存在 |
-| `02-deployment.yaml` | Deployment `z-agent-center`（镜像 `zopc/z-agent:1.0.3-r2`，replicas **1**） | 已存在 |
+| `02-deployment.yaml` | Deployment `z-agent-center`（镜像 `zopc/z-agent:1.0.3-zboot112`，replicas **1**） | 已存在 |
 | `../Dockerfile` | 镜像构建定义（2026-10-22 补进本仓，见 §1） | — |
 | `README.md` | 本文件 | — |
 
@@ -22,7 +22,7 @@
 
 - Deployment 名 `z-agent-center`，容器名 `z-agent`，容器端口 `8080`（端口名 `http`）
 - Service `z-agent-center`，`type: NodePort`，`port 8080 → targetPort http`，`nodePort 31893`
-- 镜像 `zopc/z-agent:1.0.3-r2`，`imagePullPolicy: Never`
+- 镜像 `zopc/z-agent:1.0.3-zboot112`，`imagePullPolicy: Never`
 - env：`JAVA_OPTS=-Xms256m -Xmx1024m` + 5 个 `Z_BASE_DB_CONFIG_*`（口令走 secret）
 - resources：requests `300m` / `1280Mi`，limits `2` CPU / `2Gi`
 - **replicas 线上是 1**（2026-10-22 20:21 拉起；此前 2026-10-19 23:05 手工 scale down 到 0，
@@ -49,7 +49,10 @@ curl -s http://192.168.31.136:31893/api/agent/app/list | head -c 200
 **本仓现在有 Dockerfile 了**：`z-agent/deploy/Dockerfile`（叠加式：基镜像 `zopc/z-agent:local` + 只换 `/app/app.jar`）。
 基镜像只存在于两个节点的 containerd、不在任何 registry、也不在本仓（168MB，不入 git），取法见 Dockerfile 头部注释。
 
-线上镜像口径：裸 tag `zopc/z-agent:1.0.3-r2`，只存在于两个节点的 containerd，不在任何 registry。
+线上镜像口径：裸 tag `zopc/z-agent:1.0.3-zboot112`，只存在于两个节点的 containerd，不在任何 registry。
+
+> ⚠ 2026-10-23（卡 `TASK-20261023-008`）：线上 tag 从 `zopc/z-agent:1.0.3-r2` 换成版本化
+> `zopc/z-agent:1.0.3-zboot112`（`z-boot-parent` BOM 抬到 1.1.2），本清单 `image:` 行已同步对齐。
 
 ### 实际执行过的构建命令（2026-10-22，r2 版）
 
@@ -72,7 +75,7 @@ ssh 192.168.31.231 'docker load -i /tmp/z-agent-local.tar'
 
 # 4) 构建（tag 必须与 02-deployment.yaml 的 image: 逐字一致）
 ssh 192.168.31.231 'cd ~/z-agent-build && cp /tmp/z-agent-center.jar app.jar && \
-    docker build --platform linux/amd64 -t zopc/z-agent:1.0.3-r2 -f deploy/Dockerfile .'
+    docker build --platform linux/amd64 -t zopc/z-agent:1.0.3-zboot112 -f deploy/Dockerfile .'
 ```
 
 > ⚠ **从零构建的变体**（想换基础运行时时才用，本轮**未验证**）：
@@ -175,7 +178,7 @@ kubectl -n z-agent rollout status deploy/z-agent-center
 |---|---|---|---|
 | 探针 | 无 | `httpGet /api/agent/template/health`（readiness + liveness） | 2026-10-22 已拉起 1 副本并**实测过该 path 返回 200** ⇒ 换成真能判"应用活着"的探针（原先的 tcpSocket 只证端口在监听） |
 | replicas | 1 | 1 | 2026-10-22 20:21 拉起（旧清单的 0 是 2026-10-19 scale down 的残留，而 0 状态下它起不来） |
-| 镜像 | `zopc/z-agent:1.0.3-r2` | 同左 | 含 §7 修好的数据源装配 |
+| 镜像 | `zopc/z-agent:1.0.3-zboot112` | 同左 | 含 §7 修好的数据源装配 + z-boot-parent 1.1.2（BOM 抬版） |
 | labels | 资源上只有 `app.kubernetes.io/name` | 额外加 `app.kubernetes.io/part-of` | 仅加标签，不影响 selector 匹配；`apply` 是幂等合并 |
 | SA 令牌自动挂载 | `automountServiceAccountToken: false` | 不含该字段 | 该收敛由**独立清单**执行（卡 `TASK-20261021-021` 交付、用户亲自执行），刻意与各域部署清单分开，避免抢同一批字段。⚠ `apply` 本清单**不会回退**这项加固（字段既不在本清单、也不在 last-applied ⇒ 三向合并不构成删除动作，已用 `kubectl apply --dry-run=server` 逐域实测：该字段仍为 `false`） |
 
@@ -228,7 +231,7 @@ kubectl -n z-agent rollout status deploy/z-agent-center
 ### 7.3 版本口径
 
 本轮把 z-agent 仓 `revision` 从 `1.0.2` 抬到 `1.0.3`（新增 starter 的数据源装配 + 收窄 @MapperScan），
-镜像 `zopc/z-agent:1.0.3-r2` 里装的就是 `z-agent-center-starter-1.0.3-boot.jar`。
+镜像 `zopc/z-agent:1.0.3-zboot112` 里装的就是 `z-agent-center-starter-1.0.3-boot.jar`。
 ⚠ 中央仓**同一版本不能重发**，所以 1.0.2 的旧字节永远留在中央 —— 拉取 1.0.3 才是修复后的版本。
 
 ### 7.4 实测记录（2026-10-22 20:21–20:23）
@@ -299,6 +302,12 @@ kubectl -n z-agent rollout status deploy/z-agent-center
 
 ⇒ 20:26 那次修复是用命令式上去的（`kubectl set image` + `kubectl scale`）⇒ 注解没被收口。
 
+> 📌 **上表是 2026-10-22 22:4x 的历史快照**（记录当时的实况，不是现在的）。
+> 2026-10-23 卡 `TASK-20261023-008` 发版后线上 tag 已是 `zopc/z-agent:1.0.3-zboot112`，
+> 本仓清单 `image:` 行已同步对齐（卡 `TASK-20261023-012` 补齐）。
+> ⚠ 但 **last-applied 注解仍是 `zopc/z-agent:local` / `replicas=0`** ——
+> 注解要靠一次线上 `apply` 才刷新，而 apply 是生产写 ⇒ **本仓不代跑**，留人工授权。
+
 ### 8.2 危害分两档（**别混读**）
 
 | 档 | 判据 | 危害 |
@@ -324,8 +333,55 @@ kubectl -n z-agent rollout status deploy/z-agent-center
      -o jsonpath='{.metadata.annotations.kubectl\.kubernetes\.io/last-applied-configuration}' \
      | python3 -c "import sys,json; d=json.load(sys.stdin); print('last-applied image=',d['spec']['template']['spec']['containers'][0]['image'],'replicas=',d['spec'].get('replicas'))"
    ```
-   期望：`image` == `zopc/z-agent:1.0.3-r2` 且 `replicas` == 1（与 §5 表里的清单一致）。
+   期望：`image` == `zopc/z-agent:1.0.3-zboot112` 且 `replicas` == 1（与 §5 表里的清单一致）。
    ⚠ **注解里可能带明文 env 值**（本域实测注解里就有 DB host / 用户名）⇒
    **只摘 `image` / `replicas` 字段入库**，不要把注解全文贴进卡、报告或提交记录。
 
+> 通用版纪律见 lead 仓 `006_部署方案/010_发版收尾清单.md` §三·十八。
+
+## 9. ⚠️ 纪律：发版 ⇒ **同一次提交里同步清单 `image:` 行**（2026-10-23 落地 · 卡 `TASK-20261023-012` 第 7 项）
+
+### 9.1 纪律条目（一句话，可被下一轮巡检读到）
+
+> **线上镜像坐标变更必须在同一次提交里同步 `deploy/k8s/*-deployment.yaml` 的 `image:` 行。**
+> 换句话说：**改了线上跑的那个 tag，就必须同一次提交把仓内清单的 `image:` 改成逐字一致的同一个 tag。**
+
+本条对 `z-agent` / `z-config` / `z-task` **三个仓通用**（它们共用同一批节点的 containerd、
+同一套 `imagePullPolicy: Never` 口径）。
+
+### 9.2 为什么（本批三仓踩过的真实坑）
+
+2026-10-23 卡 `TASK-20261023-008` 给 `z-agent` / `z-config` / `z-task` / `z-lc` / `z-ctc`
+五个服务发版，把线上镜像换成 `-zboot112` 版本化 tag（顺带把 `z-boot-parent` BOM
+从 1.1.0 抬到 1.1.2，修「DB 健康检查卡死 16 分钟」那个坑）。
+⇒ **线上换了镜像，但仓内清单的 `image:` 行没同步** ⇒ 巡检量具
+`layers.manifest_image_drift` 报 `manifest_behind_live`（🔴 高危，apply 会回滚）。
+
+**只有 `z-lc` 做对了**：它**先改清单、再发版**（提交 `35888e7`）⇒ 清单与线上逐字一致
+⇒ 量具判 `aligned`。**`z-lc` 是本批的正确样板**，其它仓照它抄即可。
+
+### 9.3 为什么这条回滚是**静默**的（本集群 `imagePullPolicy: Never` 特有的）
+
+| 查什么 | 本集群实况 | 后果 |
+|---|---|---|
+| 旧 tag 还在节点上吗？| 在 —— 回滚目标就是几分钟前线上正在跑的那份 | ⇒ apply **拉得到镜像** |
+| apply 会报错吗？| 不会 —— `imagePullPolicy: Never` + 镜像在本地 content store | ⇒ **不会 `ErrImageNeverPull`** |
+| 那会怎样？| Pod 正常起来、探针正常、事件 0 | 🔴 **静默回滚**，**没有任何告警** |
+| 回滚丢了什么？| 丢 `z-boot-parent` 1.1.2 的 `connectTimeout` / `socketTimeout` ⇒「DB 健康卡死 16 分钟」原样复活 | 故障**极难归因**（没报错、没事件、没重启）|
+
+⇒ 「清单落后」不是「当前故障」，而是**一次例行 `kubectl apply` 就会触发的静默回滚风险**。
+
+### 9.4 怎么自查（只读，随时可跑）
+
+```bash
+# 线上现役 tag
+kubectl -n z-agent get deploy z-agent-center \
+  -o jsonpath='{.spec.template.spec.containers[*].image}'
+# 仓内清单（远端 HEAD，origin/main）的 tag
+git show origin/main:deploy/k8s/02-deployment.yaml | grep -n 'image:'
+```
+
+两边**逐字一致**才算对齐。⚠ **不要**用 `git show HEAD:` —— 口径是 `origin/main`（与巡检量具同源）。
+
+> 同款纪律也落在 `z-task/deploy/k8s/README.md` §7（那个仓是本批**唯一真落后**的成员）。
 > 通用版纪律见 lead 仓 `006_部署方案/010_发版收尾清单.md` §三·十八。
