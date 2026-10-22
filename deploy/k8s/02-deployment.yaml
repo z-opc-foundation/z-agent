@@ -1,0 +1,99 @@
+# ============================================================
+# z-agent —— Deployment（工作负载）
+#
+# 【镜像 tag 为什么这样写】
+#   image: zopc/z-agent:local
+#   —— 裸 tag，**不带 Nexus 仓库前缀**。铁律：本集群 imagePullPolicy=Never，
+#      镜像只存在于两个节点的 containerd，不在任何 registry。k3s 不会去拉，
+#      它按 `image:` 字段的**字面引用**去节点本地 content store 里找。
+#      如果喂进 containerd 的 tag 带前缀（例如 nexus.internal/zopc/z-agent:local）
+#      而清单里写的是裸 tag（或反过来），本地查不到 ⇒ Pod 卡 ErrImageNeverPull。
+#      喂镜像的 tag 必须与这里的 `image:` 逐字一致，见 README §2。
+#   imagePullPolicy: Never
+#   —— 照抄线上。改成 IfNotPresent 也不会更安全（节点上没有 registry 可用），
+#      但会让「本地有镜像」这条隐含前提失效，排查时更难定位。
+#
+# 【探针为什么选 tcpSocket】
+#   本域线上 replicas=0（手工 scale down，见下方 replicas 注释），
+#   ⇒ 没有任何 Pod 在跑，HTTP 端点无法实测（探针打哪个 path 都不能确证）。
+#   保守起见只用 tcpSocket 探 8080：它只证明「端口在监听」，
+#   不对应用的健康语义做任何假设。等本域恢复副本后再换成实测过的 HTTP 端点。
+#   （线上基线里本域**原本没有探针**，本清单补上 tcpSocket 以满足
+#     「每个工作负载至少一个探针」的可观测性下限。）
+#
+# 【secret 从哪来】
+#   Z_BASE_DB_CONFIG_PASSWORD → secretKeyRef: secret z-agent-db / 键 password。
+#   secret z-agent-db 已在集群里（手工灌的），本仓不写它的内容。
+#   重建集群时按 README §3 的命令补灌。
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: z-agent-center
+  namespace: z-agent
+  labels:
+    app.kubernetes.io/name: z-agent-center
+    app.kubernetes.io/part-of: z-opc-foundation
+spec:
+  # 线上当前是 0 副本（2026-10-19 23:05 手工 scale down，基线导出 spec.replicas=0）。
+  # 照抄现状 ⇒ 集群可从代码复现；要拉起把这里改成 1 再 apply。
+  replicas: 0
+  # 保留 10 个历史版本 ⇒ `kubectl rollout undo deploy/z-agent-center -n z-agent` 可用。
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: z-agent-center
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: z-agent-center
+    spec:
+      containers:
+        - name: z-agent
+          image: zopc/z-agent:local
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            # JVM 参数：与线上逐字一致。
+            - name: JAVA_OPTS
+              value: "-Xms256m -Xmx1024m"
+            # ===== 数据源：共享 RDS 的 oc 库（z-opc 系各仓共用同一个库）=====
+            # 地址/账号照线上现状明文（要求「集群可从代码复现」⇒ 与线上一字不差）；
+            # 口令一律走 secret 引用，仓里不出现明文口令。
+            - name: Z_BASE_DB_CONFIG_HOST
+              value: rm-bp108uqlgwn712k54ho.mysql.rds.aliyuncs.com
+            - name: Z_BASE_DB_CONFIG_PORT
+              value: "3306"
+            - name: Z_BASE_DB_CONFIG_DATABASE
+              value: oc
+            - name: Z_BASE_DB_CONFIG_USERNAME
+              value: zifang
+            - name: Z_BASE_DB_CONFIG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: z-agent-db
+                  key: password
+          resources:
+            limits:
+              cpu: "2"
+              memory: 2Gi
+            requests:
+              cpu: 300m
+              memory: 1280Mi
+          # 探针只探「端口在监听」（本域 0 副本，HTTP 端点无法实测，理由见文件头）。
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 40
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: http
+            # 启动比就绪慢：JVM 起 + 连 RDS，放宽到 120s 再开始判活。
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            failureThreshold: 6
