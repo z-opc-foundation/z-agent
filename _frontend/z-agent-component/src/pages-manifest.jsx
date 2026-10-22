@@ -1,7 +1,7 @@
 /**
  * z-agent 页面清单（lead 005 §9）：menuItems + routes + 具名页面导出。
  */
-import { AppstoreOutlined, BarChartOutlined, CloudOutlined, ClusterOutlined, CodeOutlined, DashboardOutlined, DeploymentUnitOutlined, EditOutlined, FileTextOutlined, HomeOutlined, KeyOutlined, NodeIndexOutlined, RobotOutlined, ShareAltOutlined, ShoppingOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, BarChartOutlined, CloudOutlined, ClusterOutlined, CodeOutlined, DashboardOutlined, DeploymentUnitOutlined, EditOutlined, FileTextOutlined, HomeOutlined, KeyOutlined, NodeIndexOutlined, ReadOutlined, RobotOutlined, ShareAltOutlined, ShoppingOutlined } from '@ant-design/icons'
 import AgentHome from './agent/pages/agent/index.jsx'
 import AgentDashboard from './agent/pages/agent/dashboard/index.jsx'
 import AgentAppEditor from './agent/pages/agent/editor/AgentAppEditor.jsx'
@@ -34,6 +34,7 @@ export {
     ScriptHome, ScriptProductization, SkillManage, TemplateManage, TraceHome, UsageHome,
 }
 import HomePage from './pages/HomePage'
+import ComponentDocPage from './pages/ComponentDoc.jsx'
 
 /** 菜单 + 路由清单（lead 008 §10/§14/§16 批量落地）。App 壳在 suit 侧组装。 */
 export const appMeta = { title: 'z-agent 智能体工作台', short: 'z-agent' }
@@ -61,6 +62,7 @@ export const menuItems = [
     { key: '/z-agent/template', label: '模板', icon: <FileTextOutlined /> },
     { key: '/z-agent/trace', label: '调用追踪', icon: <NodeIndexOutlined /> },
     { key: '/z-agent/usage', label: '用量统计', icon: <BarChartOutlined /> },
+    { key: '/z-agent/docs', label: '组件文档', icon: <ReadOutlined /> },
 ]
 
 export const routes = [
@@ -87,7 +89,10 @@ export const routes = [
     { path: '/z-agent/template', Component: TemplateManage },
     { path: '/z-agent/trace', Component: TraceHome },
     { path: '/z-agent/usage', Component: UsageHome },
+    { path: '/z-agent/docs', Component: ComponentDocPage },
 ]
 
 export { default as HomePage } from './pages/HomePage'
 export { default as LoginPage } from './pages/LoginPage'
+// 主壳接线用：文档页统一以 ComponentDocPage 这个名字从主入口导出。
+export { default as ComponentDocPage } from './pages/ComponentDoc.jsx'

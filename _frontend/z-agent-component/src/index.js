@@ -49,6 +49,9 @@ export {default as TemplateMarket} from './pages/template/index.jsx'
 // FEATURE014: 多 Agent 实例管理 + Skill 绑定
 export {default as AgentInstanceManager} from './pages/ai/agent-instances/index.jsx'
 
+// 组件文档页（lead 008 §7）：主壳按统一名字取，各仓一致
+export {default as ComponentDocPage} from './pages/ComponentDoc.jsx'
+
 export {
     agentApi,
     flowApi,
