@@ -253,3 +253,30 @@ kubectl -n z-agent rollout status deploy/z-agent-center
 （`z-team.integration.use-local-agent-center=true`），**不经过**独立 z-agent-center 进程。
 ⇒ 独立部署是"同一份实现的另一种拓扑"（同库同码），不是第二份实现；
 两边语义必须一致，见 §7.1 第 3 条。
+
+### 7.6 ⚠ 暴露面：独立实例的写接口**无鉴权**（2026-10-22 起生效，需业务侧定夺）
+
+**事实**（实测）：
+- Service 是 `NodePort 31893`（这是基线导出的原拓扑，本轮未改）
+- 公网**不可达**：`curl http://101.37.80.51:31893/...` = **000**（阿里云 ECS 只转发 ingress 域名）
+- **LAN 可达**：`curl http://192.168.31.136:31893/api/agent/template/health` = **200**
+- `AgentCenterWebConfig` 里**只有** `/api/agent/skill/**` 挂了 AK 鉴权拦截器
+  ⇒ 其余 `/api/agent/**` 的写接口（app 建/删/发布、template、plugin、group、
+  instance、ak、share、trigger、memory、textgen…）**无鉴权**
+- 主壳里同一份代码**是**有 SSO 保护的（主壳的 SSO filter 拦 `/api/agent/**`），
+  独立实例**没有** SSO ⇒ **同一个 API 在两个拓扑上的暴露面不同**
+
+**为什么现在才要紧**：本域此前 replicas=0 且**启动即崩** ⇒ 等于这个暴露面一直不存在。
+本轮修好并拉起后，它**真的开着**了 ⇒ 暴露面由「不存在」变成「存在」。
+
+**本轮未擅自改**（理由：改拓扑/加鉴权会影响其它消费方，且原清单就是 NodePort）：
+- 三个可选口径，请业务侧定：
+  ① **Service 改 ClusterIP**（最小改动：撤掉 LAN 暴露；集群内 z-team 照常走
+     `z-agent-center.z-agent.svc.cluster.local:8080`，只是外部探针要从集群内做）
+  ② **给独立实例补 SSO**（与主壳同口径；代价是要处理 `TeamAgentHubHttpClient`
+     的凭据传递，且我的冒烟测试需改成带 Cookie）
+  ③ **接受现状**（仅 LAN 可达、仅家庭/办公内网；与本集群其它域如 z-config-web 同级）
+
+**⇒ 在定夺之前，不要把 31893 暴露到公网入口（ingress / ECS 反代）**，
+那会把「LAN 内网可写」升级成「公网可写」。
+
