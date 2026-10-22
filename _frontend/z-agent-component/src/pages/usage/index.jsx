@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react'
-import {Card, Col, Row, Select, Statistic, Table, Tabs, Tag, Typography} from 'antd'
+import {Card, Col, Row, Select, Statistic, Tabs, Tag, Typography} from 'antd'
 import {BarChartOutlined, DollarOutlined, RocketOutlined} from '@ant-design/icons'
 import request from '@/agent/api/request'
 import ReactECharts from '../../echarts'
@@ -311,27 +311,34 @@ const UsageDashboard = () => {
                 </TabPane>
 
                 <TabPane tab="按应用统计" key="byApp">
-                    <Card style={{borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)'}}>
-                        <Table
-                            columns={appColumns}
-                            dataSource={byApp}
-                            rowKey="appCode"
-                            pagination={false}
-                            locale={{emptyText: '暂无数据'}}
-                        />
-                    </Card>
+                    <ListTable
+                        rows={byApp}
+                        columns={appColumns}
+                        rowKey="appCode"
+                        // 【为什么套客户端分页】/llm-gateway/usage/by-app 是**全量返回**
+                        // （请求不带 limit/offset，翻页要重新请求后端 —— 见 fetchByApp），
+                        // 所以聚合结果的行数随「接入的应用数」增长，不是固定的小数据集
+                        // ⇒ 不能用 pagination={false} 一股脑铺开（应用一多这页就没法看了）。
+                        // searchKeys 按真实字段走：appCode 是应用编码的唯一标识。
+                        searchKeys={['appCode']}
+                        searchPlaceholder="按应用编码过滤"
+                        emptyTitle="暂无数据"
+                        cardProps={{style: {borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)'}}}
+                    />
                 </TabPane>
 
                 <TabPane tab="按用户统计" key="byUser">
-                    <Card style={{borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)'}}>
-                        <Table
-                            columns={userColumns}
-                            dataSource={byUser}
-                            rowKey="userId"
-                            pagination={false}
-                            locale={{emptyText: '暂无数据'}}
-                        />
-                    </Card>
+                    <ListTable
+                        rows={byUser}
+                        columns={userColumns}
+                        rowKey="userId"
+                        // 【为什么套客户端分页】同 byApp：/llm-gateway/usage/by-user 全量返回，
+                        // 行数随「活跃用户数」增长 ⇒ 用基座的客户端分页 + 过滤。
+                        searchKeys={['userId']}
+                        searchPlaceholder="按用户ID过滤"
+                        emptyTitle="暂无数据"
+                        cardProps={{style: {borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)'}}}
+                    />
                 </TabPane>
 
                 <TabPane tab="调用明细" key="records">
