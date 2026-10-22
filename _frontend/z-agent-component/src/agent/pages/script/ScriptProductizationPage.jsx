@@ -45,13 +45,70 @@ const API_BASE = '/api'
 //
 // 字段名一律 snake_case：main-starter 的全局 JacksonConfig 对实体属性生效（实测
 // /api/script/invoke-log/page 与 /api/script/api-key/page 的 key 都是 api_key_id / cost_ms 这种形状），
-// 而 MyBatis-Plus 分页体里的 total / pages 是**字符串**，参与算术前必须 Number()。
+// 而分页体里的分页标量是**数字**（TASK-20260925-035：z-script 侧补上 MyBatis-Plus 分页拦截器后，
+// current/size/pages/total 一律是 JSON 数字，不再是字符串）。
 const stamp = (v) => (v ? String(v).replace('T', ' ').slice(0, 19) : '-')
 const n = (v) => (v === null || v === undefined || v === '' ? 0 : Number(v) || 0)
 const text = (v) => (v === null || v === undefined || v === '' ? '-' : String(v))
 
-/** /api/script/api-key/page 的实测口径：current/size 生效，但 total 恒 "0"（未开 count），所以行数只认 records。 */
+/**
+ * 分页接口口径（z-script 侧，TASK-20260925-035 修完后的契约）：
+ *   · 请求参数 **current / size**（页码从 1 起；size 上限 500，超了服务端收敛并回显收敛后的值）；
+ *   · 响应 data.records = **本页**行；data.total = 服务端 count 出来的**真计数**（JSON 数字）。
+ *
+ * 旧注释写的是「current/size 生效，但 total 恒 "0"（未开 count）」——已过期：
+ * 那是因为 z-script 的 ScriptMyBatisConfig 手工装配 SqlSessionFactory 又排除了
+ * MyBatisPlusAutoConfiguration，分页拦截器从来没进场，后端一次给的是**全表**。
+ * 现在后端一次只给一页，total 是真计数 ⇒ 分页控件由后端说了算，前端不再本地切页。
+ */
 const pageRecords = (r) => (r && r.data && Array.isArray(r.data.records) ? r.data.records : [])
+
+/**
+ * 服务端给的总数。拿不到时返回 **null**（老版本后端）——
+ * 刻意**不**用 records.length 冒充总数：那是「前端造出后端没有的计数」。
+ */
+const pageTotal = (r) => {
+    const t = r && r.data ? r.data.total : undefined
+    if (typeof t === 'number') {
+        return Number.isFinite(t) ? t : null
+    }
+    if (typeof t === 'string' && t !== '') {
+        const num = Number(t)
+        return Number.isFinite(num) ? num : null
+    }
+    return null
+}
+
+/**
+ * 逐页取全量（配额页要按每一把 Key 取配额，没法只拿一页）。
+ * 用**服务端给的 total** 决定何时停 —— 不是「size=200 恰好够」那种暗号。
+ */
+async function fetchAllRecords(path, size = 50) {
+    const all = []
+    let current = 1
+    for (;;) {
+        const r = await http('GET', path + '?current=' + current + '&size=' + size)
+        const recs = pageRecords(r)
+        all.push(...recs)
+        if (!recs.length) {
+            break
+        }
+        const total = pageTotal(r)
+        if (total !== null) {
+            if (all.length >= total) {
+                break
+            }
+        } else if (recs.length < size) {
+            // 老后端（不分页，一次给全量）：这一页就是全部
+            break
+        }
+        current += 1
+        if (current > 100) {
+            break
+        }
+    }
+    return all
+}
 
 async function http(method, url, body) {
     const res = await fetch(API_BASE + url, {
@@ -64,21 +121,27 @@ async function http(method, url, body) {
 
 function ApiKeyTab() {
     const [list, setList] = useState([])
+    const [total, setTotal] = useState(null)
+    const [page, setPage] = useState({current: 1, size: 10})
     const [loading, setLoading] = useState(false)
 
-    const load = async () => {
+    const load = async (target) => {
         setLoading(true)
         try {
             // 原先打的是 /script/api-key/list —— 这个路径不存在，会被 @GetMapping("/{id}") 吃掉
             // (id="list") ⇒ 500 MethodArgumentTypeMismatch，表格永远空。实测可用的是 /page。
-            const r = await http('GET', '/script/api-key/page?current=1&size=200')
+            //
+            // 现在 current/size 由**分页控件**说了算（服务端真分页，TASK-20260925-035）。
+            // 旧写法 size=200 是拿"够大"当"取全量"的暗号：后端那时根本不分页，200 只是恰好没暴露。
+            const r = await http('GET', '/script/api-key/page?current=' + target.current + '&size=' + target.size)
             setList(pageRecords(r))
+            setTotal(pageTotal(r))
         } finally {
             setLoading(false)
         }
     }
     useEffect(() => {
-        load()
+        load({current: 1, size: 10})
     }, [])
 
     // 🔴 写入口（创建 / 启停 / 删除 API Key）本轮从这页**摘掉**了，不是漏做：
@@ -93,11 +156,25 @@ function ApiKeyTab() {
     return (
         <Card>
             <Space style={{marginBottom: 16}}>
-                <Button icon={<ReloadOutlined/>} onClick={load}>刷新</Button>
+                <Button icon={<ReloadOutlined/>} onClick={() => load({current: 1, size: page.size})}>刷新</Button>
                 <span style={{color: '#999'}}>本页只读：创建/启停/删除 API Key 需要 z-script 侧的归属校验先落地（TASK-20260925-031）</span>
             </Space>
             <Table
                 rowKey="id" loading={loading} dataSource={list}
+                pagination={{
+                    current: page.current,
+                    pageSize: page.size,
+                    // total 是**服务端给的真计数**；拿不到时给 0 并在页脚写「总数未知」，
+                    // 不用 records.length 冒充（那是前端造后端没有的计数）。
+                    total: total === null ? 0 : total,
+                    showSizeChanger: true,
+                    showTotal: () => (total === null ? '总数未知' : '共 ' + total + ' 条'),
+                    onChange: (current, size) => {
+                        const next = {current, size}
+                        setPage(next)
+                        load(next)
+                    }
+                }}
                 columns={[
                     {title: 'ID', dataIndex: 'id', width: 60},
                     {title: '应用名', dataIndex: 'app_name'},
@@ -122,24 +199,34 @@ function ApiKeyTab() {
 
 function MonitorTab() {
     const [logs, setLogs] = useState([])
-    const [stats, setStats] = useState({total: 0, success: 0, failed: 0})
+    const [total, setTotal] = useState(null)
+    const [page, setPage] = useState({current: 1, size: 20})
+    const [stats, setStats] = useState({page: 0, success: 0, failed: 0})
     const [loading, setLoading] = useState(false)
     const [filter, setFilter] = useState({apiKeyId: undefined, success: undefined})
     const [trend, setTrend] = useState([])
     const [trendDays, setTrendDays] = useState(7)
 
-    const load = async () => {
+    const load = async (target) => {
         setLoading(true)
         try {
             const params = new URLSearchParams()
             if (filter.apiKeyId) params.append('apiKeyId', filter.apiKeyId)
             if (filter.success !== undefined && filter.success !== '') params.append('success', filter.success)
-            params.append('pageSize', '50')
+            // 服务端分页：current/size 由分页控件说了算（TASK-20260925-035）。
+            // 旧写法 pageSize=50 —— 参数名不对（后端那会儿只认 pageNo/pageSize），
+            // 且后端一次给全表，于是"分页"其实是在浏览器里切的。
+            params.append('current', target.current)
+            params.append('size', target.size)
             const r = await http('GET', '/script/invoke-log/page?' + params)
-            const list = r.data?.records || []
+            const list = pageRecords(r)
             setLogs(list)
+            setTotal(pageTotal(r))
+            // ⚠️ 统计口径：**只统计本页**。后端一次只给一页，这里数的是本页的 records，
+            // 不是全量 —— 所以标签写死"本页"，别再让人把它读成"总调用"（TASK-20260925-035）。
+            // 全量口径在下面那格「全部匹配」里：那是服务端 count 出来的真计数。
             const success = list.filter(x => x.success === 1).length
-            setStats({total: list.length, success, failed: list.length - success})
+            setStats({page: list.length, success, failed: list.length - success})
         } finally {
             setLoading(false)
         }
@@ -154,7 +241,7 @@ function MonitorTab() {
     }
 
     useEffect(() => {
-        load()
+        load({current: 1, size: 20})
     }, [])
     useEffect(() => {
         loadTrend()
@@ -221,7 +308,9 @@ function MonitorTab() {
                     {value: 30, label: '近 30 天'}
                 ]}/>
                 <Button type="primary" icon={<ReloadOutlined/>} onClick={() => {
-                    load();
+                    // 过滤条件变了就回到第 1 页重新数
+                    setPage({current: 1, size: page.size})
+                    load({current: 1, size: page.size})
                     loadTrend()
                 }}>刷新</Button>
             </Space>
@@ -229,14 +318,18 @@ function MonitorTab() {
             {/* 统计卡片 */}
             <Card type="inner" style={{marginBottom: 16, background: '#f5f5f5'}}>
                 <Space size="large" wrap>
-                    <span>📊 总调用: <b style={{fontSize: 18}}>{stats.total}</b></span>
-                    <span style={{color: '#52c41a'}}>✅ 成功: <b style={{fontSize: 18}}>{stats.success}</b></span>
-                    <span style={{color: '#f5222d'}}>❌ 失败: <b style={{fontSize: 18}}>{stats.failed}</b></span>
-                    <span>📈 成功率: <b style={{
+                    <span>📊 本页调用: <b style={{fontSize: 18}}>{stats.page}</b></span>
+                    <span style={{color: '#52c41a'}}>✅ 本页成功: <b style={{fontSize: 18}}>{stats.success}</b></span>
+                    <span style={{color: '#f5222d'}}>❌ 本页失败: <b style={{fontSize: 18}}>{stats.failed}</b></span>
+                    <span>📈 本页成功率: <b style={{
                         fontSize: 18,
-                        color: stats.success / Math.max(1, stats.total) > 0.9 ? '#52c41a' : '#faad14'
+                        color: stats.success / Math.max(1, stats.page) > 0.9 ? '#52c41a' : '#faad14'
                     }}>
-                        {stats.total ? ((stats.success / stats.total) * 100).toFixed(1) : 0}%
+                        {stats.page ? ((stats.success / stats.page) * 100).toFixed(1) : 0}%
+                    </b></span>
+                    {/* 全量口径 = 服务端 count 的真计数；拿不到就如实写"未知"，不拿本页行数冒充 */}
+                    <span>🗂️ 全部匹配: <b style={{fontSize: 18}}>
+                        {total === null ? '未知' : total + ' 条'}
                     </b></span>
                     <span>📅 {trendDays} 天趋势: <b style={{fontSize: 18, color: '#1890ff'}}>
                         {trend.reduce((acc, p) => acc + n(p.total), 0)} 次
@@ -274,8 +367,21 @@ function MonitorTab() {
                 </div>
             </Card>
 
-            {/* 调用日志表 */}
-            <Table rowKey="id" loading={loading} dataSource={logs} pagination={{pageSize: 20}}
+            {/* 调用日志表（服务端分页：行数与 total 都由后端给） */}
+            <Table rowKey="id" loading={loading} dataSource={logs}
+                   pagination={{
+                       current: page.current,
+                       pageSize: page.size,
+                       // total 是服务端给的真计数；拿不到时给 0 并在页脚写「总数未知」
+                       total: total === null ? 0 : total,
+                       showSizeChanger: true,
+                       showTotal: () => (total === null ? '总数未知' : '共 ' + total + ' 条'),
+                       onChange: (current, size) => {
+                           const next = {current, size}
+                           setPage(next)
+                           load(next)
+                       }
+                   }}
                    columns={[
                        {title: '时间', dataIndex: 'create_time', width: 170, render: v => stamp(v)},
                        {title: 'API Key ID', dataIndex: 'api_key_id', width: 100, render: v => text(v)},
@@ -428,8 +534,10 @@ function QuotaTab() {
     const load = async () => {
         setLoading(true)
         try {
-            const r = await http('GET', '/script/api-key/page?current=1&size=200')
-            const keyList = pageRecords(r)
+            // 配额页要按**每一把** Key 取配额 ⇒ 必须拿到全部 Key。
+            // 旧写法 size=200 是"够大就当全量"的暗号 —— 后端真分页后会变成"只给 200 把"。
+            // 现在按服务端给的 total 逐页取（fetchAllRecords），不猜上限。
+            const keyList = await fetchAllRecords('/script/api-key/page')
             const quotaList = await Promise.all(keyList.map(async k => {
                 const qr = await http('GET', '/script/quota/by-api-key/' + k.id)
                 return {...k, quota: qr.data}
