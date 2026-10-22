@@ -8,7 +8,7 @@ import {
     DollarOutlined,
     ThunderboltOutlined
 } from '@ant-design/icons'
-import ReactECharts from 'echarts-for-react'
+import ReactECharts from '../../../echarts'
 import request from '../../api'
 
 const {Text} = Typography

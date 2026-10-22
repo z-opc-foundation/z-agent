@@ -8,7 +8,7 @@ import {
     RocketOutlined,
     ThunderboltOutlined,
 } from '@ant-design/icons'
-import ReactECharts from 'echarts-for-react'
+import ReactECharts from '../../../echarts'
 import {agentApi, statsApi} from '@/agent/api'
 import {PageHeader} from '@yuku123/z-frontend-common/ui'
 // 页面可见的失败面（TASK-20260925-037 R1-2）
