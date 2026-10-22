@@ -443,6 +443,26 @@
                     </plugin>
                 </plugins>
             </build>
+            <properties>
+                <!-- 发中央时**不产** spring-boot 可执行 fat jar（classifier=boot）。
+                     起因（2026-10-22 发 1.0.2 实测两次失败）：central.sonatype.com 前面的
+                     Cloudflare 会在大 bundle 上传中途掐连接（两次都是
+                     "Unable to upload bundle ... Invalid request. Broken pipe"，
+                     连 deployment 记录都没建成 ⇒ 不是坐标占位，可直接重发同版本）。
+                     体积账：z-agent-center-starter 的 boot.jar = 65MB，占 bundle 96MB 的 68%；
+                     剔掉后 bundle ≈ 12MB，与 z-team 1.0.5（发布成功）同量级。
+                     ⚠ 不是本地不构建就不产 boot.jar：deploy/k8s/README.md 里
+                     z-agent-center-starter 的 boot.jar 是**本仓自己的部署产物**
+                     （Dockerfile COPY 的是它）⇒ 只能在**发中央这一个 profile** 里跳过，
+                     普通构建照常产 boot.jar。
+                     ⚠ 形态变化：中央上 z-agent-center-starter 1.0.1 有 boot.jar、1.0.2 没有。
+                     全工作区实测**零处**按 classifier=boot 引用该构件
+                     （z-opc 主壳的 <classifier>boot</classifier> 是 spring-boot 插件对
+                     **自己产物**的配置，不是引用它）⇒ 消费方只取 6.8K 的无 classifier jar。
+                     与组织口径一致：z-team-starter 1.0.5 在中央上同样没有 boot.jar，
+                     z-agent-admin 已因同类理由（执行型 fat jar 别仓不可引）被 excludeArtifacts 点名。 -->
+                <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
+            </properties>
         </profile>
     </profiles>
 </project>
