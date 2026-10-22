@@ -14,49 +14,71 @@
 |---|---|---|
 | `00-namespace.yaml` | Namespace `z-agent` | 已存在 |
 | `01-service.yaml` | Service `z-agent-center`（NodePort 31893 → 8080） | 已存在 |
-| `02-deployment.yaml` | Deployment `z-agent-center`（镜像 `zopc/z-agent:local`，replicas **0**） | 已存在 |
+| `02-deployment.yaml` | Deployment `z-agent-center`（镜像 `zopc/z-agent:1.0.3-r2`，replicas **1**） | 已存在 |
+| `../Dockerfile` | 镜像构建定义（2026-10-22 补进本仓，见 §1） | — |
 | `README.md` | 本文件 | — |
 
 线上实况要点（与基线导出逐条对齐）：
 
 - Deployment 名 `z-agent-center`，容器名 `z-agent`，容器端口 `8080`（端口名 `http`）
 - Service `z-agent-center`，`type: NodePort`，`port 8080 → targetPort http`，`nodePort 31893`
-- 镜像 `zopc/z-agent:local`，`imagePullPolicy: Never`
+- 镜像 `zopc/z-agent:1.0.3-r2`，`imagePullPolicy: Never`
 - env：`JAVA_OPTS=-Xms256m -Xmx1024m` + 5 个 `Z_BASE_DB_CONFIG_*`（口令走 secret）
 - resources：requests `300m` / `1280Mi`，limits `2` CPU / `2Gi`
-- **replicas 线上是 0**（2026-10-19 23:05 手工 scale down）
+- **replicas 线上是 1**（2026-10-22 20:21 拉起；此前 2026-10-19 23:05 手工 scale down 到 0，
+  而 0 状态下它**根本起不来** —— 容器启动即崩，见 §7）
+
+## 0.1 怎么确认它是活的（2026-10-22 实测过的口径）
+
+```bash
+# 1) Pod 稳态
+kubectl -n z-agent get pods -o wide
+#    期望：1/1 Running，RESTARTS 0
+# 2) 业务端点（不是 /actuator —— 这个服务不暴露 actuator）
+curl -s http://192.168.31.136:31893/api/agent/template/health
+#    期望：{"data":"Agent Template API is healthy","success":true,"code":200,...}
+# 3) 真读库（不是只回健康）：app/list 会真的查 z_agent_app
+curl -s http://192.168.31.136:31893/api/agent/app/list | head -c 200
+# 4) 真造 agent（写库）：POST /api/agent/app，见 §7.4 的实测记录
+```
 
 ## 1. 怎么构建镜像
 
-### 现状（如实说明）
+### 现状（2026-10-22 已补齐）
 
-**本仓没有 Dockerfile。** 全仓 grep 无 `Dockerfile` / `*.Dockerfile`（`z-agent/deploy/` 目录也是本任务新建的）。
-⇒ **「把源码变成 `zopc/z-agent:local`」这一步目前不在仓内**，
-线上那份镜像是当初在节点上手工构建后喂进 containerd 的，仓里没有留下可复现的构建定义。
+**本仓现在有 Dockerfile 了**：`z-agent/deploy/Dockerfile`（叠加式：基镜像 `zopc/z-agent:local` + 只换 `/app/app.jar`）。
+基镜像只存在于两个节点的 containerd、不在任何 registry、也不在本仓（168MB，不入 git），取法见 Dockerfile 头部注释。
 
-线上镜像口径：裸 tag `zopc/z-agent:local`，只存在于两个节点的 containerd，不在任何 registry。
+线上镜像口径：裸 tag `zopc/z-agent:1.0.3-r2`，只存在于两个节点的 containerd，不在任何 registry。
 
-### 建议命令（可执行；Dockerfile 需先补进本仓）
+### 实际执行过的构建命令（2026-10-22，r2 版）
 
 ```bash
 # 1) 打 boot jar —— 启动类是 z-agent-center/z-agent-center-starter 里的 Main.java
 cd z-agent
-mvn -pl z-agent-center/z-agent-center-starter -am clean package -DskipTests
-# 产物：z-agent-center/z-agent-center-starter/target/z-agent-center-starter-1.0.0-boot.jar
+mvn -o -pl z-agent-center/z-agent-center-starter -am clean package -DskipTests
+# 产物：z-agent-center/z-agent-center-starter/target/z-agent-center-starter-1.0.3-boot.jar
 
-# 2) 本仓当前没有 Dockerfile，建议新增 deploy/Dockerfile（内容如下，Java 8 口径与本仓
-#    maven.compiler.source/target=8 一致；参考 z-task/Dockerfile 的写法）：
-#
-#    FROM eclipse-temurin:8-jre
-#    WORKDIR /app
-#    COPY z-agent-center/z-agent-center-starter/target/z-agent-center-starter-1.0.0-boot.jar app.jar
-#    ENV SERVER_PORT=8080
-#    EXPOSE 8080
-#    ENTRYPOINT ["java", "-jar", "app.jar"]
+# 2) 送 jar 到构建机（.231 有 docker + 基镜像）
+scp z-agent-center/z-agent-center-starter/target/z-agent-center-starter-1.0.3-boot.jar \
+    192.168.31.231:/tmp/z-agent-center.jar
 
-# 3) 构建（tag 必须与 02-deployment.yaml 里的 image: 逐字一致）
-docker build -t zopc/z-agent:local -f deploy/Dockerfile .
+# 3) 取基镜像（.136 的 containerd → 本机 docker）
+ssh 192.168.31.136 'sudo -n k3s ctr -n k8s.io images export /tmp/z-agent-local.tar \
+    docker.io/zopc/z-agent:local'
+scp 192.168.31.136:/tmp/z-agent-local.tar /tmp/
+scp /tmp/z-agent-local.tar 192.168.31.231:/tmp/
+ssh 192.168.31.231 'docker load -i /tmp/z-agent-local.tar'
+
+# 4) 构建（tag 必须与 02-deployment.yaml 的 image: 逐字一致）
+ssh 192.168.31.231 'cd ~/z-agent-build && cp /tmp/z-agent-center.jar app.jar && \
+    docker build --platform linux/amd64 -t zopc/z-agent:1.0.3-r2 -f deploy/Dockerfile .'
 ```
+
+> ⚠ **从零构建的变体**（想换基础运行时时才用，本轮**未验证**）：
+> `FROM eclipse-temurin:8-jre` + `COPY app.jar /app/app.jar` + `ENTRYPOINT ["java","-jar","/app/app.jar"]`。
+> 它会换掉 ubuntu26.04+jdk8u504 这个已在线上验证过的运行时基座 ⇒ 与主壳镜像口径不一致，
+> 默认不走这条。
 
 ## 2. 怎么喂 containerd
 
@@ -151,12 +173,83 @@ kubectl -n z-agent rollout status deploy/z-agent-center
 
 | 项 | 线上 | 本清单 | 原因 |
 |---|---|---|---|
-| 探针 | 无 | `tcpSocket 8080`（readiness + liveness） | 本域 0 副本，HTTP 端点无法实测；tcpSocket 只证端口在监听，不假设应用健康语义 |
-| replicas | 0 | 0 | 照抄线上（2026-10-19 23:05 手工 scale down） |
+| 探针 | 无 | `httpGet /api/agent/template/health`（readiness + liveness） | 2026-10-22 已拉起 1 副本并**实测过该 path 返回 200** ⇒ 换成真能判"应用活着"的探针（原先的 tcpSocket 只证端口在监听） |
+| replicas | 1 | 1 | 2026-10-22 20:21 拉起（旧清单的 0 是 2026-10-19 scale down 的残留，而 0 状态下它起不来） |
+| 镜像 | `zopc/z-agent:1.0.3-r2` | 同左 | 含 §7 修好的数据源装配 |
 | labels | 资源上只有 `app.kubernetes.io/name` | 额外加 `app.kubernetes.io/part-of` | 仅加标签，不影响 selector 匹配；`apply` 是幂等合并 |
 | SA 令牌自动挂载 | `automountServiceAccountToken: false` | 不含该字段 | 该收敛由**独立清单**执行（卡 `TASK-20261021-021` 交付、用户亲自执行），刻意与各域部署清单分开，避免抢同一批字段。⚠ `apply` 本清单**不会回退**这项加固（字段既不在本清单、也不在 last-applied ⇒ 三向合并不构成删除动作，已用 `kubectl apply --dry-run=server` 逐域实测：该字段仍为 `false`） |
 
-## 6. 待办（不在本任务范围内）
+## 6. 待办
 
-- 本仓**缺 Dockerfile**，镜像构建不可复现（§1 已给出建议内容，需人工补进仓并提交）。
-- 探针若要换成 HTTP 端点，需先把本域拉起 1 副本并实测该域真实可用的 path。
+- ~~本仓缺 Dockerfile~~ ✅ 2026-10-22 已补 `z-agent/deploy/Dockerfile`（§1）。
+- ~~探针换成 HTTP 端点~~ ✅ 2026-10-22 已换成 `/api/agent/template/health`（实测 200）。
+- 工厂与主壳**双份运行**的边界需要长期口径（见 §7.5）：两边读同一张 `z_agent_app`，
+  逻辑删除 / 驼峰映射 / 分页语义必须一致（已在本轮对齐，见 `AgentCenterDataSourceConfig` 的 javadoc）。
+
+## 7. 2026-10-22：工厂从「永远起不来」修到「可用」
+
+### 7.1 三个缺陷（按踩到的顺序）
+
+1. **缺 `sqlSessionFactoryConfig` bean** ⇒ `APPLICATION FAILED TO START`
+   ```
+   Field instanceMapper in com.zifang.z.agent.center.core.skill.auth.AgentAuthInterceptor
+     required a bean named 'sqlSessionFactoryConfig' that could not be found.
+   ```
+   该 bean 一直由 **z-team-starter 的 `TeamSqlSessionFactoryConfig`** 提供（复用 `@Primary` dataSource，
+   并额外暴露名为 `sqlSessionFactoryConfig` 的别名）。z-agent-center 独立进程里**没有 z-team-starter**
+   ⇒ 无人提供。日志里完全没有 DataSource/Hikari/MyBatis 装配痕迹，可反证是「根本没装配数据源」
+   而不是「连不上库」：`z-boot-datasource-starter` 只提供 `ModuleDataSourceTemplate` 等辅助类，
+   **不带 spring.factories**，不会自动创建 DataSource —— 每个独立服务必须自持一份装配。
+   ⇒ 修法：`z-agent-center-starter` 新增 `AgentCenterDataSourceConfig`（照 `z-ops` 的
+   `OpsDataSourceConfig` 范式：`extends ModuleDataSourceTemplate`）。
+
+2. **`AgentAkService` 双 bean** ⇒ `NoUniqueBeanDefinitionException: expected single matching bean
+   but found 2: agentAkServiceImpl,agentAkService`
+   根因：`Main` 的 `@MapperScan(basePackages = {"com.zifang.z.agent.center"})` —— **`@MapperScan`
+   会把范围内的每一个接口都注册成 mapper bean，不要求接口带 `@Mapper` 注解**，
+   于是 service 接口 `AgentAkService` 被注册成了名为 `agentAkService` 的 mapper 代理。
+   主壳不炸是因为它不走 `Main`（主壳依赖 center-core/-web，mapper 由 z-team-starter 的
+   `TeamSqlSessionFactoryConfig` 用精确到 `*.mapper` 的清单注册）。
+   ⇒ 修法：`Main` 的 `@MapperScan` 收窄到 15 个精确 mapper 包。
+
+3. **与主壳的 MyBatis 语义漂移**（不是启动错，是**数据错**）
+   独立实例与主壳内嵌副本读写**同一张表**（同一个 RDS `oc` 库）。若两边的逻辑删除 /
+   驼峰映射 / 分页开关不一致，就是**两个运行时用不同语义改同一批数据**。
+   ⇒ 修法：`AgentCenterDataSourceConfig` 里显式对齐 z-team-starter 的口径
+   （`map-underscore-to-camel-case=true`；逻辑删除 `deleted` 字段 / 值 1 / 未删值 0；
+   显式挂 `PaginationInnerInterceptor`）。
+
+### 7.2 为什么修在 starter 而不是 core
+
+`z-agent-center-starter` **没有**被主壳依赖（z-opc 的 `dependencyManagement` 里只是版本钉，
+实测线上主壳 fat jar 的 `BOOT-INF/lib` 里没有 `z-agent-center-starter`）⇒ 数据源装配放这里
+**不会**给主壳造出第二个 DataSource。放 core 就等于污染主壳。
+
+### 7.3 版本口径
+
+本轮把 z-agent 仓 `revision` 从 `1.0.2` 抬到 `1.0.3`（新增 starter 的数据源装配 + 收窄 @MapperScan），
+镜像 `zopc/z-agent:1.0.3-r2` 里装的就是 `z-agent-center-starter-1.0.3-boot.jar`。
+⚠ 中央仓**同一版本不能重发**，所以 1.0.2 的旧字节永远留在中央 —— 拉取 1.0.3 才是修复后的版本。
+
+### 7.4 实测记录（2026-10-22 20:21–20:23）
+
+- Pod `z-agent-center-7c574485b9-wtdcw`：**1/1 Running，RESTARTS 0**，落点 zifang002
+- 旧 ReplicaSet 全部 scale 到 0（无残留 Pod）
+- `/api/agent/template/health` → 200 `{"success":true,"data":"Agent Template API is healthy"}`
+- `/api/agent/plugin/health` → 200
+- `/api/agent/app/list` → 200，**返回真实 `z_agent_app` 数据**（如 `agent_catalog_bot`/集群册子助手）
+  ⇒ 证明数据源真的接上了 RDS，不是只回健康
+- `/api/agent/group/tree` → 200，真实分组数据
+- **造 agent 实测**：`POST /api/agent/app`（appName=工厂冒烟-202303, agentMode=agent, status=DRAFT）
+  → 200，落库 `id=27` / `appCode=app_ffd3f231786c`，且模型被自动补全（qwen2.5:7b / ollama）；
+  `GET /api/agent/app/list` 立即回查到该行 ⇒ **写→读闭环成立**；
+  测完用 `POST /api/agent/app/delete?id=27` 清掉，**复查剩余 0 行**（不污染生产库）
+
+### 7.5 双份运行的边界（遗留口径，非本轮解决）
+
+主壳 z-opc 里也内嵌了一份工厂代码（`z-agent-center-web` / `-core` 是主壳依赖），
+个人模式造 agent 走的是**同进程**路径：`POST /api/personal-agents`
+→ `TeamPersonalAgentServiceImpl.createBackingAgent()` → **直写 `z_agent_app` 表**
+（`z-team.integration.use-local-agent-center=true`），**不经过**独立 z-agent-center 进程。
+⇒ 独立部署是"同一份实现的另一种拓扑"（同库同码），不是第二份实现；
+两边语义必须一致，见 §7.1 第 3 条。

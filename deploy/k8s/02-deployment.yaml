@@ -1,25 +1,37 @@
 # ============================================================
 # z-agent —— Deployment（工作负载）
 #
+# 【2026-10-22 更新：工厂从"永远起不来"修到"可用"】
+#   旧镜像 zopc/z-agent:local 里装的是 2026-10-19 构建的 jar，
+#   容器启动必崩：
+#     Field instanceMapper in ...AgentAuthInterceptor required a bean named
+#     'sqlSessionFactoryConfig' that could not be found.
+#   根因：那个 bean 一直由 z-team-starter 的 TeamSqlSessionFactoryConfig 提供，
+#   而 z-agent-center 独立部署时没有 z-team-starter ⇒ 无人提供。
+#   修法（源码侧）：z-agent-center-starter 新增 AgentCenterDataSourceConfig
+#   自持 DataSource + sqlSessionFactory + sqlSessionFactoryConfig 别名；
+#   同时把 Main 的 @MapperScan 从整包收窄到精确 mapper 包
+#   （整包会把 service 接口也注册成 mapper ⇒ AgentAkService 双 bean 冲突）。
+#   新镜像：zopc/z-agent:1.0.3-r2（构建定义见 ../Dockerfile）
+#
 # 【镜像 tag 为什么这样写】
-#   image: zopc/z-agent:local
+#   image: zopc/z-agent:1.0.3-r2
 #   —— 裸 tag，**不带 Nexus 仓库前缀**。铁律：本集群 imagePullPolicy=Never，
 #      镜像只存在于两个节点的 containerd，不在任何 registry。k3s 不会去拉，
 #      它按 `image:` 字段的**字面引用**去节点本地 content store 里找。
-#      如果喂进 containerd 的 tag 带前缀（例如 nexus.internal/zopc/z-agent:local）
-#      而清单里写的是裸 tag（或反过来），本地查不到 ⇒ Pod 卡 ErrImageNeverPull。
-#      喂镜像的 tag 必须与这里的 `image:` 逐字一致，见 README §2。
+#      如果喂进 containerd 的 tag 带前缀（例如 nexus.internal/zopc/z-agent:1.0.3-r2）
+#      而清单里写的是裸 tag（或反过来）⇒ **ErrImageNeverPull**。
 #   imagePullPolicy: Never
 #   —— 照抄线上。改成 IfNotPresent 也不会更安全（节点上没有 registry 可用），
-#      但会让「本地有镜像」这条隐含前提失效，排查时更难定位。
+#      但会让"本地有镜像"这条隐含前提失效，排查时更难定位。
 #
-# 【探针为什么选 tcpSocket】
-#   本域线上 replicas=0（手工 scale down，见下方 replicas 注释），
-#   ⇒ 没有任何 Pod 在跑，HTTP 端点无法实测（探针打哪个 path 都不能确证）。
-#   保守起见只用 tcpSocket 探 8080：它只证明「端口在监听」，
-#   不对应用的健康语义做任何假设。等本域恢复副本后再换成实测过的 HTTP 端点。
-#   （线上基线里本域**原本没有探针**，本清单补上 tcpSocket 以满足
-#     「每个工作负载至少一个探针」的可观测性下限。）
+# 【探针为什么换成 httpGet】
+#   2026-10-19 那版用 tcpSocket，理由是"本域 0 副本，HTTP 端点无法实测"。
+#   现在本域已拉起 1 副本并实测过真实端点 ⇒ 直接用 httpGet 打
+#   /api/agent/template/health（200 {"success":true,"data":"Agent Template API is healthy"}），
+#   探针才真的能判"应用活着"，而不是只判"端口在监听"。
+#   ⚠ 换探针前必须先实测该 path 返回 200 —— 用 `curl -o /dev/null -w '%{http_code}'
+#     http://<node>:31893/api/agent/template/health` 验，别照抄。
 #
 # 【secret 从哪来】
 #   Z_BASE_DB_CONFIG_PASSWORD → secretKeyRef: secret z-agent-db / 键 password。
@@ -35,10 +47,10 @@ metadata:
     app.kubernetes.io/name: z-agent-center
     app.kubernetes.io/part-of: z-opc-foundation
 spec:
-  # 线上当前是 0 副本（2026-10-19 23:05 手工 scale down，基线导出 spec.replicas=0）。
-  # 照抄现状 ⇒ 集群可从代码复现；要拉起把这里改成 1 再 apply。
-  replicas: 0
-  # 保留 10 个历史版本 ⇒ `kubectl rollout undo deploy/z-agent-center -n z-agent` 可用。
+  # 2026-10-22：从 0 拉起为 1 —— 独立工厂修好后已实测可用
+  # （健康端点 200、app/list 返回真实 z_agent_app 数据、POST /api/agent/app 真能造出 agent）。
+  # 留 10 个历史版本 ⇒ `kubectl rollout undo deploy/z-agent-center -n z-agent` 可用。
+  replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
@@ -50,7 +62,7 @@ spec:
     spec:
       containers:
         - name: z-agent
-          image: zopc/z-agent:local
+          image: zopc/z-agent:1.0.3-r2
           imagePullPolicy: Never
           ports:
             - name: http
@@ -63,6 +75,9 @@ spec:
             # ===== 数据源：共享 RDS 的 oc 库（z-opc 系各仓共用同一个库）=====
             # 地址/账号照线上现状明文（要求「集群可从代码复现」⇒ 与线上一字不差）；
             # 口令一律走 secret 引用，仓里不出现明文口令。
+            # ⚠ 这 5 个 env 正是 AgentCenterDataSourceConfig 里 buildDataSource(env, "config")
+            #   读取的键（Spring relaxed binding：Z_BASE_DB_CONFIG_HOST → z.base.db.config.host）。
+            #   少任何一个 ⇒ 数据源回落 localhost ⇒ 连不上库 ⇒ 启动即失败。
             - name: Z_BASE_DB_CONFIG_HOST
               value: rm-bp108uqlgwn712k54ho.mysql.rds.aliyuncs.com
             - name: Z_BASE_DB_CONFIG_PORT
@@ -83,15 +98,17 @@ spec:
             requests:
               cpu: 300m
               memory: 1280Mi
-          # 探针只探「端口在监听」（本域 0 副本，HTTP 端点无法实测，理由见文件头）。
+          # 探针打真实业务端点（2026-10-22 实测 200）。
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /api/agent/template/health
               port: http
             initialDelaySeconds: 40
             periodSeconds: 10
             failureThreshold: 6
           livenessProbe:
-            tcpSocket:
+            httpGet:
+              path: /api/agent/template/health
               port: http
             # 启动比就绪慢：JVM 起 + 连 RDS，放宽到 120s 再开始判活。
             initialDelaySeconds: 120
