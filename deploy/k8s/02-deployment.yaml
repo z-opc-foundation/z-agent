@@ -15,7 +15,7 @@
 #   新镜像：zopc/z-agent:1.0.3-r2（构建定义见 ../Dockerfile）
 #
 # 【镜像 tag 为什么这样写】
-#   image: zopc/z-agent:1.0.3-r2
+#   image: zopc/z-agent:1.0.3-zboot112
 #   —— 裸 tag，**不带 Nexus 仓库前缀**。铁律：本集群 imagePullPolicy=Never，
 #      镜像只存在于两个节点的 containerd，不在任何 registry。k3s 不会去拉，
 #      它按 `image:` 字段的**字面引用**去节点本地 content store 里找。
@@ -62,7 +62,7 @@ spec:
     spec:
       containers:
         - name: z-agent
-          image: zopc/z-agent:1.0.3-r2
+          image: zopc/z-agent:1.0.3-zboot112
           imagePullPolicy: Never
           ports:
             - name: http
