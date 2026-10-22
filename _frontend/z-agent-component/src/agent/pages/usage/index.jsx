@@ -3,7 +3,7 @@ import {Card, Col, Row, Select, Statistic, Table, Tabs, Tag, Typography} from 'a
 import {BarChartOutlined, DollarOutlined, RocketOutlined} from '@ant-design/icons'
 import request from '../../api/request'
 import ReactECharts from '../../../echarts'
-import {PageHeader} from '../../ui'
+import {ListTable, PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {Text} = Typography
 const {TabPane} = Tabs
@@ -212,10 +212,7 @@ const UsageDashboard = () => {
 
     return (
         <div>
-            <PageHeader
-                title="用量统计"
-                subtitle="查看 LLM 调用 Token 消耗、费用和趋势分析"
-            />
+            <PageHeader title="用量统计"/>
             {/* 维度筛选栏 */}
             <div style={{
                 display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
@@ -338,16 +335,15 @@ const UsageDashboard = () => {
                 </TabPane>
 
                 <TabPane tab="调用明细" key="records">
-                    <Card style={{borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)'}}>
-                        <Table
-                            columns={recordColumns}
-                            dataSource={records}
-                            loading={loading}
-                            rowKey="id"
-                            pagination={{pageSize: 20, showSizeChanger: false}}
-                            locale={{emptyText: '暂无数据'}}
-                        />
-                    </Card>
+                    <ListTable
+                        rows={records}
+                        columns={recordColumns}
+                        loading={loading}
+                        rowKey="id"
+                        searchKeys={['appCode', 'userName', 'modelCode']}
+                        searchPlaceholder="按应用 / 用户 / 模型过滤"
+                        cardProps={{style: {borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)'}}}
+                    />
                 </TabPane>
             </Tabs>
         </div>

@@ -54,7 +54,7 @@ import {
 } from '@ant-design/icons'
 import {agentApi, llmApi} from '../../api'
 import AgentAppEditor from './editor/AgentAppEditor'
-import {SearchInput} from '../../ui'
+import {SearchInput} from '@yuku123/z-frontend-common/ui'
 // 页面可见的失败面（TASK-20260925-037 R1-2）：apiRouter 不再把 404/非 2xx 洗成 {code:200}，
 // 失败必须**画在页面上**，不能只剩一行 console。
 import {ErrorState} from '@yuku123/z-frontend-common/ui'

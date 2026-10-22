@@ -1,8 +1,8 @@
 import {useEffect, useState} from 'react'
-import {Button, Card, Col, Form, Input, message, Modal, Row, Select, Space, Statistic, Table, Tag} from 'antd'
+import {Button, Card, Col, Form, Input, message, Modal, Row, Select, Space, Statistic, Tag} from 'antd'
 import {DeleteOutlined, EditOutlined, GlobalOutlined, PlusOutlined} from '@ant-design/icons'
 import request from '../../../api'
-import {EmptyState, PageHeader} from '../../../ui'
+import {ListTable, PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {confirm} = Modal
 
@@ -115,10 +115,7 @@ const LlmProvider = () => {
 
     return (
         <div>
-            <PageHeader
-                title="供应商管理"
-                subtitle="配置 LLM 供应商接入信息，管理 API 密钥"
-            />
+            <PageHeader title="供应商管理"/>
             <Row gutter={16} style={{marginBottom: 16}}>
                 <Col span={6}>
                     <Card><Statistic title="供应商数" value={data.length}/></Card>
@@ -129,15 +126,22 @@ const LlmProvider = () => {
                 </Col>
             </Row>
 
-            <div style={{marginBottom: 16}}>
-                <Button type="primary" icon={<PlusOutlined/>} onClick={handleAdd}>添加供应商</Button>
-            </div>
-
-            {data.length === 0 && !loading ? (
-                <EmptyState title="暂无供应商" description="点击上方按钮添加第一个供应商"/>
-            ) : (
-                <Table columns={columns} dataSource={data} loading={loading} rowKey="id"/>
-            )}
+            {/* 列表页三件套（分页 + 查询 + EmptyState）由基座 ListTable 一次带齐；
+                「添加供应商」放 cardExtra，与搜索框并排（lead 008 §2）。 */}
+            <ListTable
+                rows={data}
+                columns={columns}
+                loading={loading}
+                rowKey="id"
+                searchKeys={['providerName', 'providerCode']}
+                searchPlaceholder="按供应商名称 / 编码过滤"
+                emptyTitle="暂无供应商"
+                emptyDescription="点击上方按钮添加第一个供应商"
+                cardExtra={
+                    <Button type="primary" icon={<PlusOutlined/>} onClick={handleAdd}>添加供应商</Button>
+                }
+                cardProps={{variant: 'borderless', styles: {body: {padding: 0}}}}
+            />
 
             <Modal
                 title={editing ? '编辑供应商' : '添加供应商'}

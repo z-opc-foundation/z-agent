@@ -36,7 +36,7 @@ import {
     ThunderboltOutlined
 } from '@ant-design/icons'
 import {productApi, sceneApi} from '../../api'
-import {SearchInput} from '../../ui'
+import {ListTable, SearchInput} from '@yuku123/z-frontend-common/ui'
 
 const {TextArea} = Input
 const {Option} = Select
@@ -320,8 +320,12 @@ const SceneTablePage = () => {
                 <Button type="primary" icon={<PlusOutlined/>} onClick={handleCreate}>新建场景</Button>
             </div>
 
-            <Table
-                dataSource={dataSource}
+            {/* 服务端分页，不套客户端分页：分页参数由后端 total/current 驱动，
+                翻页要重新请求后端，套 ListTable 的客户端分页会把一页数据切碎。
+                页面顶部已有服务端搜索框（setSearchKey → 重新请求后端），所以这里不再传
+                searchKeys：否则会出现两个搜索框，且客户端过滤只作用于当前页。 */}
+            <ListTable
+                rows={dataSource}
                 columns={columns}
                 loading={loading}
                 rowKey="id"
@@ -329,13 +333,15 @@ const SceneTablePage = () => {
                     current: pageNum,
                     pageSize,
                     total,
+                    // showSizeChanger 保持关闭：pageSize 变化要改后端请求参数，
+                    // 与服务端分页口径绑定，不做客户端切换。
                     showSizeChanger: false,
                     showTotal: t => `共 ${t} 个场景`,
                     onChange: p => setPageNum(p),
                 }}
-                locale={{
-                    emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="还没有场景，点击新建开始创建"/>
-                }}
+                emptyTitle="还没有场景"
+                emptyDescription="点击新建开始创建"
+                cardProps={{variant: 'borderless', styles: {body: {padding: 0}}}}
             />
 
             {/* 创建/编辑 Modal */}

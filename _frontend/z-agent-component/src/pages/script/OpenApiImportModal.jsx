@@ -1,7 +1,8 @@
 import {useState} from 'react'
-import {Alert, Button, Card, Input, message, Modal, Progress, Space, Table, Tag} from 'antd'
+import {Alert, Button, Card, Input, message, Modal, Progress, Space, Tag} from 'antd'
 import {ApiOutlined, FileTextOutlined, UploadOutlined} from '@ant-design/icons'
 import {scriptApi} from '../../api'
+import {ListTable} from '@yuku123/z-frontend-common/ui'
 
 const {TextArea} = Input
 
@@ -159,13 +160,17 @@ export default function OpenApiImportModal({open, onClose, onSuccess}) {
                         style={{marginBottom: 12}}
                         showIcon
                     />
-                    <Table
-                        dataSource={parsedItems}
+                    {/* 弹窗内的预览列表：行数由粘贴的 OpenAPI 决定，不是固定 ≤10 行，
+                        所以仍按 §2 走基座 ListTable 的分页 + 查询 + 空态；
+                        用无边框卡片保持弹窗里的紧凑观感。 */}
+                    <ListTable
+                        rows={parsedItems}
                         columns={columns}
-                        pagination={{pageSize: 10}}
-                        size="small"
-                        bordered
                         rowKey="key"
+                        bordered
+                        searchKeys={['path', 'summary', 'operationId']}
+                        searchPlaceholder="按路径 / 描述过滤"
+                        cardProps={{variant: 'borderless', styles: {body: {padding: 0}}}}
                     />
                     <div style={{marginTop: 16, textAlign: 'right'}}>
                         <Space>
@@ -188,13 +193,14 @@ export default function OpenApiImportModal({open, onClose, onSuccess}) {
                         <Progress type="circle" percent={100} format={() => `${importResult.count}`} size="large"/>
                         <div style={{marginTop: 8, fontWeight: 500}}>成功导入 {importResult.count} 个脚本</div>
                     </Card>
-                    <Table
-                        dataSource={importResult.items || []}
+                    <ListTable
+                        rows={importResult.items || []}
                         columns={resultColumns}
-                        pagination={{pageSize: 10}}
-                        size="small"
-                        bordered
                         rowKey="scriptCode"
+                        bordered
+                        searchKeys={['path', 'scriptCode']}
+                        searchPlaceholder="按路径 / 脚本编码过滤"
+                        cardProps={{variant: 'borderless', styles: {body: {padding: 0}}}}
                     />
                     <div style={{marginTop: 16, textAlign: 'right'}}>
                         <Space>

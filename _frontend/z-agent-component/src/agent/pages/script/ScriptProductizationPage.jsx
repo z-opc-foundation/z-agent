@@ -31,7 +31,7 @@ import {
     ReloadOutlined,
     TagsOutlined
 } from '@ant-design/icons'
-import {PageHeader} from '../../ui'
+import {PageHeader} from '@yuku123/z-frontend-common/ui'
 import {App as AntApp} from 'antd'
 
 const useMessage = () => AntApp.useApp().message

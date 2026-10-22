@@ -4,7 +4,7 @@ import {ApiOutlined, BarChartOutlined, RobotOutlined} from '@ant-design/icons'
 import LlmProvider from './provider/index.jsx'
 import LlmModel from './model/index.jsx'
 import UsageDashboard from '../usage/index.jsx'
-import {PageHeader} from '../../ui'
+import {PageHeader} from '@yuku123/z-frontend-common/ui'
 
 /**
  * FEATURE050: 模型与凭证 — 3 个独立菜单合并为单页 + 3 个 tab.

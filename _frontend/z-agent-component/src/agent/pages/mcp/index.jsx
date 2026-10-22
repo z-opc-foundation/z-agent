@@ -16,7 +16,7 @@ import {
     ReloadOutlined
 } from '@ant-design/icons'
 import {mcpApi} from '../../api'
-import {EmptyState, PageHeader} from '../../ui'
+import {EmptyState, PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {TextArea} = Input
 const {Text} = Typography

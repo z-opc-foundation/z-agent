@@ -1,8 +1,8 @@
 import {useEffect, useState} from 'react'
-import {Button, Col, Form, Input, InputNumber, message, Modal, Row, Select, Space, Table, Tag} from 'antd'
+import {Button, Col, Form, Input, InputNumber, message, Modal, Row, Select, Space, Tag} from 'antd'
 import {DeleteOutlined, EditOutlined, PlusOutlined} from '@ant-design/icons'
 import request from '../../../api'
-import {EmptyState, PageHeader} from '@yuku123/z-frontend-common/ui'
+import {ListTable, PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {confirm} = Modal
 
@@ -119,19 +119,22 @@ const LlmModel = () => {
 
     return (
         <div>
-            <PageHeader
-                title="模型管理"
-                subtitle="管理已接入的 LLM 模型，配置参数和价格"
+            <PageHeader title="模型管理"/>
+            {/* 列表页三件套由基座 ListTable 一次带齐；「添加模型」放 cardExtra，与搜索框并排。 */}
+            <ListTable
+                rows={data}
+                columns={columns}
+                loading={loading}
+                rowKey="id"
+                searchKeys={['modelCode', 'modelName']}
+                searchPlaceholder="按模型编码 / 名称过滤"
+                emptyTitle="暂无模型"
+                emptyDescription="点击上方按钮添加第一个模型"
+                cardExtra={
+                    <Button type="primary" icon={<PlusOutlined/>} onClick={handleAdd}>添加模型</Button>
+                }
+                cardProps={{variant: 'borderless', styles: {body: {padding: 0}}}}
             />
-            <div style={{marginBottom: 16}}>
-                <Button type="primary" icon={<PlusOutlined/>} onClick={handleAdd}>添加模型</Button>
-            </div>
-
-            {data.length === 0 && !loading ? (
-                <EmptyState title="暂无模型" description="点击上方按钮添加第一个模型"/>
-            ) : (
-                <Table columns={columns} dataSource={data} loading={loading} rowKey="id"/>
-            )}
 
             <Modal
                 title={editing ? '编辑模型' : '添加模型'}

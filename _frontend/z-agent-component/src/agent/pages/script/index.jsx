@@ -1,7 +1,6 @@
 import {useEffect, useState} from 'react'
 import {
     Button,
-    Card,
     Col,
     Descriptions,
     Drawer,
@@ -14,7 +13,6 @@ import {
     Select,
     Space,
     Statistic,
-    Table,
     Tag,
     Tooltip,
     Typography
@@ -34,7 +32,7 @@ import {scriptApi} from '../../api'
 import CurlImportModal from './CurlImportModal'
 import OpenApiImportModal from './OpenApiImportModal'
 import ApiBridgeEditor from './ApiBridgeEditor'
-import {PageHeader} from '../../ui'
+import {ListTable, PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {TextArea} = Input
 const {Text, Paragraph} = Typography
@@ -296,39 +294,37 @@ export default function ScriptCenterPage() {
                 </div>
             )}
 
-            <PageHeader
-                title="脚本中心"
-                subtitle="创建和管理 DSL 脚本，支持 EL/Groovy/Lua/SQL/Mock/API Bridge"
+            <PageHeader title="脚本中心"/>
+
+            <Row gutter={16} style={{marginBottom: 16}}>
+                <Col span={6}><Statistic title="总脚本数" value={scripts.length}/></Col>
+                <Col span={6}><Statistic title="已发布" value={scripts.filter(s => s.exposeAs !== 'NONE').length}/></Col>
+                <Col span={6}><Statistic title="HTTP"
+                                         value={scripts.filter(s => s.exposeAs === 'HTTP' || s.exposeAs === 'BOTH').length}/></Col>
+                <Col span={6}><Statistic title="MCP"
+                                         value={scripts.filter(s => s.exposeAs === 'MCP' || s.exposeAs === 'BOTH').length}/></Col>
+            </Row>
+
+            {/* 列表页三件套（分页 + 查询 + EmptyState）由基座 ListTable 一次带齐；
+                动作按钮放 cardExtra，与搜索框并排（lead 008 §2）。 */}
+            <ListTable
+                rows={scripts}
+                columns={columns}
+                rowKey="id"
+                loading={loading}
+                searchKeys={['scriptName', 'scriptCode']}
+                searchPlaceholder="按脚本名称 / 编码过滤"
+                scroll={{x: 1300}}
+                cardExtra={
+                    <Space>
+                        <Button icon={<ImportOutlined/>} onClick={() => setCurlModalOpen(true)}>导入 Curl</Button>
+                        <Button icon={<CloudServerOutlined/>} onClick={() => setOpenApiModalOpen(true)}>导入
+                            OpenAPI</Button>
+                        <Button icon={<PlayCircleOutlined/>} onClick={loadScripts}>刷新</Button>
+                        <Button type="primary" icon={<PlusOutlined/>} onClick={handleCreate}>新建脚本</Button>
+                    </Space>
+                }
             />
-
-            <Card extra={
-                <Space>
-                    <Button icon={<ImportOutlined/>} onClick={() => setCurlModalOpen(true)}>导入 Curl</Button>
-                    <Button icon={<CloudServerOutlined/>} onClick={() => setOpenApiModalOpen(true)}>导入
-                        OpenAPI</Button>
-                    <Button icon={<PlayCircleOutlined/>} onClick={loadScripts}>刷新</Button>
-                    <Button type="primary" icon={<PlusOutlined/>} onClick={handleCreate}>新建脚本</Button>
-                </Space>
-            }>
-                <Row gutter={16} style={{marginBottom: 16}}>
-                    <Col span={6}><Statistic title="总脚本数" value={scripts.length}/></Col>
-                    <Col span={6}><Statistic title="已发布" value={scripts.filter(s => s.exposeAs !== 'NONE').length}/></Col>
-                    <Col span={6}><Statistic title="HTTP"
-                                             value={scripts.filter(s => s.exposeAs === 'HTTP' || s.exposeAs === 'BOTH').length}/></Col>
-                    <Col span={6}><Statistic title="MCP"
-                                             value={scripts.filter(s => s.exposeAs === 'MCP' || s.exposeAs === 'BOTH').length}/></Col>
-                </Row>
-
-                <Table
-                    dataSource={scripts}
-                    columns={columns}
-                    rowKey="id"
-                    loading={loading}
-                    pagination={{pageSize: 10}}
-                    scroll={{x: 1300}}
-                    size="small"
-                />
-            </Card>
 
             {/* Create/Edit Modal */}
             <Modal

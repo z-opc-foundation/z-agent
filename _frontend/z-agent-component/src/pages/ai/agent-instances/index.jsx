@@ -3,7 +3,6 @@ import {
     Alert,
     Badge,
     Button,
-    Card,
     Checkbox,
     Drawer,
     Empty,
@@ -35,7 +34,7 @@ import {
     ThunderboltOutlined
 } from '@ant-design/icons'
 import {agentInstanceApi, agentSkillBindApi, skillMarketApi} from '../../../services/agentInstance'
-import {PageHeader, SearchInput} from '@yuku123/z-frontend-common/ui'
+import {ListTable, PageHeader, SearchInput} from '@yuku123/z-frontend-common/ui'
 
 const {Text, Title} = Typography
 
@@ -358,32 +357,34 @@ const AgentInstanceManager = () => {
                 title="多 Agent 实例管理"
                 subtitle="支持 ZBOT / Hermes / Claude Code / OpenCode 等多种 Agent 类型"
             />
-            <Card extra={
-                <Space>
-                    <Tag color="purple">FEATURE014</Tag>
-                    <Button icon={<ReloadOutlined/>} onClick={refreshInstances}>刷新</Button>
-                    <Button icon={<CheckCircleOutlined/>} onClick={handleHealthAll}>批量健康检查</Button>
-                    <Button type="primary" icon={<PlusOutlined/>}
-                            onClick={() => setCreateOpen(true)}>
-                        创建实例
-                    </Button>
-                </Space>
-            }>
-                <Alert
-                    type="info" showIcon
-                    message="多 Agent 实例"
-                    description="支持 ZBOT / Hermes (Docker+本地) / Claude Code / OpenCode / 自定义进程。创建后会自动拉起对应进程 / 容器，并在心跳中跟踪状态。"
-                    style={{marginBottom: 16}}
-                />
-                <Table
-                    rowKey="instanceCode"
-                    columns={columns}
-                    dataSource={instances}
-                    loading={loading}
-                    size="middle"
-                    pagination={{pageSize: 10}}
-                />
-            </Card>
+            <Alert
+                type="info" showIcon
+                message="多 Agent 实例"
+                description="支持 ZBOT / Hermes (Docker+本地) / Claude Code / OpenCode / 自定义进程。创建后会自动拉起对应进程 / 容器，并在心跳中跟踪状态。"
+                style={{marginBottom: 16}}
+            />
+            {/* 列表页三件套（分页 + 查询 + EmptyState）由基座 ListTable 一次带齐；
+                动作按钮放 cardExtra，与搜索框并排（lead 008 §2）。 */}
+            <ListTable
+                rows={instances}
+                columns={columns}
+                loading={loading}
+                rowKey="instanceCode"
+                size="middle"
+                searchKeys={['instanceCode', 'appCode', 'agentType']}
+                searchPlaceholder="按实例编码 / 应用 / Agent 类型过滤"
+                cardExtra={
+                    <Space>
+                        <Tag color="purple">FEATURE014</Tag>
+                        <Button icon={<ReloadOutlined/>} onClick={refreshInstances}>刷新</Button>
+                        <Button icon={<CheckCircleOutlined/>} onClick={handleHealthAll}>批量健康检查</Button>
+                        <Button type="primary" icon={<PlusOutlined/>}
+                                onClick={() => setCreateOpen(true)}>
+                            创建实例
+                        </Button>
+                    </Space>
+                }
+            />
 
             {/* 创建实例 Modal */}
             <Modal
@@ -566,12 +567,14 @@ const AgentInstanceManager = () => {
                         {
                             key: 'logs',
                             label: `同步日志 (${syncLogs.length})`,
+                            // 抽屉里的同步日志表：同样走基座 ListTable 的三件套。
                             children: (
-                                <Table
+                                <ListTable
+                                    rows={syncLogs}
                                     rowKey="id"
-                                    size="small"
-                                    pagination={{pageSize: 10}}
-                                    dataSource={syncLogs}
+                                    searchKeys={['skillCode', 'action', 'result']}
+                                    searchPlaceholder="按 Skill / 操作 / 结果过滤"
+                                    cardProps={{variant: 'borderless', styles: {body: {padding: 0}}}}
                                     columns={[
                                         {title: '时间', dataIndex: 'gmtSync', width: 170},
                                         {title: 'Skill', dataIndex: 'skillCode'},

@@ -9,7 +9,7 @@ import {
     StarOutlined,
 } from '@ant-design/icons'
 import {templateApi} from '../../api'
-import {EmptyState, PageHeader} from '../../ui'
+import {EmptyState, PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {Text, Paragraph, Title} = Typography
 
