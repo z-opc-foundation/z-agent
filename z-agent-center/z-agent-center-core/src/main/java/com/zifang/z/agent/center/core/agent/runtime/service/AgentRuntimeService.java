@@ -359,6 +359,67 @@ public class AgentRuntimeService {
     private void callLlmStream(String provider, String modelName, List<ChatMessage> messages,
                                HttpServletResponse response, StringBuilder fullReply,
                                AgentAppVersion ver) throws IOException {
+        // FEATURE066: 流式也必须优先走大模型网关（与同步路径 callLlm 一致）。
+        // 原实现无条件直连 OLLAMA_BASE_URL(=localhost:11434)，容器里必然连不上，
+        // 且完全忽略应用的 provider/model 配置 ⇒ 所有 Agent 的就地聊天都是死路。
+        if (chatGatewayService != null) {
+            try {
+                UnifiedRequest req = new UnifiedRequest();
+                List<UnifiedMessage> reqMessages = new ArrayList<>();
+                for (ChatMessage msg : messages) {
+                    UnifiedMessage m = new UnifiedMessage();
+                    m.setRole(msg.role);
+                    m.setContent(msg.content);
+                    reqMessages.add(m);
+                }
+                req.setMessages(reqMessages);
+                req.setModel(StringUtils.defaultIfEmpty(provider, "minimax") + "/"
+                        + StringUtils.defaultIfEmpty(modelName, "minimax2.7"));
+                if (ver != null && ver.getTemperature() != null) {
+                    req.setTemperature(ver.getTemperature().doubleValue());
+                }
+                if (ver != null && ver.getTopP() != null) {
+                    req.setTopP(ver.getTopP().doubleValue());
+                }
+                if (ver != null && ver.getMaxTokens() != null) {
+                    req.setMaxTokens(ver.getMaxTokens());
+                }
+                response.setContentType("text/event-stream;charset=utf-8");
+                final Throwable[] gatewayError = {null};
+                final long[] chunkCount = {0};
+                ChatGatewayService.StreamOutcome outcome = chatGatewayService.streamChat(req,
+                        chunk -> {
+                            try {
+                                chunkCount[0]++;
+                                String content = extractChunkContent(chunk);
+                                if (content != null && !content.isEmpty()) {
+                                    fullReply.append(content);
+                                    response.getWriter().write("data: " + content + "\n\n");
+                                    response.getWriter().flush();
+                                }
+                            } catch (IOException ignore) {
+                                // 客户端断开：忽略，结束语统一在外层补
+                            }
+                        },
+                        err -> gatewayError[0] = err,
+                        () -> {
+                        });
+                if (gatewayError[0] == null && fullReply.length() > 0) {
+                    response.getWriter().write("data: [DONE]\n\n");
+                    response.getWriter().flush();
+                    return;
+                }
+                // 网关异步失败只会走 errorConsumer, 不抛异常; 不打出来的话线上只能看到
+                // "回退 Ollama" 而永远拿不到真因(凭据/模型/上游), 故必须落日志。
+                log.warn("网关流式调用未产出内容, 回退 Ollama 直连: model={}, chunks={}, err={}",
+                        req.getModel(),
+                        outcome == null ? "n/a" : outcome.chunks() + "/" + chunkCount[0],
+                        gatewayError[0] == null ? "none" : gatewayError[0].getClass().getSimpleName() + ": " + gatewayError[0].getMessage());
+            } catch (Exception e) {
+                log.warn("网关流式调用失败, 回退 Ollama 直连: {}", e.getMessage());
+            }
+        }
+
         String actualModel = StringUtils.defaultIfEmpty(modelName, "qwen2.5:7b");
 
         Map<String, Object> requestBody = new HashMap<>();
@@ -419,6 +480,27 @@ public class AgentRuntimeService {
             response.getWriter().write("data: [DONE]\n\n");
             response.getWriter().flush();
         }
+    }
+
+    /**
+     * 从网关流式分片中取文本内容（兼容 message.content 与 delta.content 两种承载）。
+     */
+    private String extractChunkContent(com.zifang.z.llm.gateway.api.dto.UnifiedStreamChunk chunk) {
+        if (chunk == null || chunk.getChoices() == null) {
+            return "";
+        }
+        for (com.zifang.z.llm.gateway.api.dto.Choice choice : chunk.getChoices()) {
+            if (choice == null) {
+                continue;
+            }
+            if (choice.getMessage() != null && choice.getMessage().getContent() != null) {
+                return choice.getMessage().getContent();
+            }
+            if (choice.getDelta() != null && choice.getDelta().getContent() != null) {
+                return choice.getDelta().getContent();
+            }
+        }
+        return "";
     }
 
     /**
@@ -575,6 +657,13 @@ public class AgentRuntimeService {
         }
     }
 
+    private String truncate(String s, int max) {
+        if (s == null || s.length() <= max) {
+            return s;
+        }
+        return s.substring(0, max);
+    }
+
     private AgentConversation buildErrorConversation(String instanceCode, String userId, String userName,
                                                      String userMessage, String errorMsg, long startTime) {
         AgentConversation conversation = new AgentConversation();
@@ -586,7 +675,9 @@ public class AgentRuntimeService {
         conversation.setAssistantMessage(errorMsg);
         conversation.setLatencyMs((int) (System.currentTimeMillis() - startTime));
         conversation.setStatus("FAILED");
-        conversation.setErrorMsg(errorMsg);
+        // error_msg 是窄列: 失败原因常带上游整段报文, 直接写会把 insert 顶成
+        // MysqlDataTruncation, 于是"调用失败"变成"接口 500", 真相反而丢了。
+        conversation.setErrorMsg(truncate(errorMsg, 200));
         conversationService.saveEntity(conversation);
         return conversation;
     }

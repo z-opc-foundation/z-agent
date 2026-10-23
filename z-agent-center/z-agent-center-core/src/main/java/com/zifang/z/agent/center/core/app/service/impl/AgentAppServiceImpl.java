@@ -240,6 +240,9 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
         }
         app.setStatus("PUBLISHED");
         updateById(app);
+        // 发布即确保运行时实例存在（instanceCode=appCode），
+        // 否则应用列表的就地聊天/分享验证都会撞「实例不存在或已停用」
+        ensurePublicInstance(appCode);
     }
 
     @Override
