@@ -123,7 +123,8 @@
         <dependency>
             <groupId>io.github.yuku123</groupId>
             <artifactId>z-llm-gateway-core</artifactId>
-            <version>0.1.7</version>
+            <!-- 0.1.8: ApiKeyService.register/unregister —— 平台 AK 桥接要把 sk-* 注册进网关 -->
+            <version>0.1.8</version>
         </dependency>
         <dependency>
             <groupId>io.github.yuku123</groupId>

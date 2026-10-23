@@ -17,6 +17,9 @@ public class AgentAkServiceImpl implements AgentAkService {
     @Resource(name = "agentAkMapper")
     private AgentAkMapper akMapper;
 
+    @Resource
+    private PlatformAkGatewayBridge gatewayBridge;
+
     @Override
     public List<AgentAk> list(String tenantCode) {
         return list(tenantCode, null);
@@ -66,6 +69,7 @@ public class AgentAkServiceImpl implements AgentAkService {
         ak.setCreatedTime(LocalDateTime.now());
         ak.setUpdatedTime(LocalDateTime.now());
         akMapper.insert(ak);
+        gatewayBridge.onUpsert(ak);
         return ak;
     }
 
@@ -87,16 +91,21 @@ public class AgentAkServiceImpl implements AgentAkService {
         }
         ak.setUpdatedTime(LocalDateTime.now());
         akMapper.updateById(ak);
+        gatewayBridge.onUpsert(akMapper.selectById(ak.getId()));
         return akMapper.selectById(ak.getId());
     }
 
     @Override
     public void delete(Long id) {
+        AgentAk existing = akMapper.selectById(id);
         AgentAk ak = new AgentAk();
         ak.setId(id);
         ak.setIsDeleted(1);
         ak.setUpdatedTime(LocalDateTime.now());
         akMapper.updateById(ak);
+        if (existing != null) {
+            gatewayBridge.onRemove(existing);
+        }
     }
 
     @Override
@@ -106,5 +115,6 @@ public class AgentAkServiceImpl implements AgentAkService {
         ak.setStatus(status);
         ak.setUpdatedTime(LocalDateTime.now());
         akMapper.updateById(ak);
+        gatewayBridge.onUpsert(akMapper.selectById(id));
     }
 }
