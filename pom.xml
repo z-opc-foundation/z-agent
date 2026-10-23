@@ -84,8 +84,9 @@
              裸 <think>…</think> 不再被当正文推给前端（实测 MiniMax-M2.7 会把思考混进 content）。 -->
         <!-- 1.0.4（2026-10-23）= Agent 应用「就地聊天」的前置：发布应用时同步建实例
              （instanceCode=appCode），否则运行时按 instanceCode 路由会报「实例不存在或已停用」。
-             只动 AgentAppServiceImpl.publish 一处。 -->
-        <revision>1.0.4</revision>
+             只动 AgentAppServiceImpl.publish 一处。
+             1.0.5（2026-10-24）= 在 1.0.4 之上抬号（发 Maven Central 前置），功能口径不变。 -->
+        <revision>1.0.5</revision>
 
         <!-- 版本口径由父链下发：maven.compiler.source/target=8、project.build.sourceEncoding=UTF-8、
              spring-boot.version=2.7.18 三格与父链面值逐字相同，已删（根 pom 一次 + api/core/starter/admin
