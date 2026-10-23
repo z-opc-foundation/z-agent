@@ -38,10 +38,12 @@ import {
     EyeOutlined,
     FolderOpenOutlined,
     FolderOutlined,
+    GiftOutlined,
     GlobalOutlined,
     LinkOutlined,
     LoadingOutlined,
     LockOutlined,
+    MessageOutlined,
     PlusOutlined,
     ReloadOutlined,
     RobotOutlined,
@@ -54,6 +56,8 @@ import {
 } from '@ant-design/icons'
 import {agentApi, llmApi} from '../../api'
 import AgentAppEditor from './editor/AgentAppEditor'
+import AgentChatDrawer from './ChatDrawer.jsx'
+import TemplateMarket from '../template/index.jsx'
 import {SearchInput} from '@yuku123/z-frontend-common/ui'
 // 页面可见的失败面（TASK-20260925-037 R1-2）：apiRouter 不再把 404/非 2xx 洗成 {code:200}，
 // 失败必须**画在页面上**，不能只剩一行 console。
@@ -349,6 +353,7 @@ const GroupTree = ({selectedGroupCode, onGroupSelect, onGroupRefresh}) => {
 // ===== 应用卡片 =====
 const AppCard = ({
                      record,
+                     onChat,
                      onEdit,
                      onView,
                      onPublish,
@@ -373,6 +378,9 @@ const AppCard = ({
             }}
             styles={{body: {padding: 16}}}
             actions={[
+                <Tooltip key="chat" title="就地对话验证（不跳页）">
+                    <Button type="text" icon={<MessageOutlined/>} onClick={() => onChat?.(record)}>对话</Button>
+                </Tooltip>,
                 isPublished ? (
                     <Tooltip key="view" title="查看发布版本（只读）">
                         <Button type="text" icon={<EyeOutlined/>} onClick={() => onView?.(record)}>查看</Button>
@@ -701,6 +709,9 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
     const [toolDrawerApp, setToolDrawerApp] = useState(null)
     const [shareDrawerVisible, setShareDrawerVisible] = useState(false)
     const [shareDrawerApp, setShareDrawerApp] = useState(null)
+    // 就地聊天验证 + 模板库（模板市场并入本页）
+    const [chatApp, setChatApp] = useState(null)
+    const [templateOpen, setTemplateOpen] = useState(false)
     // 视图模式
     const [viewMode, setViewMode] = useState('card')
     // 创建弹窗的模型列表
@@ -834,6 +845,10 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
         setShareDrawerVisible(true)
     }
 
+    const handleChat = (record) => {
+        setChatApp(record)
+    }
+
     const handleToggleShare = async (record, enabled) => {
         try {
             const res = await agentApi.appToggleShare({params: {appCode: record.app_code, enabled}})
@@ -899,6 +914,8 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
                     <Button size="small" type={viewMode === 'list' ? 'primary' : 'default'}
                             icon={<UnorderedListOutlined/>} onClick={() => setViewMode('list')}
                             style={{borderRadius: 6}}/>
+                    <Button icon={<GiftOutlined/>} onClick={() => setTemplateOpen(true)}
+                            style={{borderRadius: 8}}>模板库</Button>
                     <Button type="primary" icon={<PlusOutlined/>} onClick={handleCreate}
                             style={{borderRadius: 8}}>新建应用</Button>
                 </Space>
@@ -957,6 +974,7 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
                 }}>
                     {dataSource.map(record => (
                         <AppCard key={record.id} record={record} onEdit={handleEdit} onView={handleView}
+                                 onChat={handleChat}
                                  onPublish={handlePublish} onUpgrade={handleUpgrade} onShare={handleShare}
                                  onDelete={handleDelete} onToolConfig={(app) => {
                             setToolDrawerApp(app);
@@ -1021,8 +1039,10 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
                         {title: '模型', dataIndex: 'model_name', width: 140, ellipsis: true},
                         {title: '创建时间', dataIndex: 'gmt_create', width: 170},
                         {
-                            title: '操作', width: 220, render: (_, r) => (
+                            title: '操作', width: 280, render: (_, r) => (
                                 <Space size="small">
+                                    <Button size="small" type="link" icon={<MessageOutlined/>}
+                                            onClick={() => handleChat(r)}>对话</Button>
                                     {r.status === 'PUBLISHED' ? (
                                         <>
                                             <Button size="small" type="link" icon={<EyeOutlined/>}
@@ -1120,6 +1140,27 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
                     </Form.Item>
                 </Form>
             </Modal>
+
+            {/* ===== 就地聊天验证 Drawer ===== */}
+            <AgentChatDrawer
+                open={!!chatApp}
+                app={chatApp}
+                onClose={() => setChatApp(null)}
+            />
+
+            {/* ===== 模板库 Drawer（模板市场并入本页：fork 一键复制成应用） ===== */}
+            <Drawer
+                title="模板库 — 从模板一键创建应用"
+                size="large"
+                open={templateOpen}
+                onClose={() => {
+                    setTemplateOpen(false)
+                    fetchData()
+                }}
+                destroyOnHidden
+            >
+                <TemplateMarket/>
+            </Drawer>
 
             {/* ===== 工具配置 Drawer ===== */}
             <Drawer
