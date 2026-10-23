@@ -27,6 +27,10 @@ reg('llmApi', 'toolTemplateList', 'GET', '/z-llm/config/tool-template/list')
 reg('mcpApi', 'list', 'GET', '/mcp/server/list')
 reg('mcpApi', 'listTools', 'POST', '/mcp/server/tools/list')
 reg('mcpApi', 'callTool', 'POST', '/mcp/server/tools/call')
+// 控制面只读投影 (z-mcp-admin，z.mcp.expose-admin=true 时装配；未开启时后端回 fail 信封)
+reg('mcpApi', 'adminOverview', 'GET', '/mcp/admin/overview')
+reg('mcpApi', 'serverState', 'GET', '/mcp/admin/servers/state')
+reg('mcpApi', 'health', 'GET', '/mcp/admin/health')
 
 // =============================================================
 // ossApi (对象存储 z-oss)
@@ -60,19 +64,24 @@ reg('scriptApi', 'importOpenApi', 'POST', '/script/import-openapi')
 reg('scriptApi', 'previewMapping', 'POST', '/script/preview-mapping')
 
 // =============================================================
-// skillApi (技能市场)
+// skillApi (技能市场) —— 2026-10-22 改接 z-skill 真实市场面。
+// 旧表里的 /skill/page、/skill/category/tree、/skill/upload、/skill/versions、
+// /skill/download、/skill/by-code 在 z-skill 后端**从未存在过**（前端对着想象中的
+// 契约写，失败后回退 mock 假数据）。z-skill 真实供给的是 search/categories/stats/
+// installed/detail/content/install/uninstall/refresh 一族。
 // =============================================================
-reg('skillApi', 'page', 'POST', '/skill/page')
-reg('skillApi', 'categoryTree', 'GET', '/skill/category/tree')
-reg('skillApi', 'create', 'POST', '/skill')
-reg('skillApi', 'createCategory', 'POST', '/skill/category')
-reg('skillApi', 'deleteCategory', 'POST', '/skill/category/delete')
-reg('skillApi', 'getBySkillCode', 'GET', '/skill/by-code')
-reg('skillApi', 'install', 'POST', '/skill/install')
+reg('skillApi', 'search', 'GET', '/skill/search')
+reg('skillApi', 'categories', 'GET', '/skill/categories')
+reg('skillApi', 'sources', 'GET', '/skill/sources')
 reg('skillApi', 'stats', 'GET', '/skill/stats')
-reg('skillApi', 'versions', 'GET', '/skill/versions')
-reg('skillApi', 'downloadPackage', 'GET', '/skill/download')
-reg('skillApi', 'uploadPackage', 'POST', '/skill/upload')
+reg('skillApi', 'installed', 'GET', '/skill/installed')
+reg('skillApi', 'detail', 'GET', '/skill/detail')
+reg('skillApi', 'content', 'GET', '/skill/content')
+reg('skillApi', 'install', 'POST', '/skill/install')
+// 卸载走查询串形态（/skill/uninstall?id=）而不是路径形态：聚合出来的 id 形如 source/slug，
+// 带斜杠，进路径段会被切段。DELETE + {params:{id}} 正好是 apiRouter 认可的形状。
+reg('skillApi', 'uninstall', 'DELETE', '/skill/uninstall')
+reg('skillApi', 'refresh', 'POST', '/skill/refresh')
 
 // =============================================================
 // agentApi (Agent 应用)
