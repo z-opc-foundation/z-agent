@@ -74,7 +74,7 @@ const AkManage = () => {
         try {
             const res = await request('/agent/app/page', {
                 method: 'POST',
-                body: JSON.stringify({current: 1, size: 100})
+                data: {current: 1, size: 100}
             })
             const list = Array.isArray(res) ? res : (res?.records || res?.data || [])
             setAppOptions(list.map(a => ({value: a.appCode, label: a.appName || a.appCode})))

@@ -37,144 +37,6 @@ import {PageHeader} from '@yuku123/z-frontend-common/ui'
 const {confirm} = Modal
 
 // 示例数据
-const mockProviders = [
-    {
-        providerCode: 'ollama',
-        providerName: 'Ollama',
-        providerType: 'ollama',
-        baseUrl: 'http://localhost:11434',
-        enabled: 1,
-        priority: 100
-    },
-    {
-        providerCode: 'openai',
-        providerName: 'OpenAI',
-        providerType: 'openai',
-        baseUrl: 'https://api.openai.com',
-        enabled: 1,
-        priority: 90
-    },
-    {
-        providerCode: 'dashscope',
-        providerName: '阿里通义',
-        providerType: 'dashscope',
-        baseUrl: 'https://dashscope.aliyuncs.com',
-        enabled: 1,
-        priority: 80
-    },
-]
-
-const mockModels = [
-    {
-        id: 1,
-        modelCode: 'qwen2.5:7b-instruct-q4_K_M',
-        modelName: 'Qwen 2.5 7B',
-        providerCode: 'ollama',
-        modelType: 'chat',
-        contextWindow: 32768,
-        status: 'ACTIVE',
-        description: '通义千问 2.5 轻量级文本生成模型',
-        inputPrice: 0,
-        outputPrice: 0
-    },
-    {
-        id: 2,
-        modelCode: 'qwen3:8b',
-        modelName: 'Qwen3 8B',
-        providerCode: 'ollama',
-        modelType: 'chat',
-        contextWindow: 40960,
-        status: 'ACTIVE',
-        description: '通义千问 3 最新一代模型',
-        inputPrice: 0,
-        outputPrice: 0
-    },
-    {
-        id: 3,
-        modelCode: 'gpt-4o',
-        modelName: 'GPT-4o',
-        providerCode: 'openai',
-        modelType: 'chat',
-        contextWindow: 128000,
-        status: 'ACTIVE',
-        description: 'OpenAI 旗舰多模态模型',
-        inputPrice: 0.0025,
-        outputPrice: 0.01
-    },
-    {
-        id: 4,
-        modelCode: 'gpt-4o-mini',
-        modelName: 'GPT-4o Mini',
-        providerCode: 'openai',
-        modelType: 'chat',
-        contextWindow: 128000,
-        status: 'ACTIVE',
-        description: '轻量快速，性价比高',
-        inputPrice: 0.00015,
-        outputPrice: 0.0006
-    },
-    {
-        id: 5,
-        modelCode: 'qwen-vl-max',
-        modelName: 'Qwen VL Max',
-        providerCode: 'dashscope',
-        modelType: 'vision',
-        contextWindow: 8192,
-        status: 'ACTIVE',
-        description: '通义千问视觉模型，支持图像理解',
-        inputPrice: 0.002,
-        outputPrice: 0.008
-    },
-    {
-        id: 6,
-        modelCode: 'qwen2-audio',
-        modelName: 'Qwen2 Audio',
-        providerCode: 'dashscope',
-        modelType: 'audio',
-        contextWindow: 8192,
-        status: 'ACTIVE',
-        description: '通义千问语音模型',
-        inputPrice: 0.001,
-        outputPrice: 0.004
-    },
-    {
-        id: 7,
-        modelCode: 'text-embedding-v3',
-        modelName: 'Text Embedding V3',
-        providerCode: 'openai',
-        modelType: 'embedding',
-        contextWindow: 8191,
-        status: 'ACTIVE',
-        description: 'OpenAI 文本嵌入模型',
-        inputPrice: 0.00002,
-        outputPrice: 0
-    },
-    {
-        id: 8,
-        modelCode: 'codestral',
-        modelName: 'Codestral',
-        providerCode: 'ollama',
-        modelType: 'code',
-        contextWindow: 32768,
-        status: 'ACTIVE',
-        description: '代码生成专用模型，支持多种编程语言',
-        inputPrice: 0,
-        outputPrice: 0
-    },
-    {
-        id: 9,
-        modelCode: 'dall-e-3',
-        modelName: 'DALL·E 3',
-        providerCode: 'openai',
-        modelType: 'image',
-        contextWindow: 0,
-        status: 'ACTIVE',
-        description: 'OpenAI 图像生成模型',
-        inputPrice: 0.04,
-        outputPrice: 0
-    },
-]
-
 // ===== 能力分类定义（阿里云风格） =====
 const CATEGORY_DEFS = [
     {key: 'chat', title: '文本生成', icon: <BranchesOutlined/>, color: '#1677ff', bg: '#e6f4ff', border: '#1677ff'},
@@ -209,6 +71,30 @@ const providerTypeList = [
     {value: 'custom', label: '自定义'},
 ]
 
+/** 后端序列化成 snake_case，页面按 camelCase 取；状态字段是 enabled(1/0)，不是 status。 */
+const toModel = (m) => ({
+    ...m,
+    modelCode: m.modelCode ?? m.model_code,
+    modelName: m.modelName ?? m.model_name,
+    providerCode: m.providerCode ?? m.provider_code,
+    modelType: m.modelType ?? m.model_type,
+    contextWindow: m.contextWindow ?? m.context_window,
+    inputPrice: m.inputPrice ?? m.input_price,
+    outputPrice: m.outputPrice ?? m.output_price,
+    description: m.description ?? '',
+    status: (m.enabled ?? 0) === 1 ? 'ACTIVE' : 'INACTIVE',
+})
+
+const toProvider = (p) => ({
+    ...p,
+    providerCode: p.providerCode ?? p.provider_code,
+    providerName: p.providerName ?? p.provider_name,
+    baseUrl: p.baseUrl ?? p.base_url,
+    apiKey: p.apiKey ?? p.api_key,
+    providerType: p.providerType ?? p.provider_type,
+    status: (p.enabled ?? 0) === 1 ? 'ACTIVE' : 'INACTIVE',
+})
+
 const ModelManage = () => {
     const [models, setModels] = useState([])
     const [providers, setProviders] = useState([])
@@ -226,21 +112,19 @@ const ModelManage = () => {
         setLoading(true)
         try {
             const [mRes, pRes] = await Promise.all([
-                request('/llm-center/model/list', {method: 'GET'}).catch(() => null),
-                request('/llm-center/provider/list', {method: 'GET'}).catch(() => null),
+                request('/z-llm/config/model/list', {method: 'GET'}).catch(() => null),
+                request('/z-llm/config/provider/list', {method: 'GET'}).catch(() => null),
             ])
             const modelsData = Array.isArray(mRes) ? mRes : (mRes?.data || [])
             const providersData = Array.isArray(pRes) ? pRes : (pRes?.data || [])
-            if (modelsData.length === 0 && providersData.length === 0) {
-                setProviders(mockProviders)
-                setModels(mockModels)
-            } else {
-                setModels(modelsData)
-                setProviders(providersData)
+            // 接口不可达时如实置空并报错，绝不回落成写死的假模型清单
+            if (mRes === null || pRes === null) {
+                message.error('模型 / 供应商接口不可达，下面显示的是空清单')
             }
+            setModels(modelsData.map(toModel))
+            setProviders(providersData.map(toProvider))
         } catch (e) {
-            setProviders(mockProviders)
-            setModels(mockModels)
+            message.error('加载失败：' + (e?.message || e))
         } finally {
             setLoading(false)
         }
@@ -286,12 +170,7 @@ const ModelManage = () => {
             title: '确认删除',
             content: `删除模型 ${record.modelName} ？`,
             onOk: async () => {
-                if (models === mockModels) {
-                    setModels(models.filter(m => m.id !== record.id))
-                    message.success('删除成功')
-                    return
-                }
-                await request('/llm-center/model/delete', {method: 'POST', data: {id: record.id}})
+                await request('/z-llm/config/model/delete', {method: 'POST', data: record.id})
                 message.success('删除成功')
                 fetchData()
             }
@@ -301,18 +180,9 @@ const ModelManage = () => {
     const handleModelSubmit = async () => {
         try {
             const values = await form.validateFields()
-            if (models === mockModels) {
-                if (editing) {
-                    setModels(models.map(m => m.id === editing.id ? {...m, ...values} : m))
-                } else {
-                    setModels([...models, {...values, id: Date.now()}])
-                }
-                message.success(editing ? '更新成功' : '创建成功')
-                setModalVisible(false)
-                return
-            }
-            await request(editing ? '/llm-center/model/update' : '/llm-center/model/create', {
-                method: 'POST', data: values
+            const {status, ...rest} = values
+            await request(editing ? '/z-llm/config/model/update' : '/z-llm/config/model/create', {
+                method: 'POST', data: {...rest, enabled: status === 'ACTIVE' ? 1 : 0}
             })
             message.success(editing ? '更新成功' : '创建成功')
             setModalVisible(false)
@@ -343,12 +213,7 @@ const ModelManage = () => {
             title: '确认删除',
             content: `删除供应商 ${record.providerName} ？`,
             onOk: async () => {
-                if (providers === mockProviders) {
-                    setProviders(providers.filter(p => p.providerCode !== record.providerCode))
-                    message.success('删除成功')
-                    return
-                }
-                await request('/llm-center/provider/delete', {method: 'POST', data: {id: record.id}})
+                await request('/z-llm/config/provider/delete', {method: 'POST', data: record.id})
                 message.success('删除成功')
                 fetchData()
             }
@@ -358,18 +223,9 @@ const ModelManage = () => {
     const handleProviderSubmit = async () => {
         try {
             const values = await providerForm.validateFields()
-            if (providers === mockProviders) {
-                if (editingProvider) {
-                    setProviders(providers.map(p => p.providerCode === editingProvider.providerCode ? {...p, ...values} : p))
-                } else {
-                    setProviders([...providers, {...values}])
-                }
-                message.success(editingProvider ? '更新成功' : '创建成功')
-                setProviderModalVisible(false)
-                return
-            }
-            await request(editingProvider ? '/llm-center/provider/update' : '/llm-center/provider/create', {
-                method: 'POST', data: values
+            const {status, ...rest} = values
+            await request(editingProvider ? '/z-llm/config/provider/update' : '/z-llm/config/provider/create', {
+                method: 'POST', data: {...rest, enabled: status === 'ACTIVE' ? 1 : 0}
             })
             message.success(editingProvider ? '更新成功' : '创建成功')
             setProviderModalVisible(false)

@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react'
-import {Card, Col, Row, Select, Statistic, Table, Tabs, Tag, Typography} from 'antd'
+import {Alert, Card, Col, Row, Select, Statistic, Tabs, Tag, Typography} from 'antd'
 import {BarChartOutlined, DollarOutlined, RocketOutlined} from '@ant-design/icons'
-import request from '../../api/request'
+import request from '@/agent/api/request'
 import ReactECharts from '../../../echarts'
 import {ListTable, PageHeader} from '@yuku123/z-frontend-common/ui'
 
@@ -15,6 +15,8 @@ const UsageDashboard = () => {
     const [trend, setTrend] = useState([])
     const [records, setRecords] = useState([])
     const [loading, setLoading] = useState(false)
+    // /api/llm-gateway/usage/** 在本 JVM 没有端点（网关未部署），失败时如实告知而不是给空图
+    const [gatewayMissing, setGatewayMissing] = useState(false)
 
     // 维度筛选
     const [appFilter, setAppFilter] = useState(null)
@@ -27,7 +29,7 @@ const UsageDashboard = () => {
     // 加载维度下拉数据
     useEffect(() => {
         // 加载供应商
-        request('/llm-center/provider/list').then(res => {
+        request('/z-llm/config/provider/list').then(res => {
             const list = Array.isArray(res) ? res : (res?.data || [])
             setProviders(list)
         }).catch(() => {
@@ -37,7 +39,7 @@ const UsageDashboard = () => {
         loadModels(null)
 
         // 加载应用列表
-        request('/agent/app/page', {method: 'POST', body: JSON.stringify({current: 1, size: 100})}).then(res => {
+        request('/agent/app/page', {method: 'POST', data: {current: 1, size: 100}}).then(res => {
             const list = Array.isArray(res) ? res : (res?.records || res?.data || [])
             setApps(list)
         }).catch(() => {
@@ -45,7 +47,7 @@ const UsageDashboard = () => {
     }, [])
 
     const loadModels = (providerCode) => {
-        request('/llm-center/model/list', {params: {providerCode}}).then(res => {
+        request('/z-llm/config/model/list', {params: {providerCode}}).then(res => {
             const list = Array.isArray(res) ? res : (res?.data || [])
             setModels(list)
         }).catch(() => {
@@ -74,6 +76,7 @@ const UsageDashboard = () => {
         } catch (e) {
             console.warn('Usage overview API unavailable:', e?.message)
             setOverview(null)
+            setGatewayMissing(true)
         }
     }
 
@@ -213,6 +216,11 @@ const UsageDashboard = () => {
     return (
         <div>
             <PageHeader title="用量统计"/>
+            {gatewayMissing && (
+                <Alert type="warning" showIcon style={{marginBottom: 16}}
+                       message="网关用量端点未接入"
+                       description="本页依赖 /api/llm-gateway/usage/**（网关侧统计接口），当前部署未装配大模型网关，因此没有可展示的真实用量。请到「智能中心 · 模型监控」查看 AK 维度用量，或部署网关后刷新本页。"/>
+            )}
             {/* 维度筛选栏 */}
             <div style={{
                 display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
@@ -311,27 +319,34 @@ const UsageDashboard = () => {
                 </TabPane>
 
                 <TabPane tab="按应用统计" key="byApp">
-                    <Card style={{borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)'}}>
-                        <Table
-                            columns={appColumns}
-                            dataSource={byApp}
-                            rowKey="appCode"
-                            pagination={false}
-                            locale={{emptyText: '暂无数据'}}
-                        />
-                    </Card>
+                    <ListTable
+                        rows={byApp}
+                        columns={appColumns}
+                        rowKey="appCode"
+                        // 【为什么套客户端分页】/llm-gateway/usage/by-app 是**全量返回**
+                        // （请求不带 limit/offset，翻页要重新请求后端 —— 见 fetchByApp），
+                        // 所以聚合结果的行数随「接入的应用数」增长，不是固定的小数据集
+                        // ⇒ 不能用 pagination={false} 一股脑铺开（应用一多这页就没法看了）。
+                        // searchKeys 按真实字段走：appCode 是应用编码的唯一标识。
+                        searchKeys={['appCode']}
+                        searchPlaceholder="按应用编码过滤"
+                        emptyTitle="暂无数据"
+                        cardProps={{style: {borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)'}}}
+                    />
                 </TabPane>
 
                 <TabPane tab="按用户统计" key="byUser">
-                    <Card style={{borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)'}}>
-                        <Table
-                            columns={userColumns}
-                            dataSource={byUser}
-                            rowKey="userId"
-                            pagination={false}
-                            locale={{emptyText: '暂无数据'}}
-                        />
-                    </Card>
+                    <ListTable
+                        rows={byUser}
+                        columns={userColumns}
+                        rowKey="userId"
+                        // 【为什么套客户端分页】同 byApp：/llm-gateway/usage/by-user 全量返回，
+                        // 行数随「活跃用户数」增长 ⇒ 用基座的客户端分页 + 过滤。
+                        searchKeys={['userId']}
+                        searchPlaceholder="按用户ID过滤"
+                        emptyTitle="暂无数据"
+                        cardProps={{style: {borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)'}}}
+                    />
                 </TabPane>
 
                 <TabPane tab="调用明细" key="records">

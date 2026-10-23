@@ -6,6 +6,19 @@ import {ListTable, PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {confirm} = Modal
 
+/** 后端序列化成 snake_case（model_code），页面按 camelCase 取；状态字段是 enabled(1/0)，不是 status。 */
+const toModel = (m) => ({
+    ...m,
+    modelCode: m.modelCode ?? m.model_code,
+    modelName: m.modelName ?? m.model_name,
+    providerCode: m.providerCode ?? m.provider_code,
+    contextWindow: m.contextWindow ?? m.context_window,
+    inputPrice: m.inputPrice ?? m.input_price,
+    outputPrice: m.outputPrice ?? m.output_price,
+    description: m.description ?? '',
+    status: (m.enabled ?? 0) === 1 ? 'ACTIVE' : 'INACTIVE',
+})
+
 const LlmModel = () => {
     const [data, setData] = useState([])
     const [providers, setProviders] = useState([])
@@ -17,9 +30,9 @@ const LlmModel = () => {
     const fetchModels = async () => {
         setLoading(true)
         try {
-            const res = await request('/llm-center/model/list', {method: 'GET'})
+            const res = await request('/z-llm/config/model/list', {method: 'GET'})
             const list = Array.isArray(res) ? res : (res?.data || [])
-            setData(list)
+            setData(list.map(toModel))
         } catch (e) {
             message.error('加载失败')
         } finally {
@@ -29,7 +42,7 @@ const LlmModel = () => {
 
     const fetchProviders = async () => {
         try {
-            const res = await request('/llm-center/provider/list', {method: 'GET'})
+            const res = await request('/z-llm/config/provider/list', {method: 'GET'})
             const list = Array.isArray(res) ? res : (res?.data || [])
             setProviders(list)
         } catch (e) {
@@ -59,7 +72,7 @@ const LlmModel = () => {
             title: '确认删除',
             content: `删除模型 ${record.modelName} ？`,
             onOk: async () => {
-                await request('/llm-center/model/delete', {method: 'POST', data: {id: record.id}})
+                await request('/z-llm/config/model/delete', {method: 'POST', data: record.id})
                 message.success('删除成功')
                 fetchModels()
             }
@@ -68,10 +81,10 @@ const LlmModel = () => {
 
     const handleSubmit = async () => {
         try {
-            const values = await form.validateFields()
-            await request(editing ? '/llm-center/model/update' : '/llm-center/model/create', {
+            const {status, ...rest} = await form.validateFields()
+            await request(editing ? '/z-llm/config/model/update' : '/z-llm/config/model/create', {
                 method: 'POST',
-                data: values
+                data: {...rest, enabled: status === 'ACTIVE' ? 1 : 0}
             })
             message.success(editing ? '更新成功' : '创建成功')
             setModalVisible(false)

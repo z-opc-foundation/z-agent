@@ -6,6 +6,18 @@ import {ListTable, PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {confirm} = Modal
 
+/** 后端序列化成 snake_case，页面按 camelCase 取；状态字段是 enabled(1/0)。 */
+const toModel = (p) => ({
+    ...p,
+    providerCode: p.providerCode ?? p.provider_code,
+    providerName: p.providerName ?? p.provider_name,
+    baseUrl: p.baseUrl ?? p.base_url,
+    apiKey: p.apiKey ?? p.api_key,
+    providerType: p.providerType ?? p.provider_type,
+    priority: p.priority ?? 100,
+    status: (p.enabled ?? 0) === 1 ? 'ACTIVE' : 'INACTIVE',
+})
+
 const LlmProvider = () => {
     const [data, setData] = useState([])
     const [loading, setSetLoading] = useState(false)
@@ -16,9 +28,9 @@ const LlmProvider = () => {
     const fetchProviders = async () => {
         setSetLoading(true)
         try {
-            const res = await request('/llm-center/provider/list', {method: 'GET'})
+            const res = await request('/z-llm/config/provider/list', {method: 'GET'})
             const list = Array.isArray(res) ? res : (res?.data || [])
-            setData(list)
+            setData(list.map(toModel))
         } catch (e) {
             message.error('加载失败')
         } finally {
@@ -47,7 +59,7 @@ const LlmProvider = () => {
             title: '确认删除',
             content: `删除供应商 ${record.providerName} ？`,
             onOk: async () => {
-                await request('/llm-center/provider/delete', {method: 'POST', data: {id: record.id}})
+                await request('/z-llm/config/provider/delete', {method: 'POST', data: record.id})
                 message.success('删除成功')
                 fetchProviders()
             }
@@ -56,10 +68,10 @@ const LlmProvider = () => {
 
     const handleSubmit = async () => {
         try {
-            const values = await form.validateFields()
-            await request(editing ? '/llm-center/provider/update' : '/llm-center/provider/create', {
+            const {status, ...rest} = await form.validateFields()
+            await request(editing ? '/z-llm/config/provider/update' : '/z-llm/config/provider/create', {
                 method: 'POST',
-                data: values
+                data: {...rest, enabled: status === 'ACTIVE' ? 1 : 0}
             })
             message.success(editing ? '更新成功' : '创建成功')
             setModalVisible(false)

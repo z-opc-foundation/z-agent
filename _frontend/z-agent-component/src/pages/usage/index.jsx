@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react'
-import {Card, Col, Row, Select, Statistic, Tabs, Tag, Typography} from 'antd'
+import {Alert, Card, Col, Row, Select, Statistic, Tabs, Tag, Typography} from 'antd'
 import {BarChartOutlined, DollarOutlined, RocketOutlined} from '@ant-design/icons'
 import request from '@/agent/api/request'
 import ReactECharts from '../../echarts'
@@ -15,6 +15,8 @@ const UsageDashboard = () => {
     const [trend, setTrend] = useState([])
     const [records, setRecords] = useState([])
     const [loading, setLoading] = useState(false)
+    // /api/llm-gateway/usage/** 在本 JVM 没有端点（网关未部署），失败时如实告知而不是给空图
+    const [gatewayMissing, setGatewayMissing] = useState(false)
 
     // 维度筛选
     const [appFilter, setAppFilter] = useState(null)
@@ -27,7 +29,7 @@ const UsageDashboard = () => {
     // 加载维度下拉数据
     useEffect(() => {
         // 加载供应商
-        request('/llm-center/provider/list').then(res => {
+        request('/z-llm/config/provider/list').then(res => {
             const list = Array.isArray(res) ? res : (res?.data || [])
             setProviders(list)
         }).catch(() => {
@@ -37,7 +39,7 @@ const UsageDashboard = () => {
         loadModels(null)
 
         // 加载应用列表
-        request('/agent/app/page', {method: 'POST', body: JSON.stringify({current: 1, size: 100})}).then(res => {
+        request('/agent/app/page', {method: 'POST', data: {current: 1, size: 100}}).then(res => {
             const list = Array.isArray(res) ? res : (res?.records || res?.data || [])
             setApps(list)
         }).catch(() => {
@@ -45,7 +47,7 @@ const UsageDashboard = () => {
     }, [])
 
     const loadModels = (providerCode) => {
-        request('/llm-center/model/list', {params: {providerCode}}).then(res => {
+        request('/z-llm/config/model/list', {params: {providerCode}}).then(res => {
             const list = Array.isArray(res) ? res : (res?.data || [])
             setModels(list)
         }).catch(() => {
@@ -74,6 +76,7 @@ const UsageDashboard = () => {
         } catch (e) {
             console.warn('Usage overview API unavailable:', e?.message)
             setOverview(null)
+            setGatewayMissing(true)
         }
     }
 
@@ -213,6 +216,11 @@ const UsageDashboard = () => {
     return (
         <div>
             <PageHeader title="用量统计"/>
+            {gatewayMissing && (
+                <Alert type="warning" showIcon style={{marginBottom: 16}}
+                       message="网关用量端点未接入"
+                       description="本页依赖 /api/llm-gateway/usage/**（网关侧统计接口），当前部署未装配大模型网关，因此没有可展示的真实用量。请到「智能中心 · 模型监控」查看 AK 维度用量，或部署网关后刷新本页。"/>
+            )}
             {/* 维度筛选栏 */}
             <div style={{
                 display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
