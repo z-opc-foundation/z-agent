@@ -35,7 +35,7 @@ import {
     StopOutlined,
     ThunderboltOutlined
 } from '@ant-design/icons'
-import {productApi, sceneApi} from '@/agent/api'
+import {productApi, sceneApi} from '../../agent/api'
 import {ListTable, SearchInput} from '@yuku123/z-frontend-common/ui'
 
 const {TextArea} = Input

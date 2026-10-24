@@ -32,7 +32,7 @@ import {
     ThunderboltOutlined,
     UserOutlined
 } from '@ant-design/icons'
-import {productApi, sceneApi} from '@/agent/api'
+import {productApi, sceneApi} from '../../agent/api'
 
 const {TextArea} = Input
 const {Text, Title} = Typography

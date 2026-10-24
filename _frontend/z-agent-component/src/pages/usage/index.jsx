@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react'
 import {Alert, Card, Col, Row, Select, Statistic, Tabs, Tag, Typography} from 'antd'
 import {BarChartOutlined, DollarOutlined, RocketOutlined} from '@ant-design/icons'
-import request from '@/agent/api/request'
+import request from '../../agent/api/request'
 import ReactECharts from '../../echarts'
 import {ListTable, PageHeader} from '@yuku123/z-frontend-common/ui'
 

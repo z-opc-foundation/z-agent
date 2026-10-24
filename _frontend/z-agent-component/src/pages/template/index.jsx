@@ -8,7 +8,7 @@ import {
     SearchOutlined,
     StarOutlined,
 } from '@ant-design/icons'
-import {templateApi} from '@/agent/api'
+import {templateApi} from '../../agent/api'
 import {EmptyState, PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {Text, Paragraph, Title} = Typography

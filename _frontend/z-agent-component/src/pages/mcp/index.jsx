@@ -266,8 +266,11 @@ export default function McpPage() {
         return (
             <div style={{marginBottom: 16}}>
                 <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12}}>
-                    <KpiCard icon={<CloudServerOutlined/>} label="MCP Server" value={overview.serverCount ?? '-'}
-                             sub={overview.platform ? `v${overview.version ?? '?'}` : ''}/>
+                    {/* 计数口径必须与下方表格一致 = /api/mcp/server/list 的行数（外部上游 + 本机 LOCAL）。
+                        overview.serverCount 是「注册表里已注册的外部 server 数」，不含本机那一行，
+                        单独拿来当标题数会与表格行数对不上（表里 1 行、标题写 0）。 */}
+                    <KpiCard icon={<CloudServerOutlined/>} label="MCP Server" value={servers.length}
+                             sub={overview.platform ? `注册 ${overview.serverCount ?? 0} · v${overview.version ?? '?'}` : ''}/>
                     <KpiCard icon={<FunctionOutlined/>} label="工具总数" value={overview.toolCount ?? '-'}
                              sub={`内建 ${overview.builtinToolCount ?? 0} / 外部 ${overview.externalToolCount ?? 0}`}/>
                     <KpiCard icon={<ApiOutlined/>} label="资源" value={overview.resourceCount ?? 0}
