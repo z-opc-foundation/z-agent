@@ -217,6 +217,15 @@ export default function McpPage() {
         return st ? {...s, lastError: st.lastError ?? null, stateConnected: st.connected} : s
     }), [servers, stateByName])
 
+    // 客户端查询过滤（lead 008 §2 规则 3）：过滤字段取自下方 columns 的 dataIndex
+    // （serverName / url / transportType）。
+    const [keyword, setKeyword] = useState('')
+    const filteredServers = useMemo(() => {
+        const kw = keyword.trim().toLowerCase()
+        if (!kw) return enrichedServers
+        return enrichedServers.filter((s) => `${s.serverName || ''} ${s.url || ''} ${s.transportType || ''}`.toLowerCase().includes(kw))
+    }, [enrichedServers, keyword])
+
     // ===== Server columns =====
     const columns = [
         {title: '名称', dataIndex: 'serverName', key: 'serverName', width: 160},
@@ -310,11 +319,16 @@ export default function McpPage() {
                 <div style={{flex: 1, display: 'flex', gap: 16, overflow: 'hidden'}}>
                     {/* Server List */}
                     <div style={{flex: selectedServer ? '0 0 46%' : 1, overflow: 'auto'}}>
+                        {/* 这页没有包住 Table 的 <Card>，查询框直接放在 Table 正上方 */}
+                        <Space style={{marginBottom: 8}}>
+                            <Input.Search allowClear placeholder="按服务名 / URL 过滤" style={{width: 240}}
+                                          onChange={(e) => setKeyword(e.target.value)}/>
+                        </Space>
                         {servers.length === 0 && !loading ? (
                             <EmptyState title="暂无 MCP server"
                                         description="z.mcp.enabled=false，或还没配 z.mcp.servers[*] 上游"/>
                         ) : (
-                            <Table columns={columns} dataSource={enrichedServers} rowKey="serverName"
+                            <Table columns={columns} dataSource={filteredServers} rowKey="serverName"
                                    loading={loading}
                                    size="small"
                                    // pagination 豁免：server 清单来自配置项 z.mcp.servers，条数由部署固定，不随运行数据增长

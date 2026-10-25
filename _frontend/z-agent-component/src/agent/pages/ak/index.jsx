@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useEffect, useMemo, useState} from 'react'
 import {
     Alert,
     Button,
@@ -90,6 +90,15 @@ const AkManage = () => {
     useEffect(() => {
         fetchApps()
     }, [])
+
+    // 客户端查询过滤（lead 008 §2 规则 3）：过滤字段取自下方 columns 的 dataIndex
+    // （akName / accessKey / description）。
+    const [keyword, setKeyword] = useState('')
+    const filteredKeys = useMemo(() => {
+        const kw = keyword.trim().toLowerCase()
+        if (!kw) return keys
+        return keys.filter((k) => `${k.akName || ''} ${k.accessKey || ''} ${k.description || ''}`.toLowerCase().includes(kw))
+    }, [keys, keyword])
 
     const handleAdd = () => {
         setEditing(null)
@@ -324,7 +333,13 @@ const AkManage = () => {
                 </Col>
             </Row>
 
-            <Card size="small" styles={{body: {padding: 0}}}>
+            <Card size="small" styles={{body: {padding: 0}}}
+                  extra={
+                      <Space>
+                          <Input.Search allowClear placeholder="按 AK 名称 / AccessKey 过滤" style={{width: 240}}
+                                        onChange={(e) => setKeyword(e.target.value)}/>
+                      </Space>
+                  }>
                 <Tabs
                     activeKey={activeTab}
                     onChange={setActiveTab}
@@ -345,7 +360,7 @@ const AkManage = () => {
                             children: (
                                 <Spin spinning={loading}>
                                     <Table
-                                        dataSource={keys}
+                                        dataSource={filteredKeys}
                                         columns={columns}
                                         rowKey="id"
                                         pagination={DEFAULT_PAGINATION}
@@ -365,7 +380,7 @@ const AkManage = () => {
                             children: (
                                 <Spin spinning={loading}>
                                     <Table
-                                        dataSource={keys}
+                                        dataSource={filteredKeys}
                                         columns={columns}
                                         rowKey="id"
                                         pagination={DEFAULT_PAGINATION}

@@ -7,7 +7,7 @@
  *   - 标签管理
  *   - 配额管理
  */
-import {useEffect, useState} from 'react'
+import {useEffect, useMemo, useState} from 'react'
 import {
     Button,
     Card,
@@ -124,6 +124,15 @@ function ApiKeyTab() {
     const [page, setPage] = useState({current: 1, size: 10})
     const [loading, setLoading] = useState(false)
 
+    // 客户端查询过滤（lead 008 §2 规则 3）：过滤字段取自本表 columns 的 dataIndex
+    // （id / app_name / scope）。
+    const [keyword, setKeyword] = useState('')
+    const filteredList = useMemo(() => {
+        const kw = keyword.trim().toLowerCase()
+        if (!kw) return list
+        return list.filter((r) => `${r.id || ''} ${r.app_name || ''} ${r.scope || ''}`.toLowerCase().includes(kw))
+    }, [list, keyword])
+
     const load = async (target) => {
         setLoading(true)
         try {
@@ -153,13 +162,18 @@ function ApiKeyTab() {
     //   修法在 z-script 侧（出口 DTO 脱敏 + 读端点按角色/归属校验），修好之后这些按钮该由**带鉴权的那一面**长回来，
     //   而不是在 z-opc 这边先接上。
     return (
-        <Card>
+        <Card extra={
+            <Space>
+                <Input.Search allowClear placeholder="按 ID / 应用名 / Scope 过滤" style={{width: 240}}
+                              onChange={(e) => setKeyword(e.target.value)}/>
+            </Space>
+        }>
             <Space style={{marginBottom: 16}}>
                 <Button icon={<ReloadOutlined/>} onClick={() => load({current: 1, size: page.size})}>刷新</Button>
                 <span style={{color: '#999'}}>本页只读：创建/启停/删除 API Key 需要 z-script 侧的归属校验先落地（TASK-20260925-031）</span>
             </Space>
             <Table
-                rowKey="id" loading={loading} dataSource={list}
+                rowKey="id" loading={loading} dataSource={filteredList}
                 pagination={{
                     current: page.current,
                     pageSize: page.size,
@@ -205,6 +219,15 @@ function MonitorTab() {
     const [filter, setFilter] = useState({apiKeyId: undefined, success: undefined})
     const [trend, setTrend] = useState([])
     const [trendDays, setTrendDays] = useState(7)
+
+    // 客户端查询过滤（lead 008 §2 规则 3）：过滤字段取自本表 columns 的 dataIndex
+    // （api_key_id / app_name / script_code）。
+    const [keyword, setKeyword] = useState('')
+    const filteredLogs = useMemo(() => {
+        const kw = keyword.trim().toLowerCase()
+        if (!kw) return logs
+        return logs.filter((r) => `${r.api_key_id || ''} ${r.app_name || ''} ${r.script_code || ''}`.toLowerCase().includes(kw))
+    }, [logs, keyword])
 
     const load = async (target) => {
         setLoading(true)
@@ -293,7 +316,12 @@ function MonitorTab() {
     }
 
     return (
-        <Card>
+        <Card extra={
+            <Space>
+                <Input.Search allowClear placeholder="按 API Key ID / 应用 / 脚本过滤" style={{width: 240}}
+                              onChange={(e) => setKeyword(e.target.value)}/>
+            </Space>
+        }>
             <Space style={{marginBottom: 16}} wrap>
                 <Select placeholder="API Key ID" allowClear style={{width: 200}}
                         onChange={v => setFilter(s => ({...s, apiKeyId: v}))}/>
@@ -367,7 +395,7 @@ function MonitorTab() {
             </Card>
 
             {/* 调用日志表（服务端分页：行数与 total 都由后端给） */}
-            <Table rowKey="id" loading={loading} dataSource={logs}
+            <Table rowKey="id" loading={loading} dataSource={filteredLogs}
                    pagination={{
                        current: page.current,
                        pageSize: page.size,
@@ -409,6 +437,15 @@ function VersionTab() {
     const [scriptId, setScriptId] = useState(null)
     const [scripts, setScripts] = useState([])
 
+    // 客户端查询过滤（lead 008 §2 规则 3）：过滤字段取自本表 columns 的 dataIndex
+    // （version_no / dsl_type / change_log）。
+    const [keyword, setKeyword] = useState('')
+    const filteredVersions = useMemo(() => {
+        const kw = keyword.trim().toLowerCase()
+        if (!kw) return versions
+        return versions.filter((r) => `${r.version_no || ''} ${r.dsl_type || ''} ${r.change_log || ''}`.toLowerCase().includes(kw))
+    }, [versions, keyword])
+
     // 候选脚本来自 z-opc 侧的 /api/script-admin/scripts：z-script 自家的 /api/script/list
     // 在它自己的 ApiKeyAuthInterceptor 名单里（带平台会话仍 401），前端拿不到脚本主表 ID，
     // 而 /api/script/version/list/{scriptId} 的唯一入参就是这个 ID。见 TASK-20260925-032。
@@ -439,7 +476,12 @@ function VersionTab() {
     }, [scriptId])
 
     return (
-        <Card>
+        <Card extra={
+            <Space>
+                <Input.Search allowClear placeholder="按版本号 / DSL / 说明过滤" style={{width: 240}}
+                              onChange={(e) => setKeyword(e.target.value)}/>
+            </Space>
+        }>
             <Space style={{marginBottom: 16}}>
                 <Select style={{width: 360}} placeholder="选择脚本" value={scriptId}
                         onChange={setScriptId}
@@ -450,7 +492,7 @@ function VersionTab() {
                 <Button type="primary" onClick={load}>加载版本</Button>
                 {!scripts.length && <span style={{color: '#999'}}>z_script 表当前 0 行</span>}
             </Space>
-            <Table rowKey="id" loading={loading} dataSource={versions}
+            <Table rowKey="id" loading={loading} dataSource={filteredVersions}
                    columns={[
                        {title: '版本号', dataIndex: 'version_no', render: v => text(v)},
                        {title: 'DSL', dataIndex: 'dsl_type', render: v => text(v)},
@@ -479,6 +521,15 @@ function TagTab() {
     const [name, setName] = useState('')
     const [category, setCategory] = useState('biz')
 
+    // 客户端查询过滤（lead 008 §2 规则 3）：过滤字段取自本表 columns 的 dataIndex
+    // （tag_name / tag_category / description）。
+    const [keyword, setKeyword] = useState('')
+    const filteredTags = useMemo(() => {
+        const kw = keyword.trim().toLowerCase()
+        if (!kw) return tags
+        return tags.filter((r) => `${r.tag_name || ''} ${r.tag_category || ''} ${r.description || ''}`.toLowerCase().includes(kw))
+    }, [tags, keyword])
+
     const load = async () => {
         setLoading(true)
         try {
@@ -503,7 +554,12 @@ function TagTab() {
     }
 
     return (
-        <Card>
+        <Card extra={
+            <Space>
+                <Input.Search allowClear placeholder="按标签名 / 分类 / 描述过滤" style={{width: 240}}
+                              onChange={(e) => setKeyword(e.target.value)}/>
+            </Space>
+        }>
             <Space style={{marginBottom: 16}}>
                 <Input placeholder="标签名" style={{width: 200}} value={name} onChange={e => setName(e.target.value)}/>
                 <Select value={category} onChange={setCategory} options={[
@@ -512,7 +568,7 @@ function TagTab() {
                 <Button type="primary" icon={<PlusOutlined/>} onClick={create}>创建标签</Button>
                 <Button icon={<ReloadOutlined/>} onClick={load}>刷新</Button>
             </Space>
-            <Table rowKey="id" loading={loading} dataSource={tags}
+            <Table rowKey="id" loading={loading} dataSource={filteredTags}
                    columns={[
                        {title: 'ID', dataIndex: 'id'},
                        {title: '标签名', dataIndex: 'tag_name', render: (v, r) => <Tag color={r.tag_color || r.color}>{text(v)}</Tag>},
@@ -529,6 +585,15 @@ function QuotaTab() {
     const message = useMessage()
     const [list, setList] = useState([])
     const [loading, setLoading] = useState(false)
+
+    // 客户端查询过滤（lead 008 §2 规则 3）：过滤字段取自本表 columns 的 dataIndex
+    // （id / app_name）。
+    const [keyword, setKeyword] = useState('')
+    const filteredQuota = useMemo(() => {
+        const kw = keyword.trim().toLowerCase()
+        if (!kw) return list
+        return list.filter((r) => `${r.id || ''} ${r.app_name || ''}`.toLowerCase().includes(kw))
+    }, [list, keyword])
 
     const load = async () => {
         setLoading(true)
@@ -551,11 +616,16 @@ function QuotaTab() {
     }, [])
 
     return (
-        <Card>
+        <Card extra={
+            <Space>
+                <Input.Search allowClear placeholder="按 ID / 应用名过滤" style={{width: 240}}
+                              onChange={(e) => setKeyword(e.target.value)}/>
+            </Space>
+        }>
             <Space style={{marginBottom: 16}}>
                 <Button icon={<ReloadOutlined/>} onClick={load}>刷新</Button>
             </Space>
-            <Table rowKey="id" loading={loading} dataSource={list}
+            <Table rowKey="id" loading={loading} dataSource={filteredQuota}
                    columns={[
                        {title: '应用名', dataIndex: 'app_name', render: v => text(v)},
                        // 不渲染 api_key（同 ApiKeyTab 的理由，见 TASK-20260925-031）

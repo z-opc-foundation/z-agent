@@ -216,9 +216,10 @@ export default function ObjectBrowser() {
         }
     }
 
-    // 客户端搜索过滤
-    const filtered = searchKey
-        ? objects.filter(o => o.key?.toLowerCase().includes(searchKey.toLowerCase()))
+    // 客户端查询过滤（lead 008 §2 规则 3）：过滤字段取自下方 columns 的 dataIndex
+    // （key / contentType）。页头已有唯一的搜索框（SearchInput），不再另加第二个。
+    const filtered = searchKey.trim()
+        ? objects.filter((o) => `${o.key || ''} ${o.contentType || ''}`.toLowerCase().includes(searchKey.trim().toLowerCase()))
         : objects
 
     const columns = [
@@ -310,7 +311,7 @@ export default function ObjectBrowser() {
                 <span style={{fontSize: 16, fontWeight: 600}}>{decodedBucket}</span>
                 <div style={{flex: 1}}/>
                 <SearchInput
-                    placeholder="搜索对象名..."
+                    placeholder="按对象名 / 类型过滤"
                     value={searchKey}
                     onChange={setSearchKey}
                     size="large"
