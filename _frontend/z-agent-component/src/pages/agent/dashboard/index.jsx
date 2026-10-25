@@ -240,7 +240,6 @@ const AgentDashboard = () => {
         <div>
             <PageHeader
                 title="Agent 监控面板"
-                subtitle="实时监控 Agent 应用性能、对话趋势和延迟分布"
             />
             {loadErrors.length > 0 && (
                 <ErrorState
@@ -466,7 +465,7 @@ const AgentDashboard = () => {
                             columns={appColumns}
                             dataSource={byApp}
                             rowKey="app_code"
-                            pagination={false}
+                            pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: ['10', '20', '50', '100'], showTotal: (t) => `共 ${t} 条` }}
                             locale={{emptyText: '暂无数据'}}
                             size="middle"
                         />
@@ -482,7 +481,7 @@ const AgentDashboard = () => {
                             columns={userColumns}
                             dataSource={byUser}
                             rowKey="user_id"
-                            pagination={false}
+                            pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: ['10', '20', '50', '100'], showTotal: (t) => `共 ${t} 条` }}
                             locale={{emptyText: '暂无数据'}}
                             size="middle"
                         />

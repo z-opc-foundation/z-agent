@@ -278,7 +278,6 @@ const AkManage = () => {
         <div style={{padding: 16, display: 'flex', flexDirection: 'column', gap: 12}}>
             <PageHeader
                 title="API Key 管理"
-                subtitle="创建和管理 AccessKey，控制 API 访问权限"
             />
             <Alert
                 type="info"
@@ -351,7 +350,7 @@ const AkManage = () => {
                                         dataSource={keys}
                                         columns={columns}
                                         rowKey="id"
-                                        pagination={false}
+                                        pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: ['10', '20', '50', '100'], showTotal: (t) => `共 ${t} 条` }}
                                         size="small"
                                         onRow={(record) => ({
                                             onClick: () => setDrawerAk(record),
@@ -371,7 +370,7 @@ const AkManage = () => {
                                         dataSource={keys}
                                         columns={columns}
                                         rowKey="id"
-                                        pagination={false}
+                                        pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: ['10', '20', '50', '100'], showTotal: (t) => `共 ${t} 条` }}
                                         size="small"
                                         onRow={(record) => ({
                                             onClick: () => setDrawerAk(record),

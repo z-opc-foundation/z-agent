@@ -589,7 +589,7 @@ const NodeConfigPage = () => {
                         dataSource={nodes}
                         columns={nodeColumns}
                         rowKey="id"
-                        pagination={false}
+                        pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: ['10', '20', '50', '100'], showTotal: (t) => `共 ${t} 条` }}
                         locale={{
                             emptyText: <Empty description="暂无节点，点击添加开始配置"
                                               image={Empty.PRESENTED_IMAGE_SIMPLE}/>
@@ -725,7 +725,7 @@ const SceneCanvasPage = () => {
                             dataSource={canvasNodes}
                             columns={canvasColumns}
                             rowKey="id"
-                            pagination={false}
+                            pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: ['10', '20', '50', '100'], showTotal: (t) => `共 ${t} 条` }}
                             size="small"
                         />
                         {canvasEdges.length > 0 && (

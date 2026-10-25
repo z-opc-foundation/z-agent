@@ -68,7 +68,6 @@ const TemplateMarket = () => {
         <div>
             <PageHeader
                 title="模板市场"
-                subtitle="浏览和使用 Agent 模板，快速创建应用"
             />
             {/* 分类栏 */}
             <div style={{

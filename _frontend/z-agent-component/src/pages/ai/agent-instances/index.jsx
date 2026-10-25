@@ -355,7 +355,6 @@ const AgentInstanceManager = () => {
         <div>
             <PageHeader
                 title="多 Agent 实例管理"
-                subtitle="支持 ZBOT / Hermes / Claude Code / OpenCode 等多种 Agent 类型"
             />
             <Alert
                 type="info" showIcon
@@ -469,7 +468,7 @@ const AgentInstanceManager = () => {
                                 <Table
                                     rowKey="id"
                                     size="small"
-                                    pagination={false}
+                                    pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: ['10', '20', '50', '100'], showTotal: (t) => `共 ${t} 条` }}
                                     dataSource={bindings}
                                     columns={[
                                         {title: 'Skill 编码', dataIndex: 'skillCode'},

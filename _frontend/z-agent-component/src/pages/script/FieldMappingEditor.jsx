@@ -111,7 +111,7 @@ export default function FieldMappingEditor({value = [], onChange, readonly = fal
                 dataSource={value}
                 columns={columns}
                 rowKey={(_, i) => i}
-                pagination={false}
+                pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: ['10', '20', '50', '100'], showTotal: (t) => `共 ${t} 条` }}
                 size="small"
                 bordered
                 style={{marginBottom: 8}}

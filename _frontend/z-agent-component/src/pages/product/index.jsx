@@ -49,7 +49,6 @@ const ProductListPage = () => {
         <div>
             <PageHeader
                 title="订阅中心"
-                subtitle="管理产品配置、发布和场景绑定"
             />
             <Card>
                 <Tabs activeKey={activeTab} onChange={setActiveTab}>

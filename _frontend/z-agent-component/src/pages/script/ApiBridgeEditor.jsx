@@ -236,7 +236,7 @@ export default function ApiBridgeEditor({value, onChange, readonly = false}) {
                     dataSource={def.inputParams || []}
                     columns={paramColumns}
                     rowKey={(_, i) => i}
-                    pagination={false}
+                    pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: ['10', '20', '50', '100'], showTotal: (t) => `共 ${t} 条` }}
                     size="small"
                     locale={{emptyText: '暂无输入参数'}}
                 />

@@ -29,7 +29,6 @@ const LlmManage = () => {
         <>
             <PageHeader
                 title="模型与凭证"
-                subtitle="LLM 提供商、模型配置、用量统计 (FEATURE050 合并单页)"
                 breadcrumb={[{label: '智能中心'}, {label: '模型管理'}]}
             />
             <Tabs
