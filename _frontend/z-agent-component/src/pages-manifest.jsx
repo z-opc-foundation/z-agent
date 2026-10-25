@@ -52,7 +52,6 @@ export const menuItems = [
     { key: '/z-agent/ak', label: 'AK 管理', icon: <KeyOutlined /> },
     { key: '/z-agent/mcp', label: 'MCP 工具', icon: <ClusterOutlined /> },
     { key: '/z-agent/oss', label: 'OSS 浏览', icon: <CloudOutlined /> },
-    { key: '/z-agent/oss/bucket', label: '存储桶', icon: <CloudOutlined /> },
     { key: '/z-agent/product', label: '产品管理', icon: <ShoppingOutlined /> },
     { key: '/z-agent/product/scene', label: '场景编排', icon: <ShoppingOutlined /> },
     { key: '/z-agent/product/execute', label: '产品执行', icon: <ShoppingOutlined /> },

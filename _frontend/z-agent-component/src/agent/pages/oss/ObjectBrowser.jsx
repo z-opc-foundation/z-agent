@@ -285,7 +285,7 @@ export default function ObjectBrowser() {
     ]
 
     // 面包屑
-    const crumbs = [{title: '所有桶', onClick: () => navigate('/oss')}, {title: decodedBucket}]
+    const crumbs = [{title: '所有桶', onClick: () => navigate('/z-agent/oss')}, {title: decodedBucket}]
     if (currentPrefix) {
         const parts = currentPrefix.split('/').filter(Boolean)
         let acc = ''
@@ -303,7 +303,7 @@ export default function ObjectBrowser() {
                 background: '#fff', padding: '14px 16px', borderRadius: 10,
                 boxShadow: '0 1px 4px rgba(0,0,0,0.04)', marginBottom: 16,
             }}>
-                <Button type="text" icon={<ArrowLeftOutlined/>} onClick={() => navigate('/oss')}>
+                <Button type="text" icon={<ArrowLeftOutlined/>} onClick={() => navigate('/z-agent/oss')}>
                     返回
                 </Button>
                 <FolderOutlined style={{fontSize: 18, color: '#faad14'}}/>
