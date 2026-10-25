@@ -24,11 +24,17 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * <p>stream() 同步阻塞直到 LLM 流结束（onClosed / onFailure / readTimeout）：
  * <ul>
- *   <li>逐 token 通过 callbacks.onToken 推回（delta.content 经 {@link UpstreamThinkingTagSplitter}
- *       切分：正文段直推，思考段加 [REASONING:] 前缀推；delta.reasoning_content 同样加 [REASONING:] 前缀推）</li>
- *   <li>正常结束通过 callbacks.onComplete(fullText) 报告</li>
+ *   <li>逐 token 通过 callbacks.onToken 推回（<b>只含正文</b>）</li>
+ *   <li>逐段思考通过 callbacks.onThought 推回（<b>独立通道</b>，2026-10-25 起不再混进正文流）</li>
+ *   <li>正常结束通过 callbacks.onComplete(fullText) 报告（fullText 只含正文）</li>
  *   <li>中途错误通过 callbacks.onError 报告，并解除阻塞</li>
  * </ul>
+ *
+ * <p><b>正文 / 思考分通道的由来</b>：老协议把思考以无闭合的 {@code "[REASONING:]"} 前缀塞进正文流，
+ * 而上游 content / reasoning_content <b>交替</b>下发 ⇒ 思考块会插进 JSON 的键名/值中间
+ * （实测：{@code {"dispa[REASONING:]。tches":[…]}}）⇒ 标记不携带边界、事后无法还原
+ * ⇒ 下游 JSON 解析必失败 ⇒ 群聊派单零回复。
+ * 现在思考走 {@link StreamCallbacks#onThought(String)}，正文流恒为纯正文。
  */
 public class OpenAiCompletionsStreamProvider implements LlmStreamProvider {
 
@@ -79,6 +85,17 @@ public class OpenAiCompletionsStreamProvider implements LlmStreamProvider {
         }
     }
 
+    /**
+     * 单条流的解析状态。
+     *
+     * <p>⚠ 每条流一个实例：{@link UpstreamThinkingTagSplitter} <b>有状态</b>
+     * （跨增量维持「思考态」与被切开的标签残片）⇒ 不可跨流共享。
+     */
+    static final class StreamState {
+        final UpstreamThinkingTagSplitter splitter = new UpstreamThinkingTagSplitter();
+        final StringBuilder accumulated = new StringBuilder();
+    }
+
     @Override
     public void stream(String prompt, String systemPrompt, StreamCallbacks callbacks) {
         String url = buildChatCompletionsUrl();
@@ -91,12 +108,10 @@ public class OpenAiCompletionsStreamProvider implements LlmStreamProvider {
                 .post(RequestBody.create(body, JSON))
                 .build();
 
-        StringBuilder accumulated = new StringBuilder();
         CountDownLatch done = new CountDownLatch(1);
         AtomicReference<Throwable> failureRef = new AtomicReference<>();
 
-        // ⚠ 每条流一个实例（splitter 有状态：跨增量维持「思考态」与被切开的标签残片）
-        UpstreamThinkingTagSplitter thinkingSplitter = new UpstreamThinkingTagSplitter();
+        StreamState state = new StreamState();
 
         EventSources.createFactory(httpClient).newEventSource(request,
                 new EventSourceListener() {
@@ -129,66 +144,16 @@ public class OpenAiCompletionsStreamProvider implements LlmStreamProvider {
                         if ("[DONE]".equals(data.trim())) {
                             return;
                         }
-                        try {
-                            JsonCursor root = JsonCursor.of(JsonUtil.parse(data));
-                            JsonCursor choices = root.path("choices");
-                            if (choices.isArray() && choices.size() > 0) {
-                                JsonCursor delta = choices.at(0).path("delta");
-                                JsonCursor contentNode = delta.path("content");
-                                if (!contentNode.isMissing() && contentNode.value() instanceof String) {
-                                    String token = contentNode.asText();
-                                    if (!token.isEmpty()) {
-                                        // ⚠ 上游可能把思考过程以**裸标签**塞进正文
-                                        //   （实测 MiniMax-M2.7：content = "<think>…</think>\n\n收到"）
-                                        //   ⇒ 思考被当正文推给前端 ⇒ 主群直接显示思考过程。
-                                        // 这里用 splitter 把思考分流走既有 [REASONING:] 协议，
-                                        // 与「上游提供独立 reasoning_content 字段」走同一条路（不新增协议）。
-                                        UpstreamThinkingTagSplitter.Split split = thinkingSplitter.split(token);
-                                        if (split.hasText()) {
-                                            accumulated.append(split.getText());
-                                            if (callbacks != null) {
-                                                callbacks.onToken(split.getText());
-                                            }
-                                        }
-                                        if (split.hasReasoning() && callbacks != null) {
-                                            callbacks.onToken("[REASONING:]" + split.getReasoning());
-                                        }
-                                    }
-                                }
-                                // reasoning_content（minimaxi/M2.7 等模型）：加 [REASONING:] 前缀推回，
-                                // 由上层 LlmReactEngine / FtStreamMarkerTextSupport 路由到 onThought。
-                                JsonCursor reasoningNode = delta.path("reasoning_content");
-                                if (!reasoningNode.isMissing() && reasoningNode.value() instanceof String) {
-                                    String rt = reasoningNode.asText();
-                                    if (!rt.isEmpty()) {
-                                        if (callbacks != null) {
-                                            callbacks.onToken("[REASONING:]" + rt);
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (Exception parseErr) {
-                            log.warn("[OpenAI-Compat] failed to parse SSE chunk: {} data={}",
-                                    parseErr.toString(), data.length() > 200 ? data.substring(0, 200) + "..." : data);
-                        }
+                        handleChunk(data, callbacks, state);
                     }
 
                     @Override
                     public void onClosed(EventSource eventSource) {
-                        log.info("[OpenAI-Compat] SSE closed, accumulatedLen={}", accumulated.length());
+                        log.info("[OpenAI-Compat] SSE closed, accumulatedLen={}", state.accumulated.length());
                         // 收尾：把被切开的标签残片交还（否则尾部残片会静默丢失）
-                        UpstreamThinkingTagSplitter.Split tail = thinkingSplitter.flush();
-                        if (tail.hasText()) {
-                            accumulated.append(tail.getText());
-                            if (callbacks != null) {
-                                callbacks.onToken(tail.getText());
-                            }
-                        }
-                        if (tail.hasReasoning() && callbacks != null) {
-                            callbacks.onToken("[REASONING:]" + tail.getReasoning());
-                        }
+                        flushTail(callbacks, state);
                         if (failureRef.get() == null && callbacks != null) {
-                            callbacks.onComplete(accumulated.toString());
+                            callbacks.onComplete(state.accumulated.toString());
                         }
                         done.countDown();
                     }
@@ -222,6 +187,74 @@ public class OpenAiCompletionsStreamProvider implements LlmStreamProvider {
             if (callbacks != null) {
                 callbacks.onError(ie);
             }
+        }
+    }
+
+    /**
+     * 解析并分发一个 SSE 增量块（package-private：单测直接驱动，无需起网络）。
+     *
+     * <p>正文（{@code delta.content} 里没被思考标签切走的部分）→ {@code onToken}；
+     * 思考（{@code delta.reasoning_content} + 正文里的裸思考标签）→ {@code onThought}。
+     * <b>两条通道互不掺杂</b> ⇒ 正文流恒为纯正文，JSON 可直接解析。
+     */
+    void handleChunk(String data, StreamCallbacks callbacks, StreamState state) {
+        try {
+            JsonCursor root = JsonCursor.of(JsonUtil.parse(data));
+            JsonCursor choices = root.path("choices");
+            if (!choices.isArray() || choices.size() == 0) {
+                return;
+            }
+            JsonCursor delta = choices.at(0).path("delta");
+
+            // ── 正文通道 ──
+            JsonCursor contentNode = delta.path("content");
+            if (!contentNode.isMissing() && contentNode.value() instanceof String) {
+                String token = contentNode.asText();
+                if (!token.isEmpty()) {
+                    // ⚠ 上游可能把思考过程以**裸标签**塞进正文
+                    //   （实测 MiniMax-M2.7：content = "<think>…</think>\n\n收到"）
+                    //   ⇒ 思考被当正文推给前端 ⇒ 主群直接显示思考过程。
+                    // 这里用 splitter 把思考分流走**独立思考通道**（不再混回正文流）。
+                    UpstreamThinkingTagSplitter.Split split = state.splitter.split(token);
+                    if (split.hasText()) {
+                        state.accumulated.append(split.getText());
+                        if (callbacks != null) {
+                            callbacks.onToken(split.getText());
+                        }
+                    }
+                    if (split.hasReasoning() && callbacks != null) {
+                        callbacks.onThought(split.getReasoning());
+                    }
+                }
+            }
+
+            // ── 思考通道（reasoning_content：minimaxi/M2.7 等模型）──
+            JsonCursor reasoningNode = delta.path("reasoning_content");
+            if (!reasoningNode.isMissing() && reasoningNode.value() instanceof String) {
+                String rt = reasoningNode.asText();
+                if (!rt.isEmpty() && callbacks != null) {
+                    callbacks.onThought(rt);
+                }
+            }
+        } catch (Exception parseErr) {
+            log.warn("[OpenAI-Compat] failed to parse SSE chunk: {} data={}",
+                    parseErr.toString(), data.length() > 200 ? data.substring(0, 200) + "..." : data);
+        }
+    }
+
+    /**
+     * 流结束时的收尾：把被切开的标签残片交还（正文残片归正文、思考残片归思考）。
+     */
+    void flushTail(StreamCallbacks callbacks, StreamState state) {
+        UpstreamThinkingTagSplitter.Split tail = state.splitter.flush();
+        if (tail.hasText()) {
+            state.accumulated.append(tail.getText());
+            if (callbacks != null) {
+                callbacks.onToken(tail.getText());
+            }
+        }
+        if (tail.hasReasoning() && callbacks != null) {
+            callbacks.onThought(tail.getReasoning());
         }
     }
 

@@ -15,9 +15,12 @@ import java.util.Locale;
  *
  * <p><b>本类做且只做一件事</b>：把一段 content 增量切成
  * {@link Split#getText() 正文}与 {@link Split#getReasoning() 思考}两段。
- * <b>不负责协议</b>：思考怎么往外送由各调用方按自己的既有协议决定
- * （z-agent 侧用 {@code [REASONING:]} 行内标记；z-team 侧用 {@code onThoughtDelta} 独立通道），
- * 这样**不引入新协议**，只是让「标签式思考」与「独立 reasoning_content 字段」走同一条路。
+ * <b>不负责协议</b>：思考怎么往外送由调用方决定
+ * （z-agent 侧统一走
+ * {@link com.zifang.z.agent.llm.infrastructure.llm.provider.define.LlmStreamProvider.StreamCallbacks#onThought(String)}
+ * 独立通道；老的 {@code [REASONING:]} 行内标记协议已废弃，只在
+ * {@code LlmStreamProvider.legacyInlineReasoning(...)} 兼容层里保留），
+ * 这样「标签式思考」与「独立 reasoning_content 字段」走同一条路。
  *
  * <p><b>支持的标签变体</b>（大小写不敏感）：{@code <think>}、{@code <thinking>}、{@code <reasoning>}
  * 及其对应闭标签。闭标签在<b>未处于思考态</b>时出现 ⇒ 视为噪声丢弃（标签本身不输出）。

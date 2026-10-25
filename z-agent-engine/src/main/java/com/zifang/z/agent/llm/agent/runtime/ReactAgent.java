@@ -159,6 +159,16 @@ public class ReactAgent {
                     }
 
                     @Override
+                    public void onThought(String thought) {
+                        // 思考走独立通道（2026-10-25）：不再混进正文（老协议下思考以 "[REASONING:]"
+                        // 混在正文里 ⇒ 群聊派单的 JSON 被思考碎片切开 ⇒ 解析必失败）。
+                        // 这里把思考喂给 AgentStream 的 thought 回调（此前该回调无人触发，是条死路）。
+                        if (thought != null && !thought.isEmpty()) {
+                            stream.fireThought(thought);
+                        }
+                    }
+
+                    @Override
                     public void onComplete() {
                         TurnResult tr = new TurnResult(acc.toString(), null);
                         stream.fireTurnFinish(acc.toString(), tr);

@@ -117,6 +117,12 @@ public class LlmReactEngine {
             }
 
             @Override
+            public void onThought(String thought) {
+                // 思考走独立通道（2026-10-25）：不混进返回值 ⇒ 返回值恒为纯正文（可被 JSON 解析）。
+                // 老协议下这里会拿到 "[REASONING:]思考" 并被追加进 acc ⇒ 下游 JSON 必解析失败。
+            }
+
+            @Override
             public void onComplete(String fullText) {
                 // provider 内部已同步等待 close；fullText 由 provider 提供，此处无需额外动作
             }
@@ -153,6 +159,14 @@ public class LlmReactEngine {
             }
 
             @Override
+            public void onThought(String thought) {
+                // 思考走独立通道（2026-10-25）：正文流只给正文，思考单独给 handler。
+                if (handler != null) {
+                    handler.onThought(thought);
+                }
+            }
+
+            @Override
             public void onComplete(String fullText) {
                 if (handler != null) {
                     handler.onComplete();
@@ -170,6 +184,10 @@ public class LlmReactEngine {
 
     /**
      * Stream handler interface.
+     *
+     * <p><b>onThought（2026-10-25 新增，default 方法）</b>：上游思考的独立通道。
+     * 默认实现 = 丢弃 ⇒ 既有实现方（只实现 onText/onComplete/onError）<b>无需改动</b>即可编译，
+     * 且拿到的正文流恒为纯正文（老协议下思考以 "[REASONING:]" 混在正文里，会打断 JSON 解析）。
      */
     public interface StreamHandler {
         void onText(String text);
@@ -177,5 +195,12 @@ public class LlmReactEngine {
         void onComplete();
 
         void onError(Throwable t);
+
+        /**
+         * 独立思考通道：需要展示/落库思考过程的消费方覆写本方法。
+         */
+        default void onThought(String thought) {
+            // 默认丢弃
+        }
     }
 }
