@@ -1,7 +1,7 @@
 {
   "name": "@yuku123/z-agent-component",
   "private": false,
-  "version": "0.1.10",
+  "version": "0.1.11",
   "type": "module",
   "description": "z-agent 组件包（lead 005 §9 双包：api 客户端 + 全量 agent 页面，apiBase 参数化）",
   "main": "./dist/z-agent-component.js",

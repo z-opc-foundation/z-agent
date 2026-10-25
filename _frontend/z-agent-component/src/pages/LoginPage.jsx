@@ -6,13 +6,13 @@ import { LockOutlined, UserOutlined } from '@ant-design/icons'
  * 登录页（lead 008 §16）—— CTC/SSO 接入前的 mock 登录。
  *
  * mock 账号**不再内置任何字面量**（001_凭证管理规范：仓内不留明文凭据）：
- * 由宿主在构建期注入 VITE_Z_AGENT_MOCK_USER / VITE_Z_AGENT_MOCK_PASS，
+ * 由宿主在构建期注入 VITE_MOCK_USER / VITE_MOCK_PASSWORD（全仓统一名），
  * 未注入 ⇒ 本页直接说明「未配置 mock 账号」，不做任何账号兜底。
  */
 const MOCK_AUTH = {
-    username: import.meta.env?.VITE_Z_AGENT_MOCK_USER || '',
-    password: import.meta.env?.VITE_Z_AGENT_MOCK_PASS || '',
-    user: { name: import.meta.env?.VITE_Z_AGENT_MOCK_USER || '', role: '管理员' },
+    username: import.meta.env.VITE_MOCK_USER || '',
+    password: import.meta.env.VITE_MOCK_PASSWORD || '',
+    user: { name: import.meta.env.VITE_MOCK_USER || '', role: '管理员' },
 }
 
 export default function LoginPage() {
@@ -22,7 +22,7 @@ export default function LoginPage() {
         setLoading(true)
         try {
             if (!MOCK_AUTH.username || !MOCK_AUTH.password) {
-                message.error('未配置 mock 账号（VITE_Z_AGENT_MOCK_USER / VITE_Z_AGENT_MOCK_PASS）')
+                message.error('未配置 mock 账号（VITE_MOCK_USER / VITE_MOCK_PASSWORD）')
                 return
             }
             if (values.username === MOCK_AUTH.username && values.password === MOCK_AUTH.password) {
@@ -67,7 +67,7 @@ export default function LoginPage() {
                         </Button>
                     </Form.Item>
                     <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
-                        Mock 模式：账号由宿主注入（VITE_Z_AGENT_MOCK_USER / VITE_Z_AGENT_MOCK_PASS）
+                        Mock 模式：账号由宿主注入（VITE_MOCK_USER / VITE_MOCK_PASSWORD）
                     </div>
                 </Form>
             </Card>
