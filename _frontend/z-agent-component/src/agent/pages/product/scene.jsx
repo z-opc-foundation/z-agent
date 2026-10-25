@@ -589,6 +589,7 @@ const NodeConfigPage = () => {
                         dataSource={nodes}
                         columns={nodeColumns}
                         rowKey="id"
+                        // pagination 豁免：场景编排的节点清单是编辑态列表，整屏可拖拽排序，分页会把节点拆散
                         pagination={false}
                         locale={{
                             emptyText: <Empty description="暂无节点，点击添加开始配置"
@@ -725,6 +726,7 @@ const SceneCanvasPage = () => {
                             dataSource={canvasNodes}
                             columns={canvasColumns}
                             rowKey="id"
+                            // pagination 豁免：画布节点清单跟随画布渲染，分页会隐藏画布上可见的节点
                             pagination={false}
                             size="small"
                         />

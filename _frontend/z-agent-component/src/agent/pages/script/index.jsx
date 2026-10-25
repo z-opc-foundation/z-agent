@@ -32,7 +32,7 @@ import {scriptApi} from '../../api'
 import CurlImportModal from './CurlImportModal'
 import OpenApiImportModal from './OpenApiImportModal'
 import ApiBridgeEditor from './ApiBridgeEditor'
-import {ListTable, PageHeader} from '@yuku123/z-frontend-common/ui'
+import {ListTable} from '@yuku123/z-frontend-common/ui'
 
 const {TextArea} = Input
 const {Text, Paragraph} = Typography
@@ -294,7 +294,6 @@ export default function ScriptCenterPage() {
                 </div>
             )}
 
-            <PageHeader title="脚本中心"/>
 
             <Row gutter={16} style={{marginBottom: 16}}>
                 <Col span={6}><Statistic title="总脚本数" value={scripts.length}/></Col>

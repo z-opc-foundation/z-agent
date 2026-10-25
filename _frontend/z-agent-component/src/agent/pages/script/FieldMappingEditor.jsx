@@ -111,6 +111,7 @@ export default function FieldMappingEditor({value = [], onChange, readonly = fal
                 dataSource={value}
                 columns={columns}
                 rowKey={(_, i) => i}
+                // pagination 豁免：字段映射是表单内的行编辑器，行数由映射规则决定且需整屏核对
                 pagination={false}
                 size="small"
                 bordered

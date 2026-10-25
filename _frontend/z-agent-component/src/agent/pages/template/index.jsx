@@ -9,7 +9,7 @@ import {
     StarOutlined,
 } from '@ant-design/icons'
 import {templateApi} from '../../api'
-import {EmptyState, PageHeader} from '@yuku123/z-frontend-common/ui'
+import {EmptyState} from '@yuku123/z-frontend-common/ui'
 
 const {Text, Paragraph, Title} = Typography
 
@@ -66,10 +66,6 @@ const TemplateMarket = () => {
 
     return (
         <div>
-            <PageHeader
-                title="模板市场"
-                subtitle="浏览和使用 Agent 模板，快速创建应用"
-            />
             {/* 分类栏 */}
             <div style={{
                 display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap',

@@ -10,9 +10,8 @@ import {
 } from '@ant-design/icons'
 import ReactECharts from '../../../../echarts'
 import {agentApi, statsApi} from '../../../api'
-import {PageHeader} from '@yuku123/z-frontend-common/ui'
 // 页面可见的失败面（TASK-20260925-037 R1-2）
-import {ErrorState} from '@yuku123/z-frontend-common/ui'
+import {DEFAULT_PAGINATION, ErrorState} from '@yuku123/z-frontend-common/ui'
 
 const {Text} = Typography
 const {TabPane} = Tabs
@@ -238,10 +237,6 @@ const AgentDashboard = () => {
 
     return (
         <div>
-            <PageHeader
-                title="Agent 监控面板"
-                subtitle="实时监控 Agent 应用性能、对话趋势和延迟分布"
-            />
             {loadErrors.length > 0 && (
                 <ErrorState
                     error={loadErrors[0].reason}
@@ -466,7 +461,7 @@ const AgentDashboard = () => {
                             columns={appColumns}
                             dataSource={byApp}
                             rowKey="app_code"
-                            pagination={false}
+                            pagination={DEFAULT_PAGINATION}
                             locale={{emptyText: '暂无数据'}}
                             size="middle"
                         />
@@ -482,7 +477,7 @@ const AgentDashboard = () => {
                             columns={userColumns}
                             dataSource={byUser}
                             rowKey="user_id"
-                            pagination={false}
+                            pagination={DEFAULT_PAGINATION}
                             locale={{emptyText: '暂无数据'}}
                             size="middle"
                         />

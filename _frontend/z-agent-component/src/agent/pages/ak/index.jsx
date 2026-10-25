@@ -32,13 +32,14 @@ import {
     ThunderboltOutlined,
     UserOutlined
 } from '@ant-design/icons'
+import {DEFAULT_PAGINATION} from '@yuku123/z-frontend-common/ui'
 import request from '../../api'
 import AkUsageDrawer from './AkUsageDrawer'
-import {PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {confirm} = Modal
 
-const API_BASE_URL = 'http://localhost:8888'
+// 展示给用户复制的是「当前站点」的 API 地址；写死 localhost 会让人在部署环境里复制到错地址
+const API_BASE_URL = window.location.origin
 
 const formatTokens = (n) => {
     if (!n) return '0'
@@ -276,10 +277,6 @@ const AkManage = () => {
 
     return (
         <div style={{padding: 16, display: 'flex', flexDirection: 'column', gap: 12}}>
-            <PageHeader
-                title="API Key 管理"
-                subtitle="创建和管理 AccessKey，控制 API 访问权限"
-            />
             <Alert
                 type="info"
                 showIcon
@@ -351,7 +348,7 @@ const AkManage = () => {
                                         dataSource={keys}
                                         columns={columns}
                                         rowKey="id"
-                                        pagination={false}
+                                        pagination={DEFAULT_PAGINATION}
                                         size="small"
                                         onRow={(record) => ({
                                             onClick: () => setDrawerAk(record),
@@ -371,7 +368,7 @@ const AkManage = () => {
                                         dataSource={keys}
                                         columns={columns}
                                         rowKey="id"
-                                        pagination={false}
+                                        pagination={DEFAULT_PAGINATION}
                                         size="small"
                                         onRow={(record) => ({
                                             onClick: () => setDrawerAk(record),

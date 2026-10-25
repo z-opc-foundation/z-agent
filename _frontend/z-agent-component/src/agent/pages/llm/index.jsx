@@ -32,7 +32,6 @@ import {
     ThunderboltOutlined
 } from '@ant-design/icons'
 import request from '../../api'
-import {PageHeader} from '@yuku123/z-frontend-common/ui'
 
 const {confirm} = Modal
 
@@ -296,10 +295,6 @@ const ModelManage = () => {
 
     return (
         <div>
-            <PageHeader
-                title="LLM 管理"
-                subtitle="管理大语言模型供应商和模型配置"
-            />
             <div style={{display: 'flex', gap: 16, height: 'calc(100vh - 260px)', padding: '0 16px 16px'}}>
                 {/* 左侧：能力分类 — 阿里云风格 */}
                 <Card

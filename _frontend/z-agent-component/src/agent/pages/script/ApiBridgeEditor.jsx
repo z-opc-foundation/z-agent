@@ -236,6 +236,7 @@ export default function ApiBridgeEditor({value, onChange, readonly = false}) {
                     dataSource={def.inputParams || []}
                     columns={paramColumns}
                     rowKey={(_, i) => i}
+                    // pagination 豁免：入参定义是表单内的行编辑器，行数少且需与接口文档逐条对照
                     pagination={false}
                     size="small"
                     locale={{emptyText: '暂无输入参数'}}

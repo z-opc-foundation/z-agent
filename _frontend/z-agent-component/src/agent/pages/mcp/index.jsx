@@ -25,7 +25,7 @@ import {
     WarningOutlined
 } from '@ant-design/icons'
 import {mcpApi} from '../../api'
-import {EmptyState, ErrorState, PageHeader} from '@yuku123/z-frontend-common/ui'
+import {EmptyState, ErrorState} from '@yuku123/z-frontend-common/ui'
 
 const {TextArea} = Input
 const {Text} = Typography
@@ -288,10 +288,6 @@ export default function McpPage() {
 
     return (
         <div style={{height: 'calc(100vh - 180px)', display: 'flex', flexDirection: 'column'}}>
-            <PageHeader
-                title="MCP 服务中心"
-                subtitle="上游由配置项 z.mcp.servers 声明，本页只读：总览健康、浏览注册表工具、按 schema 表单试调用"
-            />
             {renderOverview()}
             <Tabs activeKey={activeTab} onChange={setActiveTab} tabBarExtraContent={
                 <Button icon={<ReloadOutlined/>} onClick={loadAll} loading={loading}>刷新</Button>
@@ -320,7 +316,9 @@ export default function McpPage() {
                         ) : (
                             <Table columns={columns} dataSource={enrichedServers} rowKey="serverName"
                                    loading={loading}
-                                   size="small" pagination={false}
+                                   size="small"
+                                   // pagination 豁免：server 清单来自配置项 z.mcp.servers，条数由部署固定，不随运行数据增长
+                                   pagination={false}
                                    onRow={(r) => ({
                                        onClick: () => handleSelectServer(r),
                                        style: {
