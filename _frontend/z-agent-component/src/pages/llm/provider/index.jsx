@@ -2,8 +2,7 @@ import {useEffect, useState} from 'react'
 import {Button, Card, Col, Form, Input, message, Modal, Row, Select, Space, Statistic, Tag} from 'antd'
 import {DeleteOutlined, EditOutlined, GlobalOutlined, PlusOutlined} from '@ant-design/icons'
 import request from '../../../api'
-import {ListTable, PageHeader} from '@yuku123/z-frontend-common/ui'
-
+import { ListTable } from '@yuku123/z-frontend-common/ui'
 const {confirm} = Modal
 
 /** 后端序列化成 snake_case，页面按 camelCase 取；状态字段是 enabled(1/0)。 */
@@ -127,7 +126,6 @@ const LlmProvider = () => {
 
     return (
         <div>
-            <PageHeader title="供应商管理"/>
             <Row gutter={16} style={{marginBottom: 16}}>
                 <Col span={6}>
                     <Card><Statistic title="供应商数" value={data.length}/></Card>

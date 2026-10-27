@@ -31,7 +31,6 @@ import {
     ReloadOutlined,
     TagsOutlined
 } from '@ant-design/icons'
-import {PageHeader} from '@yuku123/z-frontend-common/ui'
 import {App as AntApp} from 'antd'
 
 const useMessage = () => AntApp.useApp().message
@@ -662,9 +661,6 @@ export default function ScriptCenterPage({initialTab = 'apikey'}) {
     useEffect(() => setActive(initialTab), [initialTab])
     return (
         <div style={{padding: 16}}>
-            <PageHeader
-                title="脚本中心"
-            />
             <Tabs activeKey={active} onChange={setActive} items={[
                 {key: 'apikey', label: <span><KeyOutlined/> API Key 管理</span>, children: <ApiKeyTab/>},
                 {key: 'monitor', label: <span><LineChartOutlined/> 调用监控</span>, children: <MonitorTab/>},

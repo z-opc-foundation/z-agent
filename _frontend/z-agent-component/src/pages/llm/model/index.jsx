@@ -2,8 +2,7 @@ import {useEffect, useState} from 'react'
 import {Button, Col, Form, Input, InputNumber, message, Modal, Row, Select, Space, Tag} from 'antd'
 import {DeleteOutlined, EditOutlined, PlusOutlined} from '@ant-design/icons'
 import request from '../../../api'
-import {ListTable, PageHeader} from '@yuku123/z-frontend-common/ui'
-
+import { ListTable } from '@yuku123/z-frontend-common/ui'
 const {confirm} = Modal
 
 /** 后端序列化成 snake_case（model_code），页面按 camelCase 取；状态字段是 enabled(1/0)，不是 status。 */
@@ -132,7 +131,6 @@ const LlmModel = () => {
 
     return (
         <div>
-            <PageHeader title="模型管理"/>
             {/* 列表页三件套由基座 ListTable 一次带齐；「添加模型」放 cardExtra，与搜索框并排。 */}
             <ListTable
                 rows={data}

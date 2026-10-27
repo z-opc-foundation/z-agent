@@ -34,8 +34,6 @@ import {
 } from '@ant-design/icons'
 import request from '../../api'
 import AkUsageDrawer from './AkUsageDrawer'
-import {PageHeader} from '@yuku123/z-frontend-common/ui'
-
 const {confirm} = Modal
 
 const API_BASE_URL = 'http://localhost:8888'
@@ -285,9 +283,6 @@ const AkManage = () => {
 
     return (
         <div style={{padding: 16, display: 'flex', flexDirection: 'column', gap: 12}}>
-            <PageHeader
-                title="API Key 管理"
-            />
             <Alert
                 type="info"
                 showIcon

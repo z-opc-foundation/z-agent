@@ -34,8 +34,7 @@ import {
     ThunderboltOutlined
 } from '@ant-design/icons'
 import {agentInstanceApi, agentSkillBindApi, skillMarketApi} from '../../../services/agentInstance'
-import {ListTable, PageHeader, SearchInput} from '@yuku123/z-frontend-common/ui'
-
+import { ListTable, SearchInput } from '@yuku123/z-frontend-common/ui'
 const {Text, Title} = Typography
 
 const AGENT_TYPE_ICONS = {
@@ -353,9 +352,6 @@ const AgentInstanceManager = () => {
 
     return (
         <div>
-            <PageHeader
-                title="多 Agent 实例管理"
-            />
             <Alert
                 type="info" showIcon
                 message="多 Agent 实例"

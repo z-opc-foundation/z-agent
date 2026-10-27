@@ -25,8 +25,7 @@ import {
     WarningOutlined
 } from '@ant-design/icons'
 import {mcpApi} from '../../api'
-import {EmptyState, ErrorState, PageHeader} from '@yuku123/z-frontend-common/ui'
-
+import { EmptyState, ErrorState } from '@yuku123/z-frontend-common/ui'
 const {TextArea} = Input
 const {Text} = Typography
 
@@ -297,9 +296,6 @@ export default function McpPage() {
 
     return (
         <div style={{height: 'calc(100vh - 180px)', display: 'flex', flexDirection: 'column'}}>
-            <PageHeader
-                title="MCP 服务中心"
-            />
             {renderOverview()}
             <Tabs activeKey={activeTab} onChange={setActiveTab} tabBarExtraContent={
                 <Button icon={<ReloadOutlined/>} onClick={loadAll} loading={loading}>刷新</Button>

@@ -3,8 +3,7 @@ import {Alert, Card, Col, Row, Select, Statistic, Tabs, Tag, Typography} from 'a
 import {BarChartOutlined, DollarOutlined, RocketOutlined} from '@ant-design/icons'
 import request from '../../agent/api/request'
 import ReactECharts from '../../echarts'
-import {ListTable, PageHeader} from '@yuku123/z-frontend-common/ui'
-
+import { ListTable } from '@yuku123/z-frontend-common/ui'
 const {Text} = Typography
 const {TabPane} = Tabs
 
@@ -215,7 +214,6 @@ const UsageDashboard = () => {
 
     return (
         <div>
-            <PageHeader title="用量统计"/>
             {gatewayMissing && (
                 <Alert type="warning" showIcon style={{marginBottom: 16}}
                        message="网关用量端点未接入"

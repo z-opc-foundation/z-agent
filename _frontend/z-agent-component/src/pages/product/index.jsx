@@ -36,8 +36,7 @@ import {
     TagOutlined
 } from '@ant-design/icons'
 import {productApi} from '../../api'
-import {ListTable, PageHeader, SearchInput} from '@yuku123/z-frontend-common/ui'
-
+import { ListTable, SearchInput } from '@yuku123/z-frontend-common/ui'
 const {TextArea} = Input
 const {Option} = Select
 const {TabPane} = Tabs
@@ -47,9 +46,6 @@ const ProductListPage = () => {
     const [activeTab, setActiveTab] = useState('list')
     return (
         <div>
-            <PageHeader
-                title="订阅中心"
-            />
             <Card>
                 <Tabs activeKey={activeTab} onChange={setActiveTab}>
                     <TabPane tab={<span><ShopOutlined/> 产品管理</span>} key="list">
