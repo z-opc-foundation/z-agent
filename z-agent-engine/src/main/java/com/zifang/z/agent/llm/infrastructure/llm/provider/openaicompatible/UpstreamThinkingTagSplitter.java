@@ -45,8 +45,29 @@ public final class UpstreamThinkingTagSplitter {
     /** 已知的思考闭标签（大小写不敏感匹配）。 */
     private static final String[] CLOSE_TAGS = {"</think>", "</thinking>", "</reasoning>"};
 
-    /** 最长标签长度（用于残片缓冲的上界）。 */
-    private static final int MAX_TAG_LEN = 10;
+    /**
+     * 最长标签长度（用于残片缓冲的上界）。
+     *
+     * <p>⚠ 必须动态取自标签数组：固定 10 时不覆盖 11 字符的 {@code </thinking>}、
+     * 12 字符的 {@code </reasoning>} —— 残片缓冲被钳短后，前导 {@code '<'} 会被
+     * 冲进已出流的正文/思考里，残片变成 {@code "/thinking"} 这类非法前缀，
+     * 闭标签<b>永远匹配不上</b> ⇒ {@code inThinking} 永真 ⇒ 后续正文全部被当思考
+     * ⇒ 流式调用"零内容完成"（2026-10-28 生产实测：glm-4-flash 按 1~3 字符/块
+     * 下发，dispatch-observer 要求输出 {@code <thinking>} 标签，群聊广播全员沉默）。
+     */
+    private static final int MAX_TAG_LEN = maxLengthOf(OPEN_TAGS, CLOSE_TAGS);
+
+    private static int maxLengthOf(String[]... tagArrays) {
+        int max = 1;
+        for (String[] tags : tagArrays) {
+            for (String tag : tags) {
+                if (tag != null && tag.length() > max) {
+                    max = tag.length();
+                }
+            }
+        }
+        return max;
+    }
 
     /** 是否处于思考态。 */
     private boolean inThinking;

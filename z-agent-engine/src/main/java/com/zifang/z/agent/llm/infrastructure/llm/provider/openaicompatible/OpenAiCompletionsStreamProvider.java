@@ -150,6 +150,12 @@ public class OpenAiCompletionsStreamProvider implements LlmStreamProvider {
                     @Override
                     public void onClosed(EventSource eventSource) {
                         log.info("[OpenAI-Compat] SSE closed, accumulatedLen={}", state.accumulated.length());
+                        // 零内容关闭 = 上层"空响应"的第一现场：思考态未闭合是已知成因之一
+                        // （splitter 把全部正文归入思考通道）⇒ WARN 带上 splitter 状态便于定位。
+                        if (state.accumulated.length() == 0) {
+                            log.warn("[OpenAI-Compat] SSE closed with ZERO content, model={} splitter={}",
+                                    model, state.splitter);
+                        }
                         // 收尾：把被切开的标签残片交还（否则尾部残片会静默丢失）
                         flushTail(callbacks, state);
                         if (failureRef.get() == null && callbacks != null) {
