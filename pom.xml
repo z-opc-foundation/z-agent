@@ -20,7 +20,7 @@
     <parent>
         <groupId>io.github.yuku123</groupId>
         <artifactId>z-boot-parent</artifactId>
-        <version>1.1.2</version>
+        <version>1.2.0</version>
         <relativePath/>
     </parent>
 
@@ -264,6 +264,12 @@
             <artifactId>junit-vintage-engine</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- 2026-10-30 Java17/SB3 火车：老链上 javax.annotation 来自 JDK8 内置；
+             JDK17 摘除后所有模块统一吃 jakarta.annotation-api（版本走 z-boot-parent DM 2.1.1） -->
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -439,6 +445,12 @@
                                  ⚠ wrapper 自己会从仓根 .env 兜底加载 CENTRAL_GPG_PASSPHRASE；
                                  本仓没有 .env ⇒ 须由调用方 export 该变量。 -->
                             <executable>${maven.multiModuleProjectDirectory}/_doc/003_script/gpg-with-passphrase.sh</executable>
+                            <!-- 2026-10-30 补（对齐 z-util / z-mcp / z-lc 的实发口径）：
+                                 插件默认用 local-user=default，而本机密钥环里**没有名为
+                                 "default" 的密钥**（只有 uid yuku123 / key A403FCCFD7EF5DA6）
+                                 ⇒ gpg 报 skipped "default": No secret key。
+                                 ⇒ 把 keyname 显式钉成真实 key id。 -->
+                            <keyname>A403FCCFD7EF5DA6</keyname>
                         </configuration>
                         <executions>
                             <execution>

@@ -6,7 +6,7 @@ import com.zifang.z.agent.center.core.agent.instance.service.AgentInstanceServic
 import okhttp3.*;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;

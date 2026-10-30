@@ -7,7 +7,7 @@ import com.zifang.z.agent.center.core.app.mapper.AgentAppGroupMapper;
 import com.zifang.z.agent.center.core.app.service.AgentAppGroupService;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 
 @Service

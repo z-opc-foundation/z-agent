@@ -20,8 +20,8 @@
 |------|-----|
 | **仓库** | `z-agent`（`z-opc-foundation/z-agent`，分支 `main`） |
 | **Maven 坐标** | `io.github.yuku123:z-agent:${revision}`（根 POM `packaging=pom` 聚合） |
-| **当前版本** | `1.0.2`（根 POM `<revision>`；CI-friendly versions + flatten-maven-plugin `1.7.2`，`flattenMode=oss`） |
-| **父项目** | `io.github.yuku123:z-boot-parent:1.1.0`（`<relativePath/>` 留空，parent 在 repo1 不在磁盘） |
+| **当前版本** | `1.0.6`（根 POM `<revision>`；CI-friendly versions + flatten-maven-plugin `1.7.2`，`flattenMode=oss`） |
+| **父项目** | `io.github.yuku123:z-boot-parent:1.2.0`（`<relativePath/>` 留空，parent 在 repo1 不在磁盘；2026-10-30 Java17/SB3 火车） |
 | **Maven Central** | 2026-10-20 实测：`z-agent` / `z-agent-api` / `z-agent-core` / `z-agent-starter` 四个坐标的 `0.1.0`–`0.1.4` / `1.0.0` / `1.0.1` 都在；`z-agent-common` / `z-agent-engine` / `z-agent-center` 已发 `1.0.0` / `1.0.1`；`z-agent-admin` **只到 `0.1.4`**（1.0.x 起被根 POM `central` profile 的 `excludeArtifacts` 排除，见「项目结构」末尾）。`maven-metadata.xml`：`latest=release=1.0.1`，`lastUpdated=20261018235906`；`z-agent` 是 pom 聚合，**没有 jar** |
 | **内核依赖** | `io.github.yuku123:z-agent-kernel-{agent,llm,message,tool,types,memory,event,middleware}:0.2.3` —— 根 POM 属性 `z-agent-kernel.version=0.2.3` + 8 条按坐标写的直接 DM 条目 |
 | **默认端口** | 无。**原有四模块**不监听端口、不产出 boot jar；`z-agent-center-starter` 用 `spring-boot-maven-plugin` 的 `<classifier>boot</classifier>` 产出可启动 fat jar，端口由部署侧下发。`server.port` 与 context-path 不在本仓钉死 |
@@ -45,8 +45,8 @@
    `rg --no-ignore -l "org.springframework" --glob '*.java' ../z-agent-kernel/z-agent-kernel-llm` ⇒ `0` 个文件。
    内核 `z-agent-kernel-llm` 现树里有 **7** 个 provider 类（`OpenAI`/`Anthropic`/`Gemini`/`DashScope` 直接实现 `LlmProvider`，
    `DeepSeek`/`Qwen`/`Ollama` 继承 `OpenAIProvider`），要用的得自己 `@Bean` 出来（见「怎么接」）。
-3. **版本分歧是刻意的**：本仓钉 `0.2.3`，而父链 `z-boot-parent:1.1.0` 的 `z-agent-kernel.version` 槽位是 `0.2.1`
-   （1.1.0 这一版 parent 已不再 import `z-boot-fleet`，该格直接由 parent 自身属性下发）。中央上 `z-agent-core:1.0.1`
+3. **版本分歧是刻意的**：本仓钉 `0.2.3`，而父链 `z-boot-parent:1.2.0` 的 `z-agent-kernel.version` 槽位是 `0.2.1`
+   （1.2.0 这一版 parent 已不再 import `z-boot-fleet`，该格直接由 parent 自身属性下发）。中央上 `z-agent-core:1.0.1`
    的发布 POM 把 8 条 kernel 直接依赖落成字面 `0.2.2`（复算：`curl -s https://repo1.maven.org/maven2/io/github/yuku123/z-agent-core/1.0.1/z-agent-core-1.0.1.pom`）——
    即已发布的那一版比本仓当前 `0.2.3` 低一格。中央上 `0.2.3` 已发（`z-agent-kernel` 的 `maven-metadata.xml` 实测列 `0.1.0 / 0.1.1 / 0.2.1 / 0.2.2 / 0.2.3`）。
    ⇒ 消费方若继承了 parent 的 DM，Maven 会用 DM 覆盖传递版本、把 kernel 压回 `0.2.1`，与本仓的编译基线不一致；跨版本联调前先对齐这一格。
@@ -85,7 +85,7 @@ grep -A1 '@Bean' z-agent-starter/src/main/java/com/zifang/z/agent/starter/autoco
 
 ```
 z-agent/
-├── pom.xml                    # 聚合根 POM：parent z-boot-parent:1.1.0、<revision>1.0.2</revision>、7 个 <module>、central profile
+├── pom.xml                    # 聚合根 POM：parent z-boot-parent:1.2.0、<revision>1.0.6</revision>、7 个 <module>、central profile
 ├── LICENSE                    # MIT（Copyright (c) 2026 z-opc-foundation）
 ├── README.md
 ├── _doc/                      # 文档收口目录（001_arch/ 内含项目总览 00-overview.md）
@@ -122,15 +122,15 @@ z-agent/
     └── z-agent-center-starter/# 可执行入口：Main（@SpringBootApplication + main()）
 ```
 
-规模实测：main **384** 个 `.java`（现读，尺子可钉）；test **28** 个 / 合计 **48004** 行是 **2026-10-20 快照**（**不含本仓 README 自守卫** —— 守卫落在 `z-agent-core/src/test`，这两个数必然漂，故只作快照不作断言）。
+规模实测：main **386** 个 `.java`（现读，尺子可钉）；test **28** 个 / 合计 **48004** 行是 **2026-10-20 快照**（**不含本仓 README 自守卫** —— 守卫落在 `z-agent-core/src/test`，这两个数必然漂，故只作快照不作断言）。
 
 ```bash
-find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/main/'   # ⇒ 384
+find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/main/'   # ⇒ 386
 find . -path '*/target' -prune -o -name '*.java' -print | grep -c '/src/test/'    # ⇒ 26（2026-10-20 快照，不含本仓 README 自守卫）
 find . -path '*/target' -prune -o -name '*.java' -print | xargs wc -l | tail -1  # ⇒ 48004 total（同上快照口径）
 ```
 
-分模块（main / test / @Test）：`z-agent-center` 204/1/6 · `z-agent-engine` 160/21/161 · `z-agent-core` 7/5/47 ·
+分模块（main / test / @Test）：`z-agent-center` 206/1/6 · `z-agent-engine` 160/21/161 · `z-agent-core` 7/5/47 ·
 `z-agent-api` 6/0/0 · `z-agent-common` 4/0/0 · `z-agent-admin` 2/0/0 · `z-agent-starter` 1/0/0 —— **仓级 200 支 `@Test`**（main 计数现读、尺子可钉；test 与 `@Test` 计数是 **2026-10-20 快照**，同样不含本仓 README 自守卫）。
 
 本仓**没有** `deploy/`、`k8s/`、`Dockerfile*`、`docker-compose*.yml`、`Makefile`（逐个 `ls -d` 实测均不存在），
@@ -150,7 +150,7 @@ find . -path '*/target' -prune -o -name '*.java' -print | xargs wc -l | tail -1 
 
 | 层级 | 技术 | 出处 |
 |------|------|------|
-| 语言 / 运行时 | Java 8 | 父链 `z-boot-parent:1.1.0` 的 `pluginManagement` |
+| 语言 / 运行时 | Java 17（2026-10-30 火车） | 父链 `z-boot-parent:1.2.0` 的 `pluginManagement`（Spring Boot 3.3.13） |
 | 框架 | Spring Boot 2.7.18（`spring-boot` / `spring-boot-autoconfigure`） | 版本由父链属性 `spring-boot.version` 供给；中央发布 POM 实测 `2.7.18` |
 | Web 层 | `spring-web` / `spring-webmvc` `5.3.39` | `z-agent-core:1.0.1` 发布 POM 实测 |
 | 序列化 | `jackson-databind` `2.18.6` | 同上 |
@@ -183,7 +183,7 @@ mvn clean install -DskipTests
 ```
 
 版本口径全部由父链下发；构建报找不到版本时，先确认能从 repo1 解析到
-`io.github.yuku123:z-boot-parent:1.1.0` 与 `z-agent-kernel-*:0.2.3`（两者都已实测存在）。
+`io.github.yuku123:z-boot-parent:1.2.0` 与 `z-agent-kernel-*:0.2.3`（两者都已实测存在）。
 
 ### 怎么接（三步，缺一不可）
 
@@ -340,7 +340,7 @@ mvn test          # z-agent-core 47 支 @Test（2026-10-20 快照，不含本仓
 - **注册中心是内存版**：`ConcurrentHashMap`，进程重启即空，没有持久化、没有多实例同步。
 - **控制面 `models` 的口径 = `LlmAdapter.listModels()`**，即"注册进来的 provider 声称支持什么"，
   不是平台真的可用的模型清单；一个 provider 都没注册时它就是空列表（`providerCount` 同步为 0）。
-- **父链 `z-boot-parent:1.1.0` 里 `z-agent.version` 槽位仍是 `0.1.4`**，比本仓 `<revision>`（`1.0.1`）低两格；
+- **父链 `z-boot-parent:1.2.0` 里 `z-agent.version` 槽位仍是 `0.1.4`**，比本仓 `<revision>`（`1.0.1`）低两格；
   下一刀抬版本时本仓必须晚于 parent，否则 parent 会指向一个还没上的版本。
 
 ---

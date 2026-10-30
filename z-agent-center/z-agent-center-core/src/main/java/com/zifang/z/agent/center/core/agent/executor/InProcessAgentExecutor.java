@@ -5,7 +5,7 @@ import com.zifang.z.agent.center.core.agent.instance.service.AgentInstanceServic
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * 内存模式 Agent 执行器 (ReAct 循环)

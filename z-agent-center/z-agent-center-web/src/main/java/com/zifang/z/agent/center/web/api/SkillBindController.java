@@ -12,7 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -114,7 +114,7 @@ public class SkillBindController {
      */
     @Operation(summary = "FEATURE014 外部 Agent 拉取自己应该加载的 Skill 列表")
     @GetMapping("/pull")
-    public Result<SkillPullResp> pull(javax.servlet.http.HttpServletRequest httpRequest,
+    public Result<SkillPullResp> pull(jakarta.servlet.http.HttpServletRequest httpRequest,
                                       @RequestParam String instanceCode) {
         AgentInstance instance = resolveInstance(httpRequest, instanceCode);
         if (instance == null) {
@@ -138,7 +138,7 @@ public class SkillBindController {
      */
     @Operation(summary = "FEATURE014 Agent 心跳上报 — 更新 lastHeartbeat")
     @PostMapping("/heartbeat")
-    public Result<HeartbeatResp> heartbeat(javax.servlet.http.HttpServletRequest httpRequest,
+    public Result<HeartbeatResp> heartbeat(jakarta.servlet.http.HttpServletRequest httpRequest,
                                            @RequestBody HeartbeatReq req) {
         return doHeartbeat(httpRequest, req.instanceCode, req.status, req.agentVersion, req.capabilities);
     }
@@ -148,7 +148,7 @@ public class SkillBindController {
      */
     @Operation(summary = "FEATURE014 Agent 心跳（GET 别名）")
     @GetMapping("/heartbeat")
-    public Result<HeartbeatResp> heartbeatGet(javax.servlet.http.HttpServletRequest httpRequest,
+    public Result<HeartbeatResp> heartbeatGet(jakarta.servlet.http.HttpServletRequest httpRequest,
                                               @RequestParam String instanceCode,
                                               @RequestParam(required = false, defaultValue = "ACTIVE") String status,
                                               @RequestParam(required = false) String agentVersion,
@@ -159,7 +159,7 @@ public class SkillBindController {
     /**
      * 心跳核心逻辑 — 供 POST 和 GET 复用。
      */
-    private Result<HeartbeatResp> doHeartbeat(javax.servlet.http.HttpServletRequest httpRequest,
+    private Result<HeartbeatResp> doHeartbeat(jakarta.servlet.http.HttpServletRequest httpRequest,
                                               String instanceCode, String status,
                                               String agentVersion, String capabilities) {
         AgentInstance instance = resolveInstance(httpRequest, instanceCode);
@@ -240,7 +240,7 @@ public class SkillBindController {
      * 优先使用拦截器已认证的 instance（从 request attribute 取），
      * 回退到 {@link AgentInstanceService#getByInstanceCode} 查 DB。
      */
-    private AgentInstance resolveInstance(javax.servlet.http.HttpServletRequest req, String requestedCode) {
+    private AgentInstance resolveInstance(jakarta.servlet.http.HttpServletRequest req, String requestedCode) {
         Object attr = req.getAttribute("agentInstance");
         if (attr instanceof AgentInstance) {
             AgentInstance authed = (AgentInstance) attr;

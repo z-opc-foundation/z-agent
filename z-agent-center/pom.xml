@@ -27,8 +27,8 @@
              ${revision} 遮成了 1.0.0 —— 根 pom 抬到 1.0.1 后，本聚合件仍发 1.0.0，
              Central 直接以 "already exists" 打回（deployment 9929b133）。
              ${revision} 从根 pom 一路继承即可，本级不得再声明。 -->
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -39,7 +39,7 @@
             <artifactId>z-boot-parent</artifactId>
                 <scope>import</scope>
                 <type>pom</type>
-                <version>1.1.2</version>
+                <version>1.2.0</version>
             </dependency>
 
 
