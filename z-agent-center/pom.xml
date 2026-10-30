@@ -11,7 +11,7 @@
 
     <artifactId>z-agent-center</artifactId>
 
-    <name>z-agent-center</name>
+    <name>z-agent :: center</name>
 
     <description>z-agent center 聚合模块</description>
     <packaging>pom</packaging>

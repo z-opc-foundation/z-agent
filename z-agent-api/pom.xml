@@ -15,6 +15,6 @@
     <version>${revision}</version>
     <packaging>jar</packaging>
 
-    <name>z-agent-api (DTO)</name>
+    <name>z-agent :: api</name>
     <description>z-agent 平台 API DTO (AgentDto / RunRequest / RunResponse / StreamChunk) + AgentException, 零依赖</description>
 </project>

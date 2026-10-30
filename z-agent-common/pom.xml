@@ -12,7 +12,7 @@
 
     <artifactId>z-agent-common</artifactId>
 
-    <name>z-agent-common</name>
+    <name>z-agent :: common</name>
 
     <description>z-agent 公共模型与工具：DTO、常量、枚举与通用异常</description>
 

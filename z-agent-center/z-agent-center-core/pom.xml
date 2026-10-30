@@ -11,7 +11,7 @@
 
     <artifactId>z-agent-center-core</artifactId>
 
-    <name>z-agent-center-core</name>
+    <name>z-agent :: center-core</name>
 
     <description>z-agent center 核心域：Agent 模板、实例、MCP 与 LLM 配置</description>
 

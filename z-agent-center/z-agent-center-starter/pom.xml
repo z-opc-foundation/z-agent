@@ -11,7 +11,7 @@
 
     <artifactId>z-agent-center-starter</artifactId>
 
-    <name>z-agent-center-starter</name>
+    <name>z-agent :: center-starter</name>
 
     <description>z-agent center Starter：自动装配入口</description>
 

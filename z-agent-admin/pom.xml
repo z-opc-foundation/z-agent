@@ -15,7 +15,7 @@
     <version>${revision}</version>
     <packaging>jar</packaging>
 
-    <name>z-agent-admin</name>
+    <name>z-agent :: admin</name>
     <description>控制面 REST + 内置 HTML (列出注册 agent / 调用示例 / 健康检查视图)</description>
 
     <dependencies>

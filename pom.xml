@@ -29,8 +29,8 @@
     <version>${revision}</version>
     <packaging>pom</packaging>
 
-    <name>z-agent (Cloud Agent SaaS)</name>
-    <description>云端 Agent 平台: ReAct / Plan agent 默认实现 + 注册中心 + REST 网关 + 控制面</description>
+    <name>z-agent :: root</name>
+    <description>云端 Agent 平台: ReAct / Plan agent 默认实现 + 注册中心 + REST 网关 + 控制面 / Cloud Agent SaaS</description>
     <url>https://github.com/z-opc-foundation/z-agent</url>
 
     <licenses>

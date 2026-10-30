@@ -12,7 +12,7 @@
 
     <artifactId>z-agent-engine</artifactId>
 
-    <name>z-agent-engine</name>
+    <name>z-agent :: engine</name>
 
     <description>z-agent 引擎：会话编排、记忆与工具调度的运行时实现</description>
 

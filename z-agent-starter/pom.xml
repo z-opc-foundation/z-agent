@@ -15,7 +15,7 @@
     <version>${revision}</version>
     <packaging>jar</packaging>
 
-    <name>z-agent-starter</name>
+    <name>z-agent :: starter</name>
     <description>Spring Boot 自动装配: ZAgentAutoConfiguration + spring.factories</description>
 
     <dependencies>
