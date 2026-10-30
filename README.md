@@ -25,7 +25,7 @@
 | **Maven Central** | 2026-10-20 实测：`z-agent` / `z-agent-api` / `z-agent-core` / `z-agent-starter` 四个坐标的 `0.1.0`–`0.1.4` / `1.0.0` / `1.0.1` 都在；`z-agent-common` / `z-agent-engine` / `z-agent-center` 已发 `1.0.0` / `1.0.1`；`z-agent-admin` **只到 `0.1.4`**（1.0.x 起被根 POM `central` profile 的 `excludeArtifacts` 排除，见「项目结构」末尾）。`maven-metadata.xml`：`latest=release=1.0.1`，`lastUpdated=20261018235906`；`z-agent` 是 pom 聚合，**没有 jar** |
 | **内核依赖** | `io.github.yuku123:z-agent-kernel-{agent,llm,message,tool,types,memory,event,middleware}:0.2.3` —— 根 POM 属性 `z-agent-kernel.version=0.2.3` + 8 条按坐标写的直接 DM 条目 |
 | **默认端口** | 无。**原有四模块**不监听端口、不产出 boot jar；`z-agent-center-starter` 用 `spring-boot-maven-plugin` 的 `<classifier>boot</classifier>` 产出可启动 fat jar，端口由部署侧下发。`server.port` 与 context-path 不在本仓钉死 |
-| **运行口径** | Java 8 · Spring Boot 2.7.18 —— 两格都由父链下发。**原有四模块**的 POM 里没有 `maven.compiler.*` / `spring-boot.version` 声明（复算：`rg -n "spring-boot.version|maven.compiler" pom.xml z-agent-api/pom.xml z-agent-core/pom.xml z-agent-starter/pom.xml z-agent-admin/pom.xml` ⇒ 只命中注释）；迁入的 `z-agent-common` / `z-agent-engine` / `z-agent-center` 各自声明了 `maven.compiler.source/target`（`8` / `8` / `1.8`），值与父链同格 |
+| **运行口径** | Java 17 · Spring Boot 3.3.13 —— 两格都由父链下发。**原有四模块**的 POM 里没有 `maven.compiler.*` / `spring-boot.version` 声明（复算：`rg -n "spring-boot.version|maven.compiler" pom.xml z-agent-api/pom.xml z-agent-core/pom.xml z-agent-starter/pom.xml z-agent-admin/pom.xml` ⇒ 只命中注释）；迁入的 `z-agent-common` / `z-agent-engine` / `z-agent-center` 各自声明了 `maven.compiler.source/target`（`8` / `8` / `1.8`），值与父链同格 |
 | **最近更新** | 2026-10-19（仓内最后一次提交 `8a2f870` "kernel 版本线抬到 0.2.3"） |
 
 ---
