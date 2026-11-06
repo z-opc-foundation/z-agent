@@ -613,7 +613,7 @@ public class ReadmeClaimsTest {
         Facts f = recomputed();
         String[][] mutations = {
                 {"当前版本", "**当前版本** | `1.0.6`", "**当前版本** | `9.9.9`"},
-                {"父项目版本", "z-boot-parent:1.2.0", "z-boot-parent:1.0.0"},
+                {"父项目版本", "z-boot-parent:1.2.1", "z-boot-parent:1.0.0"},
                 {"模块数", "7 个 <module>", "6 个 <module>"},
                 {"内核属性版本", "z-agent-kernel.version=0.2.3", "z-agent-kernel.version=0.2.2"},
                 {"内核 DM 条目", "8 条按坐标写的直接 DM 条目", "9 条按坐标写的直接 DM 条目"},
