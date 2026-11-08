@@ -108,8 +108,8 @@
              纯 JDK client，零 Spring 依赖，不带额外版本负担。 -->
         <dependency>
             <groupId>io.github.yuku123</groupId>
-            <artifactId>z-cognition-memory-client</artifactId>
-            <version>1.0.0</version>
+            <artifactId>z-memory-client</artifactId>
+            <version>1.1.0-SNAPSHOT</version>
         </dependency>
 
         <!-- z-mcp 依赖 (MCP 工具支持，独立件，版本由 z-boot-fleet 下发) -->
