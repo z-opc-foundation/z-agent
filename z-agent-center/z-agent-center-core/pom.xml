@@ -103,6 +103,15 @@
 
         <!-- 2026-10-18: 移除 z-agent-knowledge-core 依赖, RAG 检索归 z-kb 独立仓 -->
 
+        <!-- 2026-11-08: 记忆层归认知舱。z_cognition_memory 为唯一记忆真源，
+             本地 z_agent_memory 只作过渡（z.agent.memory.mode=local 默认，切 remote 走认知舱）。
+             纯 JDK client，零 Spring 依赖，不带额外版本负担。 -->
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-cognition-memory-client</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
         <!-- z-mcp 依赖 (MCP 工具支持，独立件，版本由 z-boot-fleet 下发) -->
         <dependency>
             <groupId>io.github.yuku123</groupId>
