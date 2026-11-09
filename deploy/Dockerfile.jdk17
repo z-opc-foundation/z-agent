@@ -1,0 +1,52 @@
+# ============================================================
+# z-agent-center 镜像（JDK17 基座）—— 2026-11-09 新增
+# ============================================================
+# 【为什么需要这个，而不是继续用 deploy/Dockerfile】
+#   老 Dockerfile 是「叠加」写法：FROM zopc/z-agent:local（ubuntu 26.04 + **jdk8u504**），
+#   只换 /app/app.jar ⇒ 运行时不变、差异面最小。这条路在 jar 还是 Java 8 字节码时是对的。
+#   但 2026-10-30 起的 Java17/SB3 火车把本仓编译目标提到了 17
+#   （z-agent-center-core 的 <maven.compiler.source>17</maven.compiler.source>），
+#   老基座的 jdk8 **跑不了 class major 61** ⇒ 只能「UnsupportedClassVersionError」起不来。
+#   ⇒ 必须换运行时基座 ⇒ 从零构建。
+#
+# 【基座为什么选 temurin:17-jre-jammy】
+#   与生产主壳 z-opc-main 同款（Ubuntu 22.04 + temurin 17，java 在 /opt/java/openjdk）。
+#   ⇒ 同一套 OS/locale/时区口径，agent 与主壳在容器内的行为一致。
+#   ⚠ 本集群 imagePullPolicy=Never ⇒ 基座镜像必须**导入节点 containerd**，
+#     清单里的 tag 要与导入的 tag 逐字一致。
+#
+# 【构建】
+#   cd z-agent
+#   mvn -pl z-agent-center/z-agent-center-starter -am install -DskipTests
+#   cp z-agent-center/z-agent-center-starter/target/z-agent-center-starter-1.0.7-boot.jar app.jar
+#   docker build --platform linux/amd64 -t zopc/z-agent:1.0.7-jdk17 -f deploy/Dockerfile.jdk17 .
+#
+# 【tag 铁律】
+#   本集群 imagePullPolicy=Never ⇒ 产出的 tag 必须与 deploy/k8s/02-deployment.yaml
+#   的 image: 逐字一致 —— k3s 按字面引用去节点本地 content store 找。
+# ============================================================
+FROM eclipse-temurin:17-jre-jammy
+
+# 启动类 jar：z-agent-center-starter 的 boot jar（com.zifang.z.agent.center.starter.Main）
+COPY app.jar /app/app.jar
+
+# locale 显式钉 UTF-8（与主壳 z-opc 镜像同一口径）：
+#   JVM 的 sun.jnu.encoding 由 locale 决定；非 UTF-8 时中文路径（agent 目录 /
+#   displayName）会抛 Malformed input or input contains unmappable characters。
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+
+ENV JAVA_OPTS="-Xms256m -Xmx1024m"
+
+# JAVA_TOOL_OPTIONS 与主壳一致（headless，避免 AWT 在无显示环境报错）
+ENV JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
+
+WORKDIR /app
+
+EXPOSE 8080
+
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]
+
+LABEL org.opencontainers.image.title="z-agent-center" \
+      org.opencontainers.image.description="Agent SaaS 控制面（Java17 / Spring Boot 3 火车）" \
+      org.opencontainers.image.source="https://github.com/z-opc-foundation/z-agent" \
+      org.opencontainers.image.licenses="MIT"

@@ -62,7 +62,15 @@ spec:
     spec:
       containers:
         - name: z-agent
-          image: zopc/z-agent:1.0.3-zboot112
+          # 2026-11-09：1.0.3-zboot112 → 1.0.7-jdk17。
+          #   换镜像的两个原因（缺一不可）：
+          #     ① 运行时：老镜像 zopc/z-agent:local 是 jdk8u504，而本仓自 2026-10-30
+          #        的 Java17/SB3 火车起编译目标就是 17（class major 61）
+          #        ⇒ jdk8 跑不了新 jar，只能 UnsupportedClassVersionError。
+          #     ② 功能：1.0.7 才有记忆层接线修复（starter 装配 + remote fail-fast），
+          #        以及 AgentMemory 分层注入。
+          #   ⚠ 本集群 imagePullPolicy=Never ⇒ tag 必须与节点 containerd 里逐字一致。
+          image: zopc/z-agent:1.0.7-jdk17
           imagePullPolicy: Never
           ports:
             - name: http
@@ -72,6 +80,23 @@ spec:
             # JVM 参数：与线上逐字一致。
             - name: JAVA_OPTS
               value: "-Xms256m -Xmx1024m"
+            # ===== 记忆层：切认知舱 z-memory-server =====
+            # mode=remote ⇒ 走认知舱记忆（z-cognition / z-memory），本地 z_agent_memory 表不再读写。
+            # base-url 传**服务根（含 context-path）**，memory-client 会再拼 /api/memory/...
+            #   ⇒ 跨 namespace 时用 FQDN：z-memory-server.z-cognition.svc.cluster.local:18092/cognition
+            # ⚠ 这三项都**不能留空**：base-url 留空会让装配层不触发（local 模式），
+            #   而 mode=remote 却缺 MemoryClient bean ⇒ 服务**启动失败**（fail-fast，
+            #   这是刻意设计：宁可起不来，也不要静默回退本地表把记忆写歪）。
+            - name: Z_AGENT_MEMORY_MODE
+              value: "remote"
+            - name: Z_COGNITION_MEMORY_BASE_URL
+              value: "http://z-memory-server.z-cognition.svc.cluster.local:18092/cognition"
+            - name: Z_AGENT_MEMORY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: z-agent-db
+                  key: memory-token
+                  optional: true
             # ===== 数据源：共享 RDS 的 oc 库（z-opc 系各仓共用同一个库）=====
             # 地址走 secret 引用（001_凭证管理规范：仓内不留云端地址字面量）；
             # 账号/库名/端口照线上现状明文（与线上一字不差）；口令一律走 secret 引用，仓里不出现明文口令。
