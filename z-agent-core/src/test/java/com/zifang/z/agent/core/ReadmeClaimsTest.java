@@ -611,16 +611,27 @@ public class ReadmeClaimsTest {
     public void rulerActuallyCondemnsWrongNumbers() {
         String real = read(repoRoot().resolve("README.md"));
         Facts f = recomputed();
+        // ⚠ 样本里的版本号必须**从 Facts 动态派生**，不能写死字面量。
+        //   写死的写法（父项目版本写 1.2.1、当前版本写 1.0.6）在父链/本仓一抬版本后
+        //   `real.replace(样本)` 就命中不了 ⇒ 尺子测不到自己 ⇒ 用例假红（2026-11-09 实测）。
+        //   取自实际盘面，任何一次抬版本都不会再让本用例失效。
+        String wrongParentVersion = bumpLastSegment(f.parentVersion);
+        String wrongRevision = bumpLastSegment(f.revision);
+        String wrongKernelVersion = bumpLastSegment(f.kernelVersion);
         String[][] mutations = {
-                {"当前版本", "**当前版本** | `1.0.6`", "**当前版本** | `9.9.9`"},
-                {"父项目版本", "z-boot-parent:1.2.1", "z-boot-parent:1.0.0"},
-                {"模块数", "7 个 <module>", "6 个 <module>"},
-                {"内核属性版本", "z-agent-kernel.version=0.2.3", "z-agent-kernel.version=0.2.2"},
-                {"内核 DM 条目", "8 条按坐标写的直接 DM 条目", "9 条按坐标写的直接 DM 条目"},
-                {"@Bean 数", "产出 3 个 `@Bean`", "产出 4 个 `@Bean`"},
-                {"main .java 数", "main **386** 个 `.java`", "main **380** 个 `.java`"},
+                {"当前版本", "**当前版本** | `" + f.revision + "`", "**当前版本** | `" + wrongRevision + "`"},
+                {"父项目版本", "z-boot-parent:" + f.parentVersion, "z-boot-parent:" + wrongParentVersion},
+                {"模块数", f.modules.size() + " 个 <module>", (f.modules.size() - 1) + " 个 <module>"},
+                {"内核属性版本", "z-agent-kernel.version=" + f.kernelVersion,
+                        "z-agent-kernel.version=" + wrongKernelVersion},
+                {"内核 DM 条目", f.kernelArtifacts.size() + " 条按坐标写的直接 DM 条目",
+                        (f.kernelArtifacts.size() + 1) + " 条按坐标写的直接 DM 条目"},
+                {"@Bean 数", "产出 " + f.beanCount + " 个 `@Bean`", "产出 " + (f.beanCount + 1) + " 个 `@Bean`"},
+                {"main .java 数", "main **" + f.mainJavaTotal + "** 个 `.java`",
+                        "main **" + (f.mainJavaTotal - 1) + "** 个 `.java`"},
                 {"类行数", "`core/agent/ReActAgent.java`（203 行）", "`core/agent/ReActAgent.java`（205 行）"},
-                {"方法级端点", "2 个类级 + 7 个方法级", "2 个类级 + 8 个方法级"},
+                {"方法级端点", f.classLevelMappings + " 个类级 + " + f.methodLevelMappings + " 个方法级",
+                        f.classLevelMappings + " 个类级 + " + (f.methodLevelMappings + 1) + " 个方法级"},
                 {"center-web Controller", "**18 个 Controller / 135 个方法级端点**", "**17 个 Controller / 135 个方法级端点**"},
                 {"真实 main", "命中 1 个真实 main", "命中 2 个真实 main"},
                 {"错误码", "`AgentException`（6 个错误码常量）", "`AgentException`（5 个错误码常量）"},
@@ -642,9 +653,9 @@ public class ReadmeClaimsTest {
         String real = read(repoRoot().resolve("README.md"));
         Facts f = recomputed();
         String[][] deletions = {
-                {"当前版本", "**当前版本** | `1.0.6`", "**当前版本** | 待定"},
-                {"@Bean 数", "产出 3 个 `@Bean`", "产出若干 `@Bean`"},
-                {"main .java 数", "main **386** 个 `.java`", "main 若干个 `.java`"},
+                {"当前版本", "**当前版本** | `" + f.revision + "`", "**当前版本** | 待定"},
+                {"@Bean 数", "产出 " + f.beanCount + " 个 `@Bean`", "产出若干 `@Bean`"},
+                {"main .java 数", "main **" + f.mainJavaTotal + "** 个 `.java`", "main 若干个 `.java`"},
         };
         for (String[] del : deletions) {
             String broken = real.replace(del[1], del[2]);
@@ -655,6 +666,27 @@ public class ReadmeClaimsTest {
             } catch (AssertionError expected) {
                 // 预期：断言必须抛
             }
+        }
+    }
+
+    /**
+     * 把版本号最后一段 +1（1.2.2 → 1.2.3），用于生成"必然错误"的变异值。
+     * 段数不足或非数字时退化为在末尾追加 "x" —— 目标只是造一个与原值**不同**且**非法**的版本。
+     */
+    private static String bumpLastSegment(String version) {
+        if (version == null || version.isEmpty()) {
+            return "9.9.9";
+        }
+        int lastDot = version.lastIndexOf('.');
+        if (lastDot < 0) {
+            return version + "x";
+        }
+        String head = version.substring(0, lastDot + 1);
+        String tail = version.substring(lastDot + 1);
+        try {
+            return head + (Integer.parseInt(tail) + 1);
+        } catch (NumberFormatException e) {
+            return version + "x";
         }
     }
 }

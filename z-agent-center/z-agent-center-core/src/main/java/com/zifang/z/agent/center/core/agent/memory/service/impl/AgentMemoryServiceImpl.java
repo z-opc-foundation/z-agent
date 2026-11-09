@@ -55,10 +55,23 @@ public class AgentMemoryServiceImpl implements AgentMemoryService {
         this.remoteMode = "remote".equalsIgnoreCase(mode == null ? "" : mode.trim());
         this.token = token == null ? "" : token;
         if (remoteMode && memoryClient == null) {
-            log.warn("[AgentMemory] mode=remote 但容器没有 MemoryClient（检查 z.cognition.memory.base-url）⇒ 回退 local");
+            // 【假绿防护】remote 模式下缺 MemoryClient 是**配置错误**，不是可降级故障。
+            //   历史行为：打一行 warn 后静默回退 local 表 —— 服务照常启动、接口照常返回 200，
+            //   但记忆数据**全写进了本地 MySQL 表**，认知舱里的记忆永远是空的。
+            //   运维看到「服务健康」却查不到记忆，就是被这行 warn 骗过去的。
+            //   修法：remote 模式缺 client ⇒ 直接启动失败（fail-fast），
+            //   让配置问题在发布那一刻就暴露，而不是在业务用的时候才暴露。
+            throw new IllegalStateException(
+                    "[AgentMemory] z.agent.memory.mode=remote 但容器里没有 MemoryClient bean。"
+                            + "检查两件事：① z.cognition.memory.base-url 是否已配置"
+                            + "（配了才会装配 client）；② classpath 上是否有 z-memory-client-spring-boot-starter"
+                            + "（只有 z-memory-client 纯库件不会自动装配）。"
+                            + "修不好请显式改回 z.agent.memory.mode=local。");
         }
-        if (remoteMode && memoryClient != null) {
+        if (remoteMode) {
             log.info("[AgentMemory] 使用认知舱 memory 服务（remote 模式）");
+        } else {
+            log.info("[AgentMemory] 使用本地记忆表（local 模式）");
         }
     }
 

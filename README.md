@@ -20,7 +20,7 @@
 |------|-----|
 | **仓库** | `z-agent`（`z-opc-foundation/z-agent`，分支 `main`） |
 | **Maven 坐标** | `io.github.yuku123:z-agent:${revision}`（根 POM `packaging=pom` 聚合） |
-| **当前版本** | `1.0.6`（根 POM `<revision>`；CI-friendly versions + flatten-maven-plugin `1.7.2`，`flattenMode=oss`） |
+| **当前版本** | `1.0.7`（根 POM `<revision>`；CI-friendly versions + flatten-maven-plugin `1.7.2`，`flattenMode=oss`） |
 | **父项目** | `io.github.yuku123:z-boot-parent:1.2.2`（`<relativePath/>` 留空，parent 在 repo1 不在磁盘；2026-10-30 Java17/SB3 火车） |
 | **Maven Central** | 2026-10-20 实测：`z-agent` / `z-agent-api` / `z-agent-core` / `z-agent-starter` 四个坐标的 `0.1.0`–`0.1.4` / `1.0.0` / `1.0.1` 都在；`z-agent-common` / `z-agent-engine` / `z-agent-center` 已发 `1.0.0` / `1.0.1`；`z-agent-admin` **只到 `0.1.4`**（1.0.x 起被根 POM `central` profile 的 `excludeArtifacts` 排除，见「项目结构」末尾）。`maven-metadata.xml`：`latest=release=1.0.1`，`lastUpdated=20261018235906`；`z-agent` 是 pom 聚合，**没有 jar** |
 | **内核依赖** | `io.github.yuku123:z-agent-kernel-{agent,llm,message,tool,types,memory,event,middleware}:0.2.3` —— 根 POM 属性 `z-agent-kernel.version=0.2.3` + 8 条按坐标写的直接 DM 条目 |
@@ -85,7 +85,7 @@ grep -A1 '@Bean' z-agent-starter/src/main/java/com/zifang/z/agent/starter/autoco
 
 ```
 z-agent/
-├── pom.xml                    # 聚合根 POM：parent z-boot-parent:1.2.2、<revision>1.0.6</revision>、7 个 <module>、central profile
+├── pom.xml                    # 聚合根 POM：parent z-boot-parent:1.2.2、<revision>1.0.7</revision>、7 个 <module>、central profile
 ├── LICENSE                    # MIT（Copyright (c) 2026 z-opc-foundation）
 ├── README.md
 ├── _doc/                      # 文档收口目录（001_arch/ 内含项目总览 00-overview.md）

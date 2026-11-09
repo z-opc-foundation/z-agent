@@ -90,8 +90,12 @@
              LlmStreamProvider.StreamCallbacks 新增 onThought（default 方法，既有实现方零改动即可编译），
              OpenAiCompletionsStreamProvider 把 delta.reasoning_content 与裸思考标签改走该通道，
              不再以无闭合的 [REASONING:] 混进正文流 ⇒ 上游交替下发 content/reasoning_content 时，
-             下游正文流恒为完整 JSON（老协议下思考会插进 JSON 键名中间 ⇒ 解析必失败）。 -->
-        <revision>1.0.6</revision>
+             下游正文流恒为完整 JSON（老协议下思考会插进 JSON 键名中间 ⇒ 解析必失败）。
+             1.0.7（2026-11-09）= AgentMemory **分层注入**：
+             AgentMemoryService 新增 searchByTier(userId, appCode, query, limit, tier)，
+             injectForPrompt 升级为「工作记忆置顶（tier=WORKING）+ 长期记忆 SHORT/LONG 混合召回」两段式，
+             供 z-cognition 记忆舱按层召回。 -->
+        <revision>1.0.7</revision>
 
         <!-- 版本口径由父链下发：maven.compiler.source/target=8、project.build.sourceEncoding=UTF-8、
              spring-boot.version=2.7.18 三格与父链面值逐字相同，已删（根 pom 一次 + api/core/starter/admin
