@@ -273,25 +273,61 @@ public class AgentMemoryServiceImpl implements AgentMemoryService {
     }
 
     @Override
+    public List<AgentMemory> searchByTier(String userId, String appCode, String query, int limit, String tier) {
+        if (!useRemote() || tier == null || tier.isBlank()) {
+            return searchRelevant(userId, appCode, query, limit);
+        }
+        try {
+            MemorySearchQuery q = new MemorySearchQuery(userId, appCode, query, limit);
+            q.setTier(tier);
+            return toAgentMemories(memoryClient.search(q));
+        } catch (Exception e) {
+            log.warn("[AgentMemory][remote] searchByTier 失败 user={} app={} tier={}: {}",
+                    userId, appCode, tier, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
     public String injectForPrompt(String userId, String appCode, String query) {
-        List<AgentMemory> hits = searchRelevant(userId, appCode, query, 5);
-        if (hits == null || hits.isEmpty()) {
+        // 分层注入（Phase 3）：
+        //   1) WORKING —— 本会话即时上下文，紧凑置顶（remote 下显式 tier=WORKING 检索；
+        //      local 表无 tier 概念，回退普通检索，不会混入工作记忆）
+        //   2) SHORT_TERM + LONG_TERM —— 跨会话混合召回（默认检索已排除 WORKING）
+        List<AgentMemory> working = searchByTier(userId, appCode, query, 3, "WORKING");
+        List<AgentMemory> longTerm = searchRelevant(userId, appCode, query, 5);
+
+        StringBuilder sb = new StringBuilder();
+        int total = 0;
+        if (working != null && !working.isEmpty()) {
+            sb.append("【工作记忆】本会话进行中的即时上下文:\n");
+            for (AgentMemory m : working) {
+                if (m.getContent() == null || m.getContent().trim().isEmpty()) {
+                    continue;
+                }
+                sb.append("- ").append(m.getContent().trim()).append("\n");
+                total++;
+            }
+        }
+        if (longTerm != null && !longTerm.isEmpty()) {
+            sb.append("【长期记忆】你之前与该用户交互时记住的跨会话信息:\n");
+            for (AgentMemory m : longTerm) {
+                if (m.getContent() == null || m.getContent().trim().isEmpty()) {
+                    continue;
+                }
+                sb.append("- [").append(nullToStr(m.getMemoryType(), "FACT")).append("] ");
+                sb.append(m.getContent().trim());
+                if (m.getImportance() != null && m.getImportance() > 0.8f) {
+                    sb.append(" (重要)");
+                }
+                sb.append("\n");
+                total++;
+            }
+        }
+        if (total == 0) {
             return "";
         }
-        StringBuilder sb = new StringBuilder();
-        sb.append("【长期记忆】你之前与该用户交互时记住了以下信息:\n");
-        for (AgentMemory m : hits) {
-            if (m.getContent() == null || m.getContent().trim().isEmpty()) {
-                continue;
-            }
-            sb.append("- [").append(nullToStr(m.getMemoryType(), "FACT")).append("] ");
-            sb.append(m.getContent().trim());
-            if (m.getImportance() != null && m.getImportance() > 0.8f) {
-                sb.append(" (重要)");
-            }
-            sb.append("\n");
-        }
-        sb.append("请在回复时自然地利用这些信息, 不要生硬地复述.\n");
+        sb.append("请在回复时自然地利用这些信息，不要生硬地复述.\n");
         return sb.toString();
     }
 }

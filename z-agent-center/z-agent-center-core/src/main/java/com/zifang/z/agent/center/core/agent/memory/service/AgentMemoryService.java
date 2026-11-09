@@ -37,6 +37,14 @@ public interface AgentMemoryService {
     List<AgentMemory> searchRelevant(String userId, String appCode, String query, int limit);
 
     /**
+     * 按层级检索（WORKING / SHORT_TERM / LONG_TERM）。remote 模式下精确透传认知舱 tier；
+     * local 模式或 tier 为空时回退 {@link #searchRelevant}。
+     */
+    default List<AgentMemory> searchByTier(String userId, String appCode, String query, int limit, String tier) {
+        return searchRelevant(userId, appCode, query, limit);
+    }
+
+    /**
      * 列出某用户某应用的所有记忆 (管理后台用).
      */
     List<AgentMemory> listByUser(String userId, String appCode, int limit);
