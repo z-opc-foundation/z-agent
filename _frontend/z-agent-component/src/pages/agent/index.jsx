@@ -77,8 +77,9 @@ const {Text, Title} = Typography
 
 // ===== 应用列表页 =====
 const AgentAppPage = () => {
-    const [selectedGroupCode, setSelectedGroupCode] = useState('')
-    const [selectedGroupName, setSelectedGroupName] = useState('')
+    // ⚠ 2026-11-09 去掉左侧分组树后，选中分组的状态已无消费方（列表恒展示全部应用）。
+    //   保留 refreshKey 作为「编辑保存后强制重取列表」的钥匙 —— 它由 handleGroupRefresh 递增，
+    //   改名会波及编辑器回调，故沿用原名。
     const [refreshKey, setRefreshKey] = useState(0)
     const [editingApp, setEditingApp] = useState(null)
     const handleGroupRefresh = () => setRefreshKey(k => k + 1)
@@ -109,26 +110,15 @@ const AgentAppPage = () => {
 
     return (
         <div style={{display: 'flex', gap: 16, height: 'calc(100vh - 180px)', padding: 16}}>
-            {/* 左侧：分组树 */}
-            <Card size="small" style={{width: 300, overflow: 'auto', flexShrink: 0}}
-                  title="分组"
-                  extra={
-                      <Button size="small" icon={<ReloadOutlined/>} onClick={handleGroupRefresh}/>
-                  }>
-                <GroupTree key={refreshKey}
-                           selectedGroupCode={selectedGroupCode}
-                           onGroupSelect={(code, name) => {
-                               setSelectedGroupCode(code || '');
-                               setSelectedGroupName(code ? (name || '') : '')
-                           }}
-                           onGroupRefresh={handleGroupRefresh}
-                />
-            </Card>
-
-            {/* 右侧：应用列表 */}
-            <Card size="small" style={{flex: 1, overflow: 'auto'}}
-                  title={selectedGroupName || undefined}>
-                <AppListPage selectedGroupCode={selectedGroupCode} onEditApp={setEditingApp}/>
+            {/* 2026-11-09 用户口径「agent 应用不要左边的分组了」：
+                去掉左侧 300px 分组树面板，应用列表直接占满整行。
+                ⚠ 只删布局，不删数据层 —— GroupTree / buildGroupTree 仍被编辑器的
+                  分组选择器（下方 ~line 1103）复用，删掉会连带弄坏「编辑应用」页。
+                selectedGroupCode 也随之恒为空串 ⇒ 列表默认展示全部应用（原本「选中分组才过滤」的语义）。 */}
+            <Card size="small" style={{flex: 1, overflow: 'auto'}}>
+                {/* refreshKey 作为 key：编辑保存后强制重挂载 ⇒ 重新拉列表。
+                    （原本靠 GroupTree 的 key 触发，分组树删掉后这里接棒） */}
+                <AppListPage key={refreshKey} selectedGroupCode={''} onEditApp={setEditingApp}/>
             </Card>
         </div>
     )
