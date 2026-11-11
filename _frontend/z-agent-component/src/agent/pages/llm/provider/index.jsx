@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react'
 import {Button, Card, Col, Form, Input, message, Modal, Row, Select, Space, Statistic, Tag} from 'antd'
-import {DeleteOutlined, EditOutlined, GlobalOutlined, PlusOutlined} from '@ant-design/icons'
+import {GlobalOutlined, PlusOutlined} from '@ant-design/icons';
 import request from '../../../api'
 import {ListTable} from '@yuku123/z-frontend-common/ui'
 
@@ -117,8 +117,8 @@ const LlmProvider = () => {
             width: 150,
             render: (_, record) => (
                 <Space>
-                    <Button size="small" icon={<EditOutlined/>} onClick={() => handleEdit(record)}>编辑</Button>
-                    <Button size="small" danger icon={<DeleteOutlined/>}
+                    <Button type="link" size="small" onClick={() => handleEdit(record)}>编辑</Button>
+                    <Button type="link" size="small" danger
                             onClick={() => handleDelete(record)}>删除</Button>
                 </Space>
             )

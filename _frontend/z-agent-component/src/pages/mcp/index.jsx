@@ -250,7 +250,7 @@ export default function McpPage() {
         {
             title: '操作', key: 'actions', width: 90, render: (_, r) => (
                 <Space size="small">
-                    <Button size="small" icon={<ApiOutlined/>} onClick={(e) => {
+                    <Button type="link" size="small" onClick={(e) => {
                         e.stopPropagation()
                         handleSelectServer(r)
                     }}>工具</Button>

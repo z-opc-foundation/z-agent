@@ -21,20 +21,15 @@ import {
     Tooltip
 } from 'antd'
 import {
-    CheckCircleOutlined,
     CloudUploadOutlined,
     CopyOutlined,
     DeleteOutlined,
-    EditOutlined,
     ExclamationCircleOutlined,
-    EyeOutlined,
     FileTextOutlined,
-    PlayCircleOutlined,
     PlusOutlined,
     ShopOutlined,
-    StopOutlined,
-    TagOutlined
-} from '@ant-design/icons'
+    TagOutlined,
+} from '@ant-design/icons';
 import {productApi} from '../../api'
 import {ListTable, SearchInput} from '@yuku123/z-frontend-common/ui'
 
@@ -239,23 +234,23 @@ const ProductTablePage = () => {
             width: 320,
             render: (_, record) => (
                 <Space size="small" wrap>
-                    <Tooltip title="查看详情"><Button size="small" icon={<EyeOutlined/>}
+                    <Tooltip title="查看详情"><Button type="link" size="small"
                                                       onClick={() => handleViewDetail(record)}>详情</Button></Tooltip>
-                    <Tooltip title="编辑配置"><Button size="small" icon={<EditOutlined/>}
+                    <Tooltip title="编辑配置"><Button type="link" size="small"
                                                       onClick={() => handleEdit(record)}>编辑</Button></Tooltip>
                     {record.status === 'DRAFT' && (
-                        <Tooltip title="发布产品"><Button size="small" type="primary" icon={<CheckCircleOutlined/>}
+                        <Tooltip title="发布产品"><Button size="small" type="primary"
                                                           onClick={() => handlePublish(record.productCode)}>发布</Button></Tooltip>
                     )}
                     {record.status === 'PUBLISHED' && (
-                        <Tooltip title="下架产品"><Button size="small" danger icon={<StopOutlined/>}
+                        <Tooltip title="下架产品"><Button type="link" size="small" danger
                                                           onClick={() => handleOffline(record.productCode)}>下架</Button></Tooltip>
                     )}
-                    <Tooltip title="执行场景"><Button size="small" type="primary" icon={<PlayCircleOutlined/>}
+                    <Tooltip title="执行场景"><Button size="small" type="primary"
                                                       onClick={() => window.open(`/ai/product/execute?productCode=${record.productCode}`, '_blank')}>执行</Button></Tooltip>
                     <Popconfirm title="确定删除此产品?" onConfirm={() => handleDelete(record.id)} okText="删除"
                                 okButtonProps={{danger: true}}>
-                        <Button size="small" danger icon={<DeleteOutlined/>}/>
+                        <Button type="link" size="small" danger>删除</Button>
                     </Popconfirm>
                 </Space>
             )

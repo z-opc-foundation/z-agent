@@ -29,7 +29,6 @@ import {
 } from 'antd'
 import {
     AppstoreFilled,
-    BookOutlined,
     CheckCircleFilled,
     CopyOutlined,
     DeleteOutlined,
@@ -50,10 +49,9 @@ import {
     RocketOutlined,
     SettingOutlined,
     ShareAltOutlined,
-    StarOutlined,
     ToolOutlined,
-    UnorderedListOutlined
-} from '@ant-design/icons'
+    UnorderedListOutlined,
+} from '@ant-design/icons';
 import {agentApi, llmApi} from '../../api'
 import AgentAppEditor from './editor/AgentAppEditor'
 import AgentChatDrawer from './ChatDrawer.jsx'
@@ -1031,25 +1029,25 @@ const AppListPage = ({selectedGroupCode, onEditApp}) => {
                         {
                             title: '操作', width: 280, render: (_, r) => (
                                 <Space size="small">
-                                    <Button size="small" type="link" icon={<MessageOutlined/>}
+                                    <Button size="small" type="link"
                                             onClick={() => handleChat(r)}>对话</Button>
                                     {r.status === 'PUBLISHED' ? (
                                         <>
-                                            <Button size="small" type="link" icon={<EyeOutlined/>}
+                                            <Button size="small" type="link"
                                                     onClick={() => handleView(r)}>查看</Button>
-                                            <Button size="small" type="link" icon={<DiffOutlined/>}
+                                            <Button size="small" type="link"
                                                     onClick={() => handleUpgrade(r)}>升级</Button>
                                         </>
                                     ) : (
                                         <>
-                                            <Button size="small" type="link" icon={<EditOutlined/>}
+                                            <Button size="small" type="link"
                                                     onClick={() => handleEdit(r)}>编辑</Button>
-                                            <Button size="small" type="link" icon={<RocketOutlined/>}
+                                            <Button size="small" type="link"
                                                     onClick={() => handlePublish(r.app_code)}>发布</Button>
                                         </>
                                     )}
                                     <Popconfirm title="确定删除?" onConfirm={() => handleDelete(r.id)}>
-                                        <Button size="small" type="link" danger icon={<DeleteOutlined/>}>删除</Button>
+                                        <Button size="small" type="link" danger>删除</Button>
                                     </Popconfirm>
                                 </Space>
                             )

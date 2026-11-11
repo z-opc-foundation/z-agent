@@ -23,18 +23,12 @@ import {
 } from 'antd'
 import {
     ApiOutlined,
-    CheckCircleOutlined,
     CopyOutlined,
-    DeleteOutlined,
-    EditOutlined,
-    EyeOutlined,
     NodeIndexOutlined,
-    PlayCircleOutlined,
     PlusOutlined,
     SettingOutlined,
-    StopOutlined,
-    ThunderboltOutlined
-} from '@ant-design/icons'
+    ThunderboltOutlined,
+} from '@ant-design/icons';
 import {productApi, sceneApi} from '../../agent/api'
 import {ListTable, SearchInput} from '@yuku123/z-frontend-common/ui'
 
@@ -264,27 +258,27 @@ const SceneTablePage = () => {
             width: 340,
             render: (_, record) => (
                 <Space size="small" wrap>
-                    <Tooltip title="查看详情"><Button size="small" icon={<EyeOutlined/>}
+                    <Tooltip title="查看详情"><Button type="link" size="small"
                                                       onClick={() => handleViewDetail(record)}>详情</Button></Tooltip>
-                    <Tooltip title="编辑配置"><Button size="small" icon={<EditOutlined/>}
+                    <Tooltip title="编辑配置"><Button type="link" size="small"
                                                       onClick={() => handleEdit(record)}>编辑</Button></Tooltip>
-                    <Tooltip title="复制场景"><Button size="small" icon={<CopyOutlined/>}
+                    <Tooltip title="复制场景"><Button type="link" size="small"
                                                       onClick={() => handleDuplicate(record)}>复制</Button></Tooltip>
                     {record.status === 'DRAFT' && (
-                        <Tooltip title="发布场景"><Button size="small" type="primary" icon={<CheckCircleOutlined/>}
+                        <Tooltip title="发布场景"><Button size="small" type="primary"
                                                           onClick={() => handlePublish(record.sceneCode)}>发布</Button></Tooltip>
                     )}
                     {record.status === 'PUBLISHED' && (
-                        <Tooltip title="下架场景"><Button size="small" danger icon={<StopOutlined/>}
+                        <Tooltip title="下架场景"><Button type="link" size="small" danger
                                                           onClick={() => handleOffline(record.sceneCode)}>下架</Button></Tooltip>
                     )}
                     <Tooltip title="执行场景">
-                        <Button size="small" type="primary" icon={<PlayCircleOutlined/>}
+                        <Button size="small" type="primary"
                                 onClick={() => window.open(`/ai/product/execute?sceneCode=${record.sceneCode}`, '_blank')}>执行</Button>
                     </Tooltip>
                     <Popconfirm title="确定删除此场景?" onConfirm={() => handleDelete(record.id)} okText="删除"
                                 okButtonProps={{danger: true}}>
-                        <Button size="small" danger icon={<DeleteOutlined/>}/>
+                        <Button type="link" size="small" danger>删除</Button>
                     </Popconfirm>
                 </Space>
             )
@@ -540,7 +534,7 @@ const NodeConfigPage = () => {
             title: '操作',
             width: 100,
             render: (_, record) => (
-                <Button size="small" danger icon={<DeleteOutlined/>} onClick={() => handleRemoveNode(record.id)}/>
+                <Button type="link" size="small" danger onClick={() => handleRemoveNode(record.id)}>删除</Button>
             )
         }
     ]

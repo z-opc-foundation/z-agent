@@ -18,16 +18,12 @@ import {
     Typography
 } from 'antd'
 import {
-    CloudDownloadOutlined,
     CloudServerOutlined,
-    CloudUploadOutlined,
     CodeOutlined,
-    DeleteOutlined,
-    EditOutlined,
     ImportOutlined,
     PlayCircleOutlined,
-    PlusOutlined
-} from '@ant-design/icons'
+    PlusOutlined,
+} from '@ant-design/icons';
 import {scriptApi} from '../../api'
 import CurlImportModal from './CurlImportModal'
 import OpenApiImportModal from './OpenApiImportModal'
@@ -253,25 +249,25 @@ export default function ScriptCenterPage() {
             render: (_, record) => (
                 <Space size="small">
                     <Tooltip title="运行测试">
-                        <Button size="small" type="link" icon={<PlayCircleOutlined/>}
+                        <Button size="small" type="link"
                                 onClick={() => handleRun(record)}>运行</Button>
                     </Tooltip>
                     <Tooltip title="编辑">
-                        <Button size="small" type="link" icon={<EditOutlined/>} onClick={() => handleEdit(record)}/>
+                        <Button size="small" type="link" onClick={() => handleEdit(record)}>编辑</Button>
                     </Tooltip>
                     {record.exposeAs === 'NONE' ? (
                         <Tooltip title="发布为HTTP">
-                            <Button size="small" type="link" icon={<CloudUploadOutlined/>}
+                            <Button size="small" type="link"
                                     onClick={() => handlePublish(record, 'HTTP')}>发布</Button>
                         </Tooltip>
                     ) : (
                         <Tooltip title="取消发布">
-                            <Button size="small" type="link" icon={<CloudDownloadOutlined/>}
+                            <Button size="small" type="link"
                                     onClick={() => handleUnpublish(record)}>取消</Button>
                         </Tooltip>
                     )}
                     <Popconfirm title="确认删除?" onConfirm={() => handleDelete(record.scriptCode)}>
-                        <Button size="small" type="link" danger icon={<DeleteOutlined/>}/>
+                        <Button size="small" type="link" danger>删除</Button>
                     </Popconfirm>
                 </Space>
             )

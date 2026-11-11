@@ -23,7 +23,6 @@ import {
 } from 'antd'
 import {
     CheckCircleOutlined,
-    CloseCircleOutlined,
     CodeOutlined,
     ContainerOutlined,
     DesktopOutlined,
@@ -31,8 +30,8 @@ import {
     PlusOutlined,
     ReloadOutlined,
     RocketOutlined,
-    ThunderboltOutlined
-} from '@ant-design/icons'
+    ThunderboltOutlined,
+} from '@ant-design/icons';
 import {agentInstanceApi, agentSkillBindApi, skillMarketApi} from '../../../services/agentInstance'
 import { ListTable, SearchInput } from '@yuku123/z-frontend-common/ui'
 const {Text, Title} = Typography
@@ -330,10 +329,10 @@ const AgentInstanceManager = () => {
             render: (_, record) => (
                 <Space>
                     <Tooltip title="健康检查">
-                        <Button size="small" icon={<CheckCircleOutlined/>}
-                                onClick={() => handleHealthCheck(record.instanceCode)}/>
+                        <Button type="link" size="small"
+                                onClick={() => handleHealthCheck(record.instanceCode)}>启用</Button>
                     </Tooltip>
-                    <Button size="small" onClick={() => openBindDrawer(record)}>
+                    <Button type="link" size="small" onClick={() => openBindDrawer(record)}>
                         Skill 绑定
                     </Button>
                     <Popconfirm
@@ -343,7 +342,7 @@ const AgentInstanceManager = () => {
                         okText="销毁"
                         cancelText="取消"
                     >
-                        <Button size="small" danger icon={<CloseCircleOutlined/>}>销毁</Button>
+                        <Button type="link" size="small" danger>销毁</Button>
                     </Popconfirm>
                 </Space>
             ),

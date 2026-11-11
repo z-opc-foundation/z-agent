@@ -260,18 +260,18 @@ const AkManage = () => {
                     <Tooltip title={record.status === 1 ? '禁用' : '启用'}>
                         <Button
                             size="small"
-                            type="text"
+                            type="link"
                             icon={record.status === 1 ? <StopOutlined style={{color: '#faad14'}}/> :
                                 <CheckCircleOutlined style={{color: '#52c41a'}}/>}
                             onClick={() => handleToggle(record)}
                         />
                     </Tooltip>
                     <Tooltip title="编辑">
-                        <Button size="small" type="text" icon={<KeyOutlined/>} onClick={() => handleEdit(record)}/>
+                        <Button size="small" type="link" onClick={() => handleEdit(record)}>密钥</Button>
                     </Tooltip>
                     <Tooltip title="删除">
-                        <Button size="small" type="text" icon={<DeleteOutlined style={{color: '#ff4d4f'}}/>}
-                                onClick={() => handleDelete(record)}/>
+                        <Button size="small" type="link" icon={<DeleteOutlined style={{color: '#ff4d4f'}}/>}
+                                onClick={() => handleDelete(record)}>删除</Button>
                     </Tooltip>
                 </Space>
             ),

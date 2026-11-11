@@ -1,5 +1,5 @@
 import {Button, Input, Select, Space, Switch, Table, Tooltip} from 'antd'
-import {ArrowDownOutlined, ArrowUpOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons'
+import {PlusOutlined} from '@ant-design/icons';
 
 const TYPE_OPTIONS = [
     {value: 'string', label: 'string'},
@@ -93,13 +93,13 @@ export default function FieldMappingEditor({value = [], onChange, readonly = fal
             width: 100,
             render: (_v, _r, i) => (
                 <Space size="small">
-                    <Tooltip title="上移"><Button size="small" type="text" icon={<ArrowUpOutlined/>} disabled={i === 0}
-                                                  onClick={() => move(i, -1)}/></Tooltip>
-                    <Tooltip title="下移"><Button size="small" type="text" icon={<ArrowDownOutlined/>}
+                    <Tooltip title="上移"><Button size="small" type="link" disabled={i === 0}
+                                                  onClick={() => move(i, -1)}>上移</Button></Tooltip>
+                    <Tooltip title="下移"><Button size="small" type="link"
                                                   disabled={i === value.length - 1}
-                                                  onClick={() => move(i, 1)}/></Tooltip>
-                    <Tooltip title="删除"><Button size="small" type="text" danger icon={<DeleteOutlined/>}
-                                                  onClick={() => remove(i)}/></Tooltip>
+                                                  onClick={() => move(i, 1)}>下移</Button></Tooltip>
+                    <Tooltip title="删除"><Button size="small" type="link" danger
+                                                  onClick={() => remove(i)}>删除</Button></Tooltip>
                 </Space>
             ),
         }]),

@@ -32,10 +32,9 @@ import {
     FileZipOutlined,
     FolderAddOutlined,
     FolderOutlined,
-    MoreOutlined,
     ReloadOutlined,
-    UploadOutlined
-} from '@ant-design/icons'
+    UploadOutlined,
+} from '@ant-design/icons';
 import {ossApi} from '../../api'
 import request from '../../api/request.js'
 import {SearchInput} from '@yuku123/z-frontend-common/ui'
@@ -278,7 +277,7 @@ export default function ObjectBrowser() {
                             },
                         }}
                     >
-                        <Button type="text" size="small" icon={<MoreOutlined/>}/>
+                        <Button type="link" size="small">更多</Button>
                     </Dropdown>
                 )
             },
