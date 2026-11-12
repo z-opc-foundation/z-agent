@@ -70,7 +70,7 @@ spec:
           #     ② 功能：1.0.7 才有记忆层接线修复（starter 装配 + remote fail-fast），
           #        以及 AgentMemory 分层注入。
           #   ⚠ 本集群 imagePullPolicy=Never ⇒ tag 必须与节点 containerd 里逐字一致。
-          image: zopc/z-agent:20261111-74599d2
+          image: zopc/z-agent:20261112-fb7847d
           imagePullPolicy: Never
           ports:
             - name: http
