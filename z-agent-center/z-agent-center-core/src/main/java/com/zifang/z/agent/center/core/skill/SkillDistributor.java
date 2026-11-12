@@ -85,6 +85,10 @@ public class SkillDistributor extends ServiceImpl<SkillBindingMapper, SkillBindi
                 String content = contentFetcher.fetch(skillCode);
                 if (content != null) {
                     distributeFromContent(instanceCode, skillCode, content, agentType);
+                } else {
+                    // 内容拉取失败不能静默：绑定已成立但分发没发生，控制台同步日志必须可见
+                    logSync(instanceCode, skillCode, agentType, "INSTALL", "FAIL",
+                            0L, "SkillCenter 内容拉取失败 (skillCode=" + skillCode + ")");
                 }
             }
         }
@@ -229,6 +233,8 @@ public class SkillDistributor extends ServiceImpl<SkillBindingMapper, SkillBindi
             String content = contentFetcher.fetch(b.getSkillCode());
             if (content == null) {
                 log.warn("reconcile: failed to fetch content for skillCode={}", b.getSkillCode());
+                logSync(instanceCode, b.getSkillCode(), agentType, "INSTALL", "FAIL",
+                        0L, "SkillCenter 内容拉取失败 (reconcile)");
                 continue;
             }
             if (distributeFromContent(instanceCode, b.getSkillCode(), content, agentType)) {

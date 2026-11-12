@@ -14,8 +14,10 @@ import java.util.Map;
 /**
  * 从 SkillCenter 拉取 Skill 内容（FEATURE014 Wishlist 2 配套）。
  *
- * <p>SkillCenter 暴露 {@code GET /api/skill/content?skillCode=xxx} 返回
- * {@code {"code":0,"msg":"success","data":"<skill.md content>"}}。</p>
+ * <p>z-skill 的 content 面是 {@code GET /api/skill/content?id=xxx}，data 是
+ * {@code {id, path, available, content, reason?}} 对象（content 为 SKILL.md 全文）。
+ * 旧 SkillCenter 契约（{@code ?skillCode=} + data 直接是正文字符串）在全后端
+ * 从未有提供方，这里统一走 z-skill 真面，同时兼容 data 为字符串的旧形状。</p>
  *
  * <p>center 通过这个 client 在 reconcile / distribute 时拿到 SKILL.md 全文，
  * 传给 {@link SkillAdapter#writeSkill} 落盘到 Agent 目标目录。</p>
@@ -66,7 +68,7 @@ public class SkillContentFetcher {
      */
     public String fetch(String skillCode) {
         String urlStr = skillCenterBaseUrl.replaceAll("/$", "")
-                + "/api/skill/content?skillCode=" + urlEncode(skillCode);
+                + "/api/skill/content?id=" + urlEncode(skillCode);
         HttpURLConnection conn = null;
         try {
             URL url = new URL(urlStr);
@@ -90,7 +92,23 @@ public class SkillContentFetcher {
             if (data == null) {
                 return null;
             }
-
+            // z-skill 真面: data = {id, path, available, content, reason?}
+            if (data instanceof Map) {
+                Map<?, ?> contentResp = (Map<?, ?>) data;
+                Object available = contentResp.get("available");
+                if (available != null && !Boolean.parseBoolean(String.valueOf(available))) {
+                    log.warn("SkillCenter content unavailable for skillCode={}: reason={}",
+                            skillCode, contentResp.get("reason"));
+                    return null;
+                }
+                Object content = contentResp.get("content");
+                if (content == null || content.toString().isEmpty()) {
+                    log.warn("SkillCenter returned empty content for skillCode={}", skillCode);
+                    return null;
+                }
+                return content.toString();
+            }
+            // 旧契约兜底: data 直接是正文字符串
             String content = data.toString();
             if (content.isEmpty()) {
                 log.warn("SkillCenter returned empty content for skillCode={}", skillCode);
