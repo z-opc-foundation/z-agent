@@ -13,14 +13,14 @@
         依赖 kernel.agent SPI + kernel.llm + kernel.memory + kernel.message + kernel.tool + kernel.types + kernel.event + z-llm(可选)
     -->
 
-    <!-- 消费入口统一挂 z-boot-parent:1.0.19 = 第三方地板 z-boot-dependencies:1.0.19（156 条）
+    <!-- 消费入口统一挂 z-boot-parent:1.2.4 = 第三方地板 z-boot-dependencies:1.0.19（156 条）
          + 兄弟仓槽位 z-boot-fleet:1.0.0（163 条）+ Java 8 的 pluginManagement。迁移前这里没有
          parent，根 pom 自己摊版本键 + 一条 spring-boot-dependencies import。
          relativePath 必须留空：parent 不在磁盘上，在 repo1。 -->
     <parent>
         <groupId>io.github.yuku123</groupId>
         <artifactId>z-boot-parent</artifactId>
-        <version>1.2.3</version>
+        <version>1.2.4</version>
         <relativePath/>
     </parent>
 
