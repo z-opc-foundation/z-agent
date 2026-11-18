@@ -128,7 +128,14 @@
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty-shaded</artifactId>
-            <version>1.59.0</version>
+            <!-- 2026-11-18 第二轮：1.59.0 → 1.75.0
+                 起因 GHSA-prj3-ccx8-p6x4（C:H，Netty MadeYouReset HTTP/2 DDoS）：
+                 grpc-netty-shaded 区间 introduced=0 / fixed=1.75.0 ⇒ 1.59.0 命中。
+                 可抬性已核：本仓（连同 z-agent 全仓）**零 io.grpc 的 Java 代码引用**
+                 （grep `**/*.java` → 无匹配）⇒ 纯声明坐标，是被别的库带进来的传递依赖，
+                 抬版本不会动到任何一行源码。取 1.75.0（刚过修复线）与 z-vector 对齐，
+                 也与 z-vector 的 protobuf 3.25.5 组合风险最低。 -->
+            <version>1.75.0</version>
         </dependency>
 
         <!-- FastJSON (used by ToolArguments and other tool framework classes) -->
