@@ -5,11 +5,12 @@ import com.zifang.util.core.lang.RandomUtil;
 import com.zifang.z.agent.center.core.agent.humaninput.entity.AgentFlowHumanInput;
 import com.zifang.z.agent.center.core.agent.humaninput.mapper.AgentFlowHumanInputMapper;
 import com.zifang.z.agent.center.core.agent.humaninput.service.AgentFlowHumanInputService;
+import com.zifang.z.meta.api.annotation.BizMethod;
+import jakarta.annotation.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,6 +34,7 @@ public class AgentFlowHumanInputServiceImpl implements AgentFlowHumanInputServic
     private AgentFlowHumanInputMapper mapper;
 
     @Override
+    @BizMethod(name = "getById", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentFlowHumanInput getById(Long id) {
         if (id == null) {
             return null;
@@ -42,6 +44,7 @@ public class AgentFlowHumanInputServiceImpl implements AgentFlowHumanInputServic
     }
 
     @Override
+    @BizMethod(name = "getByCode", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentFlowHumanInput getByCode(String requestCode) {
         if (requestCode == null || requestCode.isEmpty()) {
             return null;
@@ -52,6 +55,7 @@ public class AgentFlowHumanInputServiceImpl implements AgentFlowHumanInputServic
     }
 
     @Override
+    @BizMethod(name = "createPending", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentFlowHumanInput createPending(AgentFlowHumanInput request) {
         if (request == null) {
             throw new IllegalArgumentException("request 不能为空");
@@ -89,6 +93,7 @@ public class AgentFlowHumanInputServiceImpl implements AgentFlowHumanInputServic
     }
 
     @Override
+    @BizMethod(name = "listPending", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentFlowHumanInput> listPending(String assignee, int limit) {
         if (limit <= 0 || limit > 200) {
             limit = 50;
@@ -101,6 +106,7 @@ public class AgentFlowHumanInputServiceImpl implements AgentFlowHumanInputServic
     }
 
     @Override
+    @BizMethod(name = "listByExecution", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentFlowHumanInput> listByExecution(String executionId) {
         if (executionId == null || executionId.isEmpty()) {
             return java.util.Collections.emptyList();
@@ -111,6 +117,7 @@ public class AgentFlowHumanInputServiceImpl implements AgentFlowHumanInputServic
     }
 
     @Override
+    @BizMethod(name = "decide", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public AgentFlowHumanInput decide(Long id, String status, String decidedBy,
                                       String resultJson, String resultText, String comments) {
         if (id == null) {
@@ -145,3 +152,6 @@ public class AgentFlowHumanInputServiceImpl implements AgentFlowHumanInputServic
         return mapper.selectById(id);
     }
 }
+
+
+

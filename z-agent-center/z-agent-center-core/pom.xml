@@ -166,6 +166,11 @@
             <artifactId>z-util-parser-json</artifactId>
             <version>1.2.2</version>
         </dependency>
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-meta-api</artifactId>
+            <version>${z-meta.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

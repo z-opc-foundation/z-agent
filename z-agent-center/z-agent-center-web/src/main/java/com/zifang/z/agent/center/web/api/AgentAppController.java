@@ -1,16 +1,19 @@
 package com.zifang.z.agent.center.web.api;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.zifang.util.json.JsonUtil;
 import com.zifang.util.core.meta.Result;
+import com.zifang.util.json.JsonUtil;
 import com.zifang.z.agent.center.core.app.dto.AgentAppDto;
 import com.zifang.z.agent.center.core.app.dto.AgentAppReq;
 import com.zifang.z.agent.center.core.app.service.AgentAppService;
+import com.zifang.z.meta.api.annotation.BizApi;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.annotation.Resource;
 import java.util.List;
 
 /**
@@ -51,7 +54,8 @@ public class AgentAppController {
      */
     @Operation(summary = "分页查询应用")
     @PostMapping("/page")
-    public Result<IPage<AgentAppDto>> page(@RequestBody AgentAppReq req) {
+    @BizApi(summary = "分页查询应用列表", description = "分页查询应用列表.", tags = { "z-agent" })
+    public Result<IPage<AgentAppDto>> page(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "应用查询条件（appName / status / groupCode），其中 {@code req.id} 兼作页码", position = BizParam.Position.BODY) AgentAppReq req) {
         int pageNum = req.getId() != null ? req.getId().intValue() : 1;
         int pageSize = 12;
         IPage<AgentAppDto> page = agentAppService.pageResp(req.getAppName(), req.getStatus(), req.getGroupCode(), pageNum, pageSize);
@@ -65,10 +69,14 @@ public class AgentAppController {
      */
     @Operation(summary = "列出应用 (RESTful 别名)")
     @GetMapping("/list")
+    @BizApi(summary = "RESTful alias: GET /api/agent/app/list?ownerId=&pageNum=&pageSize=", description = "RESTful alias: GET /api/agent/app/list?ownerId=&pageNum=&pageSize= 用于前端 makeApi('agent').list() 与 makeApi('agent').page() 友好调用. 优先按 ownerId 过滤;无 ownerId 时返回所有.", tags = { "z-agent" })
     public Result<List<AgentAppDto>> listAlias(
-            @RequestParam(required = false) String ownerId,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String groupCode) {
+            @RequestParam(required = false)
+            @BizParam(name = "ownerId", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String ownerId,
+            @RequestParam(required = false)
+            @BizParam(name = "status", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String status,
+            @RequestParam(required = false)
+            @BizParam(name = "groupCode", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String groupCode) {
         // 用 pageResp 拿前 1000 条,简单实现 list
         IPage<AgentAppDto> page = agentAppService.pageResp(null, status, groupCode, 1, 1000);
         List<AgentAppDto> all = page.getRecords();
@@ -86,12 +94,18 @@ public class AgentAppController {
      */
     @Operation(summary = "分页查询应用 (RESTful GET 别名)")
     @GetMapping("/page")
+    @BizApi(summary = "RESTful alias: GET /api/agent/app/page?pageNum=&pageSize=&appName=&status=&groupCode=", tags = { "z-agent" })
     public Result<IPage<AgentAppDto>> pageAlias(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "12") Integer pageSize,
-            @RequestParam(required = false) String appName,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String groupCode) {
+            @RequestParam(defaultValue = "1")
+            @BizParam(name = "pageNum", type = BizField.FieldType.INTEGER, description = "", position = BizParam.Position.QUERY) Integer pageNum,
+            @RequestParam(defaultValue = "12")
+            @BizParam(name = "pageSize", type = BizField.FieldType.INTEGER, description = "", position = BizParam.Position.QUERY) Integer pageSize,
+            @RequestParam(required = false)
+            @BizParam(name = "appName", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String appName,
+            @RequestParam(required = false)
+            @BizParam(name = "status", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String status,
+            @RequestParam(required = false)
+            @BizParam(name = "groupCode", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String groupCode) {
         IPage<AgentAppDto> page = agentAppService.pageResp(appName, status, groupCode, pageNum, pageSize);
         return Result.success(page);
     }
@@ -104,7 +118,8 @@ public class AgentAppController {
      */
     @Operation(summary = "查询应用详情")
     @GetMapping("/get")
-    public Result<AgentAppDto> get(@RequestParam String appCode) {
+    @BizApi(summary = "按 appCode 查询应用详情", description = "按 appCode 查询应用详情.", tags = { "z-agent" })
+    public Result<AgentAppDto> get(@RequestParam @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "应用编码", position = BizParam.Position.QUERY) String appCode) {
         return Result.success(agentAppService.getRespByAppCode(appCode));
     }
 
@@ -116,7 +131,8 @@ public class AgentAppController {
      */
     @Operation(summary = "创建应用")
     @PostMapping
-    public Result<AgentAppDto> create(@RequestBody AgentAppReq req) {
+    @BizApi(summary = "创建应用", description = "创建应用.", tags = { "z-agent" })
+    public Result<AgentAppDto> create(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "创建参数", position = BizParam.Position.BODY) AgentAppReq req) {
         return Result.success(agentAppService.createResp(req));
     }
 
@@ -128,7 +144,8 @@ public class AgentAppController {
      */
     @Operation(summary = "更新应用")
     @PostMapping("/update")
-    public Result<AgentAppDto> update(@RequestBody AgentAppReq req) {
+    @BizApi(summary = "更新应用", description = "更新应用.", tags = { "z-agent" })
+    public Result<AgentAppDto> update(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "更新参数", position = BizParam.Position.BODY) AgentAppReq req) {
         return Result.success(agentAppService.updateResp(req));
     }
 
@@ -140,7 +157,8 @@ public class AgentAppController {
      */
     @Operation(summary = "删除应用")
     @PostMapping("/delete")
-    public Result<Object> remove(@RequestParam Long id) {
+    @BizApi(summary = "删除应用", description = "删除应用.", tags = { "z-agent" })
+    public Result<Object> remove(@RequestParam @BizParam(name = "id", type = BizField.FieldType.INTEGER, description = "应用主键 ID", position = BizParam.Position.QUERY) Long id) {
         agentAppService.remove(id);
         return Result.success();
     }
@@ -153,7 +171,8 @@ public class AgentAppController {
      */
     @Operation(summary = "发布应用")
     @PostMapping("/publish")
-    public Result<Object> publish(@RequestParam String appCode) {
+    @BizApi(summary = "发布应用", description = "发布应用.", tags = { "z-agent" })
+    public Result<Object> publish(@RequestParam @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "应用编码", position = BizParam.Position.QUERY) String appCode) {
         agentAppService.publish(appCode);
         return Result.success();
     }
@@ -166,7 +185,8 @@ public class AgentAppController {
      */
     @Operation(summary = "升级：基于已发布版本创建新草稿版本（version+1）")
     @PostMapping("/upgrade")
-    public Result<AgentAppDto> upgrade(@RequestParam String appCode) {
+    @BizApi(summary = "基于已发布版本创建新草稿版本（version+1）", description = "基于已发布版本创建新草稿版本（version+1）.", tags = { "z-agent" })
+    public Result<AgentAppDto> upgrade(@RequestParam @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "应用编码", position = BizParam.Position.QUERY) String appCode) {
         return Result.success(agentAppService.upgradeResp(appCode));
     }
 
@@ -178,7 +198,8 @@ public class AgentAppController {
      */
     @Operation(summary = "查询版本列表")
     @GetMapping("/versions")
-    public Result<List<AgentAppDto>> versions(@RequestParam String appCode) {
+    @BizApi(summary = "查询指定应用的全部版本列表", description = "查询指定应用的全部版本列表.", tags = { "z-agent" })
+    public Result<List<AgentAppDto>> versions(@RequestParam @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "应用编码", position = BizParam.Position.QUERY) String appCode) {
         return Result.success(agentAppService.listVersionResp(appCode));
     }
 
@@ -190,7 +211,8 @@ public class AgentAppController {
      */
     @Operation(summary = "获取草稿")
     @GetMapping("/draft")
-    public Result<String> getDraft(@RequestParam String appCode) {
+    @BizApi(summary = "获取指定应用的草稿内容（JSON 字符串）", description = "获取指定应用的草稿内容（JSON 字符串）.", tags = { "z-agent" })
+    public Result<String> getDraft(@RequestParam @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "应用编码", position = BizParam.Position.QUERY) String appCode) {
         return Result.success(agentAppService.getDraft(appCode));
     }
 
@@ -202,7 +224,8 @@ public class AgentAppController {
      */
     @Operation(summary = "保存草稿")
     @PostMapping("/draft")
-    public Result<Object> saveDraft(@RequestBody AgentAppReq req) {
+    @BizApi(summary = "保存草稿内容", description = "保存草稿内容.", tags = { "z-agent" })
+    public Result<Object> saveDraft(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "草稿参数（appCode 必须），内部序列化为 JSON 存储", position = BizParam.Position.BODY) AgentAppReq req) {
         String draftJson;
         try {
             draftJson = JsonUtil.toJsonExcludingNulls(req);
@@ -222,7 +245,11 @@ public class AgentAppController {
      */
     @Operation(summary = "切换分享开关，返回当前 shareCode")
     @PostMapping("/toggleShare")
-    public Result<String> toggleShare(@RequestParam String appCode, @RequestParam Boolean enabled) {
+    @BizApi(summary = "切换分享开关，返回当前 shareCode", description = "切换分享开关，返回当前 shareCode.", tags = { "z-agent" })
+    public Result<String> toggleShare(@RequestParam @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "应用编码", position = BizParam.Position.QUERY) String appCode, @RequestParam @BizParam(name = "enabled", type = BizField.FieldType.BOOLEAN, description = "是否启用分享", position = BizParam.Position.QUERY) Boolean enabled) {
         return Result.success(agentAppService.toggleShare(appCode, enabled));
     }
 }
+
+
+

@@ -3,23 +3,36 @@ package com.zifang.z.agent.center.core.agent.textgen.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizModel;
 
 /**
  * FEATURE013 T3.4: Agent 文本生成器 每行结果实体
  */
+@BizModel(name = "FEATURE013 T3.4: Agent 文本生成器 每行结果实体", module = "z-agent", description = "FEATURE013 T3.4: Agent 文本生成器 每行结果实体")
 @TableName("z_agent_text_gen_result")
 public class AgentTextGenResult {
 
     @TableId(type = IdType.AUTO)
+    @BizField(name = "id", type = BizField.FieldType.INTEGER)
     private Long id;
+    @BizField(name = "taskId", type = BizField.FieldType.INTEGER)
     private Long taskId;
+    @BizField(name = "rowIndex", type = BizField.FieldType.INTEGER)
     private Integer rowIndex;
+    @BizField(name = "inputJson", type = BizField.FieldType.STRING)
     private String inputJson;
+    @BizField(name = "outputText", type = BizField.FieldType.STRING)
     private String outputText;
+    @BizField(name = "status", type = BizField.FieldType.STRING)
     private String status;
+    @BizField(name = "errorMessage", type = BizField.FieldType.STRING)
     private String errorMessage;
+    @BizField(name = "tokenCount", type = BizField.FieldType.INTEGER)
     private Integer tokenCount;
+    @BizField(name = "elapsedMs", type = BizField.FieldType.INTEGER)
     private Long elapsedMs;
+    @BizField(name = "gmtCreate", type = BizField.FieldType.STRING)
     private java.time.LocalDateTime gmtCreate;
 
     public Long getId() {
@@ -102,3 +115,6 @@ public class AgentTextGenResult {
         this.gmtCreate = gmtCreate;
     }
 }
+
+
+

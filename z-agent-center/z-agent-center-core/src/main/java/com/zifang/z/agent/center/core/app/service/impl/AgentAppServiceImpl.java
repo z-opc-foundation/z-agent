@@ -5,26 +5,27 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zifang.util.core.lang.RandomUtil;
+import com.zifang.util.json.JsonUtil;
 import com.zifang.z.agent.center.core.agent.instance.entity.AgentInstance;
 import com.zifang.z.agent.center.core.agent.instance.service.AgentInstanceService;
 import com.zifang.z.agent.center.core.agent.share.service.AgentShareService;
 import com.zifang.z.agent.center.core.app.dto.AgentAppDto;
 import com.zifang.z.agent.center.core.app.dto.AgentAppReq;
 import com.zifang.z.agent.center.core.app.entity.AgentAppDraft;
-import com.zifang.util.json.JsonUtil;
 import com.zifang.z.agent.center.core.app.mapper.AgentAppDraftMapper;
 import com.zifang.z.agent.center.core.app.mapper.AgentAppMapper;
 import com.zifang.z.agent.center.core.app.mapper.AgentAppVersionMapper;
 import com.zifang.z.agent.center.core.app.service.AgentAppService;
 import com.zifang.z.agent.common.entity.AgentApp;
 import com.zifang.z.agent.common.entity.AgentAppVersion;
+import com.zifang.z.meta.api.annotation.BizMethod;
+import jakarta.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -54,6 +55,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     private AgentInstanceService instanceService;
 
     @Override
+    @BizMethod(name = "pageResp", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public IPage<AgentAppDto> pageResp(String keyword, String status, String groupCode, int pageNum, int pageSize) {
         LambdaQueryWrapper<AgentApp> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.isNotEmpty(keyword)) {
@@ -77,11 +79,13 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "getRespByAppCode", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentAppDto getRespByAppCode(String appCode) {
         return toDto(getByAppCode(appCode));
     }
 
     @Override
+    @BizMethod(name = "upgradeResp", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public AgentAppDto upgradeResp(String appCode) {
         AgentApp published = getByAppCode(appCode);
         if (published == null) {
@@ -169,6 +173,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "createResp", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentAppDto createResp(AgentAppReq req) {
         AgentApp app = toEntity(req);
         if (StringUtils.isEmpty(app.getAppCode())) {
@@ -183,6 +188,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "updateResp", module = "z-agent", description = "", operation = BizMethod.Operation.UPDATE)
     public AgentAppDto updateResp(AgentAppReq req) {
         AgentApp existing = getByAppCode(req.getAppCode());
         if (existing == null) {
@@ -196,6 +202,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "getByAppCode", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentApp getByAppCode(String appCode) {
         LambdaQueryWrapper<AgentApp> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentApp::getAppCode, appCode);
@@ -204,6 +211,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "create", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentApp create(AgentApp app) {
         if (StringUtils.isEmpty(app.getAppCode())) {
             app.setAppCode("app_" + RandomUtil.uuidShort(12));
@@ -217,6 +225,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "update", module = "z-agent", description = "", operation = BizMethod.Operation.UPDATE)
     public AgentApp update(AgentApp app) {
         app.setGmtModified(LocalDateTime.now());
         this.updateById(app);
@@ -224,6 +233,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "remove", module = "z-agent", description = "", operation = BizMethod.Operation.DELETE)
     public void remove(Long id) {
         AgentApp app = this.getById(id);
         if (app != null) {
@@ -233,6 +243,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "publish", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public void publish(String appCode) {
         AgentApp app = getByAppCode(appCode);
         if (app == null) {
@@ -246,6 +257,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "listVersionResp", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentAppDto> listVersionResp(String appCode) {
         List<AgentAppVersion> list = listVersions(appCode);
         return list.stream().map(v -> {
@@ -258,6 +270,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "listVersions", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentAppVersion> listVersions(String appCode) {
         LambdaQueryWrapper<AgentAppVersion> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentAppVersion::getAppCode, appCode);
@@ -266,6 +279,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "createVersion", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentAppVersion createVersion(AgentAppVersion version) {
         version.setGmtCreate(LocalDateTime.now());
         version.setGmtModified(LocalDateTime.now());
@@ -274,6 +288,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "getDraft", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public String getDraft(String appCode) {
         LambdaQueryWrapper<AgentAppDraft> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentAppDraft::getAppCode, appCode);
@@ -282,6 +297,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "saveDraft", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public void saveDraft(String appCode, String draftData) {
         LambdaQueryWrapper<AgentAppDraft> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentAppDraft::getAppCode, appCode);
@@ -303,10 +319,12 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
     }
 
     @Override
+    @BizMethod(name = "incrementVisitCount", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public void incrementVisitCount(String instanceCode) {
     }
 
     @Override
+    @BizMethod(name = "toggleShare", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public String toggleShare(String appCode, boolean enabled) {
         AgentApp app = getByAppCode(appCode);
         if (app == null) {
@@ -430,3 +448,6 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentAppMapper, AgentApp> i
         return app;
     }
 }
+
+
+

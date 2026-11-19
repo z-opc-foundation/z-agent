@@ -10,6 +10,7 @@ import com.zifang.z.agent.center.core.agent.share.mapper.AgentShareMapper;
 import com.zifang.z.agent.center.core.agent.share.service.AgentShareService;
 import com.zifang.z.agent.center.core.app.service.AgentAppService;
 import com.zifang.z.agent.common.entity.AgentApp;
+import com.zifang.z.meta.api.annotation.BizMethod;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,11 +28,13 @@ public class AgentShareServiceImpl extends ServiceImpl<AgentShareMapper, AgentSh
     private AgentAppService agentAppService;
 
     @Override
+    @BizMethod(name = "createResp", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentShareDto createResp(AgentShareReq req) {
         return toDto(createShare(req.getInstanceCode(), req.getAppCode()));
     }
 
     @Override
+    @BizMethod(name = "verifyResp", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public AgentShareDto verifyResp(String shareCode) {
         AgentShare share = getByShareCode(shareCode);
         if (share != null) {
@@ -41,11 +44,13 @@ public class AgentShareServiceImpl extends ServiceImpl<AgentShareMapper, AgentSh
     }
 
     @Override
+    @BizMethod(name = "listRespByInstance", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentShareDto> listRespByInstance(String instanceCode) {
         return listByInstance(instanceCode).stream().map(this::toDto).collect(Collectors.toList());
     }
 
     @Override
+    @BizMethod(name = "getByShareCode", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentShare getByShareCode(String shareCode) {
         LambdaQueryWrapper<AgentShare> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentShare::getShareCode, shareCode);
@@ -60,6 +65,7 @@ public class AgentShareServiceImpl extends ServiceImpl<AgentShareMapper, AgentSh
     }
 
     @Override
+    @BizMethod(name = "createShare", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentShare createShare(String instanceCode, String appCode) {
         AgentShare share = new AgentShare();
         share.setShareCode(RandomUtil.uuidShort(12));
@@ -75,6 +81,7 @@ public class AgentShareServiceImpl extends ServiceImpl<AgentShareMapper, AgentSh
     }
 
     @Override
+    @BizMethod(name = "upsertActiveShare", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public AgentShare upsertActiveShare(String shareCode, String instanceCode, String appCode) {
         if (StringUtils.isEmpty(shareCode)) {
             return null;
@@ -104,6 +111,7 @@ public class AgentShareServiceImpl extends ServiceImpl<AgentShareMapper, AgentSh
     }
 
     @Override
+    @BizMethod(name = "listByInstance", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentShare> listByInstance(String instanceCode) {
         LambdaQueryWrapper<AgentShare> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentShare::getInstanceCode, instanceCode);
@@ -112,6 +120,7 @@ public class AgentShareServiceImpl extends ServiceImpl<AgentShareMapper, AgentSh
     }
 
     @Override
+    @BizMethod(name = "disable", module = "z-agent", description = "", operation = BizMethod.Operation.DELETE)
     public void disable(String shareCode) {
         LambdaQueryWrapper<AgentShare> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentShare::getShareCode, shareCode);
@@ -124,6 +133,7 @@ public class AgentShareServiceImpl extends ServiceImpl<AgentShareMapper, AgentSh
     }
 
     @Override
+    @BizMethod(name = "incrementVisitCount", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public void incrementVisitCount(String shareCode) {
         LambdaQueryWrapper<AgentShare> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentShare::getShareCode, shareCode);
@@ -164,3 +174,6 @@ public class AgentShareServiceImpl extends ServiceImpl<AgentShareMapper, AgentSh
         return dto;
     }
 }
+
+
+

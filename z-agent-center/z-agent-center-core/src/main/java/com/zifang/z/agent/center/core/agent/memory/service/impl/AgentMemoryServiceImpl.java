@@ -7,6 +7,7 @@ import com.zifang.z.cognition.memory.MemoryEntry;
 import com.zifang.z.cognition.memory.MemorySearchQuery;
 import com.zifang.z.cognition.memory.MemoryWrite;
 import com.zifang.z.cognition.memory.client.MemoryClient;
+import com.zifang.z.meta.api.annotation.BizMethod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.ObjectProvider;
@@ -131,6 +132,7 @@ public class AgentMemoryServiceImpl implements AgentMemoryService {
     }
 
     @Override
+    @BizMethod(name = "write", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public AgentMemory write(String userId, String appCode, String memoryType,
                              String content, Float importance, String keywords) {
         if (userId == null || userId.trim().isEmpty()) {
@@ -180,6 +182,7 @@ public class AgentMemoryServiceImpl implements AgentMemoryService {
     }
 
     @Override
+    @BizMethod(name = "searchRelevant", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentMemory> searchRelevant(String userId, String appCode, String query, int limit) {
         if (userId == null) {
             return Collections.emptyList();
@@ -217,6 +220,7 @@ public class AgentMemoryServiceImpl implements AgentMemoryService {
     }
 
     @Override
+    @BizMethod(name = "listByUser", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentMemory> listByUser(String userId, String appCode, int limit) {
         if (userId == null) {
             return Collections.emptyList();
@@ -240,6 +244,7 @@ public class AgentMemoryServiceImpl implements AgentMemoryService {
     }
 
     @Override
+    @BizMethod(name = "decay", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public int decay(float factor) {
         if (factor <= 0 || factor > 1) {
             throw new IllegalArgumentException("factor 必须在 (0, 1] 之间");
@@ -265,6 +270,7 @@ public class AgentMemoryServiceImpl implements AgentMemoryService {
     }
 
     @Override
+    @BizMethod(name = "forget", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public boolean forget(Long id) {
         if (id == null) {
             return false;
@@ -286,6 +292,7 @@ public class AgentMemoryServiceImpl implements AgentMemoryService {
     }
 
     @Override
+    @BizMethod(name = "searchByTier", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentMemory> searchByTier(String userId, String appCode, String query, int limit, String tier) {
         if (!useRemote() || tier == null || tier.isBlank()) {
             return searchRelevant(userId, appCode, query, limit);
@@ -302,6 +309,7 @@ public class AgentMemoryServiceImpl implements AgentMemoryService {
     }
 
     @Override
+    @BizMethod(name = "injectForPrompt", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public String injectForPrompt(String userId, String appCode, String query) {
         // 分层注入（Phase 3）：
         //   1) WORKING —— 本会话即时上下文，紧凑置顶（remote 下显式 tier=WORKING 检索；
@@ -344,3 +352,4 @@ public class AgentMemoryServiceImpl implements AgentMemoryService {
         return sb.toString();
     }
 }
+

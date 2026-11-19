@@ -4,11 +4,14 @@ import com.zifang.util.core.meta.Result;
 import com.zifang.z.agent.center.core.agent.memory.entity.AgentMemory;
 import com.zifang.z.agent.center.core.agent.memory.service.AgentMemoryService;
 import com.zifang.z.agent.center.web.api.response.dto.PromptFragmentResp;
+import com.zifang.z.meta.api.annotation.BizApi;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.annotation.Resource;
 import java.util.List;
 
 /**
@@ -33,7 +36,8 @@ public class AgentMemoryController {
      */
     @Operation(summary = "写入一条记忆")
     @PostMapping("/write")
-    public Result<AgentMemory> write(@RequestBody WriteReq req) {
+    @BizApi(summary = "写入一条记忆", description = "写入一条记忆.", tags = { "z-agent" })
+    public Result<AgentMemory> write(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "记忆写入请求体（userId / appCode / memoryType / content / importance / keywords）", position = BizParam.Position.BODY) WriteReq req) {
         if (req == null) {
             throw new IllegalArgumentException("body 必填");
         }
@@ -54,10 +58,14 @@ public class AgentMemoryController {
      */
     @Operation(summary = "检索相关记忆 (命中后自动 touch)")
     @GetMapping("/search")
-    public Result<List<AgentMemory>> search(@RequestParam String userId,
-                                            @RequestParam(required = false) String appCode,
-                                            @RequestParam(required = false) String query,
-                                            @RequestParam(defaultValue = "5") Integer limit) {
+    @BizApi(summary = "检索相关记忆（命中后自动 touch，更新最近访问时间）", description = "检索相关记忆（命中后自动 touch，更新最近访问时间）.", tags = { "z-agent" })
+    public Result<List<AgentMemory>> search(@RequestParam @BizParam(name = "userId", type = BizField.FieldType.STRING, description = "用户 ID", position = BizParam.Position.QUERY) String userId,
+                                            @RequestParam(required = false)
+                                            @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "应用编码，可为空", position = BizParam.Position.QUERY) String appCode,
+                                            @RequestParam(required = false)
+                                            @BizParam(name = "query", type = BizField.FieldType.STRING, description = "查询关键词，可为空", position = BizParam.Position.QUERY) String query,
+                                            @RequestParam(defaultValue = "5")
+                                            @BizParam(name = "limit", type = BizField.FieldType.INTEGER, description = "返回条数上限，默认 5", position = BizParam.Position.QUERY) Integer limit) {
         return Result.success(memoryService.searchRelevant(userId, appCode, query, limit));
     }
 
@@ -71,9 +79,12 @@ public class AgentMemoryController {
      */
     @Operation(summary = "列出某用户某应用的全部记忆 (管理后台用)")
     @GetMapping("/list")
-    public Result<List<AgentMemory>> list(@RequestParam String userId,
-                                          @RequestParam(required = false) String appCode,
-                                          @RequestParam(defaultValue = "50") Integer limit) {
+    @BizApi(summary = "列出某用户某应用的全部记忆（管理后台用）", description = "列出某用户某应用的全部记忆（管理后台用）.", tags = { "z-agent" })
+    public Result<List<AgentMemory>> list(@RequestParam @BizParam(name = "userId", type = BizField.FieldType.STRING, description = "用户 ID", position = BizParam.Position.QUERY) String userId,
+                                          @RequestParam(required = false)
+                                          @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "应用编码，可为空", position = BizParam.Position.QUERY) String appCode,
+                                          @RequestParam(defaultValue = "50")
+                                          @BizParam(name = "limit", type = BizField.FieldType.INTEGER, description = "返回条数上限，默认 50", position = BizParam.Position.QUERY) Integer limit) {
         return Result.success(memoryService.listByUser(userId, appCode, limit));
     }
 
@@ -85,7 +96,8 @@ public class AgentMemoryController {
      */
     @Operation(summary = "软删一条记忆")
     @PostMapping("/forget")
-    public Result<Boolean> forget(@RequestParam Long id) {
+    @BizApi(summary = "软删一条记忆", description = "软删一条记忆.", tags = { "z-agent" })
+    public Result<Boolean> forget(@RequestParam @BizParam(name = "id", type = BizField.FieldType.INTEGER, description = "记忆主键 ID", position = BizParam.Position.QUERY) Long id) {
         return Result.success(memoryService.forget(id));
     }
 
@@ -97,7 +109,8 @@ public class AgentMemoryController {
      */
     @Operation(summary = "周期衰减所有记忆 (factor∈(0,1])")
     @PostMapping("/decay")
-    public Result<Integer> decay(@RequestParam(defaultValue = "0.95") Float factor) {
+    @BizApi(summary = "周期衰减所有记忆（factor ∈ (0, 1]）", description = "周期衰减所有记忆（factor ∈ (0, 1]）.", tags = { "z-agent" })
+    public Result<Integer> decay(@RequestParam(defaultValue = "0.95") @BizParam(name = "factor", type = BizField.FieldType.DECIMAL, description = "衰减因子，默认 0.95", position = BizParam.Position.QUERY) Float factor) {
         return Result.success(memoryService.decay(factor));
     }
 
@@ -111,9 +124,12 @@ public class AgentMemoryController {
      */
     @Operation(summary = "检索并格式化为 system prompt 片段")
     @GetMapping("/prompt-fragment")
-    public Result<PromptFragmentResp> promptFragment(@RequestParam String userId,
-                                                     @RequestParam(required = false) String appCode,
-                                                     @RequestParam(required = false) String query) {
+    @BizApi(summary = "检索并格式化为 system prompt 片段", description = "检索并格式化为 system prompt 片段.", tags = { "z-agent" })
+    public Result<PromptFragmentResp> promptFragment(@RequestParam @BizParam(name = "userId", type = BizField.FieldType.STRING, description = "用户 ID", position = BizParam.Position.QUERY) String userId,
+                                                     @RequestParam(required = false)
+                                                     @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "应用编码，可为空", position = BizParam.Position.QUERY) String appCode,
+                                                     @RequestParam(required = false)
+                                                     @BizParam(name = "query", type = BizField.FieldType.STRING, description = "查询关键词，可为空", position = BizParam.Position.QUERY) String query) {
         String fragment = memoryService.injectForPrompt(userId, appCode, query);
         PromptFragmentResp resp = new PromptFragmentResp();
         resp.setFragment(fragment);
@@ -128,6 +144,7 @@ public class AgentMemoryController {
      */
     @Operation(summary = "健康检查")
     @GetMapping("/health")
+    @BizApi(summary = "健康检查端点", description = "健康检查端点.", tags = { "z-agent" })
     public Result<String> health() {
         return Result.success("Agent Memory API is healthy");
     }
@@ -146,3 +163,6 @@ public class AgentMemoryController {
         public String keywords;       // 空格分隔
     }
 }
+
+
+

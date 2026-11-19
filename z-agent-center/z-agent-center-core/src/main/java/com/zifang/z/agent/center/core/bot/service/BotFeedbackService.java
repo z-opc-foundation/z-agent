@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zifang.z.agent.center.core.bot.entity.BotFeedback;
 import com.zifang.z.agent.center.core.bot.mapper.BotFeedbackMapper;
+import com.zifang.z.meta.api.annotation.BizMethod;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,6 +22,7 @@ public class BotFeedbackService extends ServiceImpl<BotFeedbackMapper, BotFeedba
     /**
      * 提交反馈（点赞 / 点踩 / 中性 + 可选评论）。
      */
+    @BizMethod(name = "提交反馈（点赞 / 点踩 / 中性 + 可选评论）", module = "z-agent", description = "提交反馈（点赞 / 点踩 / 中性 + 可选评论）。", operation = BizMethod.Operation.CREATE)
     public BotFeedback submit(String instanceCode, String traceId, String userId,
                               int rating, String comment, String appCode, String skillCodes) {
         BotFeedback f = new BotFeedback();
@@ -41,6 +43,7 @@ public class BotFeedbackService extends ServiceImpl<BotFeedbackMapper, BotFeedba
     /**
      * 累计反馈分数（点赞 +1, 点踩 -1, 中性 0）。
      */
+    @BizMethod(name = "累计反馈分数（点赞 +1, 点踩 -1, 中性 0）", module = "z-agent", description = "累计反馈分数（点赞 +1, 点踩 -1, 中性 0）。", operation = BizMethod.Operation.ACTION)
     public int scoreForInstance(String instanceCode) {
         LambdaQueryWrapper<BotFeedback> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(BotFeedback::getInstanceCode, instanceCode)
@@ -57,6 +60,7 @@ public class BotFeedbackService extends ServiceImpl<BotFeedbackMapper, BotFeedba
     /**
      * 累计反馈分数（按 skill_code）— 用于 wishlist 6 决定是否晋升。
      */
+    @BizMethod(name = "累计反馈分数（按 skill_code）— 用于 wishlist 6 决定是否晋升", module = "z-agent", description = "累计反馈分数（按 skill_code）— 用于 wishlist 6 决定是否晋升。", operation = BizMethod.Operation.ACTION)
     public int scoreForInstanceAndSkill(String instanceCode, String skillCode) {
         LambdaQueryWrapper<BotFeedback> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(BotFeedback::getInstanceCode, instanceCode)
@@ -77,6 +81,7 @@ public class BotFeedbackService extends ServiceImpl<BotFeedbackMapper, BotFeedba
         return sum;
     }
 
+    @BizMethod(name = "recentForInstance", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public List<BotFeedback> recentForInstance(String instanceCode, int limit) {
         LambdaQueryWrapper<BotFeedback> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(BotFeedback::getInstanceCode, instanceCode)
@@ -86,3 +91,6 @@ public class BotFeedbackService extends ServiceImpl<BotFeedbackMapper, BotFeedba
         return this.list(wrapper);
     }
 }
+
+
+

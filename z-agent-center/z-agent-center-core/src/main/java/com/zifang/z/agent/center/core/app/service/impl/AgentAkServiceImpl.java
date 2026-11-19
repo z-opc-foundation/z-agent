@@ -5,9 +5,10 @@ import com.zifang.util.core.lang.RandomUtil;
 import com.zifang.z.agent.center.core.app.entity.AgentAk;
 import com.zifang.z.agent.center.core.app.mapper.AgentAkMapper;
 import com.zifang.z.agent.center.core.app.service.AgentAkService;
+import com.zifang.z.meta.api.annotation.BizMethod;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,11 +22,13 @@ public class AgentAkServiceImpl implements AgentAkService {
     private PlatformAkGatewayBridge gatewayBridge;
 
     @Override
+    @BizMethod(name = "list", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentAk> list(String tenantCode) {
         return list(tenantCode, null);
     }
 
     @Override
+    @BizMethod(name = "list", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentAk> list(String tenantCode, String akType) {
         LambdaQueryWrapper<AgentAk> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentAk::getIsDeleted, 0);
@@ -40,12 +43,14 @@ public class AgentAkServiceImpl implements AgentAkService {
     }
 
     @Override
+    @BizMethod(name = "getByAccessKey", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentAk getByAccessKey(String accessKey) {
         return akMapper.selectOne(new LambdaQueryWrapper<AgentAk>()
                 .eq(AgentAk::getAccessKey, accessKey));
     }
 
     @Override
+    @BizMethod(name = "create", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentAk create(AgentAk ak) {
         // 自动生成 AccessKey / SecretKey
         if (ak.getAccessKey() == null || ak.getAccessKey().isEmpty()) {
@@ -74,6 +79,7 @@ public class AgentAkServiceImpl implements AgentAkService {
     }
 
     @Override
+    @BizMethod(name = "update", module = "z-agent", description = "", operation = BizMethod.Operation.UPDATE)
     public AgentAk update(AgentAk ak) {
         // 不允许通过 update 改 akType，一旦创建类型就锁死
         AgentAk existing = akMapper.selectById(ak.getId());
@@ -96,6 +102,7 @@ public class AgentAkServiceImpl implements AgentAkService {
     }
 
     @Override
+    @BizMethod(name = "delete", module = "z-agent", description = "", operation = BizMethod.Operation.DELETE)
     public void delete(Long id) {
         AgentAk existing = akMapper.selectById(id);
         AgentAk ak = new AgentAk();
@@ -109,6 +116,7 @@ public class AgentAkServiceImpl implements AgentAkService {
     }
 
     @Override
+    @BizMethod(name = "toggleStatus", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public void toggleStatus(Long id, Integer status) {
         AgentAk ak = new AgentAk();
         ak.setId(id);
@@ -118,3 +126,6 @@ public class AgentAkServiceImpl implements AgentAkService {
         gatewayBridge.onUpsert(akMapper.selectById(id));
     }
 }
+
+
+

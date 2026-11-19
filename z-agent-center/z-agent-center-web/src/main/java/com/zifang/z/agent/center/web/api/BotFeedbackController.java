@@ -7,11 +7,14 @@ import com.zifang.z.agent.center.core.bot.hook.BotHookDispatcher;
 import com.zifang.z.agent.center.core.bot.service.BotFeedbackService;
 import com.zifang.z.agent.center.web.api.response.dto.FeedbackScoreResp;
 import com.zifang.z.agent.center.web.api.response.dto.FeedbackSubmitResp;
+import com.zifang.z.meta.api.annotation.BizApi;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 
@@ -41,7 +44,8 @@ public class BotFeedbackController {
      */
     @Operation(summary = "FEATURE014 提交反馈（点赞 / 点踩 / 中性 + 备注）")
     @PostMapping
-    public Result<FeedbackSubmitResp> submit(@RequestBody FeedbackReq req) {
+    @BizApi(summary = "FEATURE014 提交反馈（点赞 / 点踩 / 中性 + 备注）", description = "FEATURE014 提交反馈（点赞 / 点踩 / 中性 + 备注）. 提交后会触发 onFeedback Hook（FeedbackHook + SkillPromotionHook）。", tags = { "z-agent" })
+    public Result<FeedbackSubmitResp> submit(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "反馈请求体（instanceCode / traceId / userId / rating / comment / appCode / skillCodes）", position = BizParam.Position.BODY) FeedbackReq req) {
         if (req.instanceCode == null) {
             return Result.<FeedbackSubmitResp>fail("instanceCode is required").code(BaseStatusCode.FAIL.getCode());
         }
@@ -78,8 +82,10 @@ public class BotFeedbackController {
      */
     @Operation(summary = "查询一个实例的最近反馈")
     @GetMapping("/recent")
-    public Result<List<BotFeedback>> recent(@RequestParam String instanceCode,
-                                            @RequestParam(defaultValue = "20") int limit) {
+    @BizApi(summary = "查询一个实例的最近反馈", description = "查询一个实例的最近反馈.", tags = { "z-agent" })
+    public Result<List<BotFeedback>> recent(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode,
+                                            @RequestParam(defaultValue = "20")
+                                            @BizParam(name = "limit", type = BizField.FieldType.INTEGER, description = "返回条数上限，默认 20", position = BizParam.Position.QUERY) int limit) {
         return Result.success(feedbackService.recentForInstance(instanceCode, limit));
     }
 
@@ -91,7 +97,8 @@ public class BotFeedbackController {
      */
     @Operation(summary = "查询一个实例的累计反馈分数（+赞 / -踩）")
     @GetMapping("/score")
-    public Result<FeedbackScoreResp> score(@RequestParam String instanceCode) {
+    @BizApi(summary = "查询一个实例的累计反馈分数（+赞 / -踩）", description = "查询一个实例的累计反馈分数（+赞 / -踩）.", tags = { "z-agent" })
+    public Result<FeedbackScoreResp> score(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode) {
         FeedbackScoreResp resp = new FeedbackScoreResp();
         resp.setInstanceCode(instanceCode);
         resp.setScore(feedbackService.scoreForInstance(instanceCode));
@@ -117,3 +124,6 @@ public class BotFeedbackController {
         public String skillCodes;
     }
 }
+
+
+

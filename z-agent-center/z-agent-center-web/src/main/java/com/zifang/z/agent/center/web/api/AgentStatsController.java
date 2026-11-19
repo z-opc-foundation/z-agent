@@ -3,15 +3,18 @@ package com.zifang.z.agent.center.web.api;
 import com.zifang.util.core.meta.Result;
 import com.zifang.z.agent.center.core.agent.stats.AgentStatsService;
 import com.zifang.z.agent.center.core.agent.stats.dto.*;
+import com.zifang.z.meta.api.annotation.BizApi;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.annotation.Resource;
 import java.util.List;
 
 /**
@@ -54,8 +57,10 @@ public class AgentStatsController {
      */
     @Operation(summary = "顶部 KPI 总览（累计 + 今日）")
     @GetMapping("/overview")
+    @BizApi(summary = "顶部 KPI 总览（累计 + 今日）", description = "顶部 KPI 总览（累计 + 今日）.", tags = { "z-agent" })
     public Result<AgentStatsOverview> overview(
-            @Parameter(description = "可选应用编码过滤") @RequestParam(required = false) String appCode) {
+            @Parameter(description = "可选应用编码过滤") @RequestParam(required = false)
+            @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "可选应用编码过滤", position = BizParam.Position.QUERY) String appCode) {
         return Result.success(agentStatsService.getOverview(emptyToNull(appCode)));
     }
 
@@ -68,9 +73,12 @@ public class AgentStatsController {
      */
     @Operation(summary = "近 N 天每日趋势（默认 7 天，最大 90 天）")
     @GetMapping("/trend")
+    @BizApi(summary = "近 N 天每日趋势（默认 7 天，最大 90 天）", description = "近 N 天每日趋势（默认 7 天，最大 90 天）.", tags = { "z-agent" })
     public Result<List<AgentTrendPoint>> trend(
-            @RequestParam(required = false) String appCode,
-            @Parameter(description = "天数, 默认 7") @RequestParam(defaultValue = "7") Integer days) {
+            @RequestParam(required = false)
+            @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "可选应用编码过滤", position = BizParam.Position.QUERY) String appCode,
+            @Parameter(description = "天数, 默认 7") @RequestParam(defaultValue = "7")
+            @BizParam(name = "days", type = BizField.FieldType.INTEGER, description = "天数，默认 7", position = BizParam.Position.QUERY) Integer days) {
         return Result.success(agentStatsService.getTrend(emptyToNull(appCode), days));
     }
 
@@ -82,8 +90,10 @@ public class AgentStatsController {
      */
     @Operation(summary = "延迟分布直方图（6 桶固定区间）")
     @GetMapping("/latency")
+    @BizApi(summary = "延迟分布直方图（6 桶固定区间）", description = "延迟分布直方图（6 桶固定区间）.", tags = { "z-agent" })
     public Result<List<AgentLatencyBucket>> latency(
-            @RequestParam(required = false) String appCode) {
+            @RequestParam(required = false)
+            @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "可选应用编码过滤", position = BizParam.Position.QUERY) String appCode) {
         return Result.success(agentStatsService.getLatencyDistribution(emptyToNull(appCode)));
     }
 
@@ -96,9 +106,12 @@ public class AgentStatsController {
      */
     @Operation(summary = "按 Agent 应用聚合统计（TOP-N，默认 20）")
     @GetMapping("/by-app")
+    @BizApi(summary = "按 Agent 应用聚合统计（TOP-N）", description = "按 Agent 应用聚合统计（TOP-N）.", tags = { "z-agent" })
     public Result<List<AgentByAppRow>> byApp(
-            @RequestParam(required = false) String appCode,
-            @Parameter(description = "TOP N, 默认 20, 最大 200") @RequestParam(defaultValue = "20") Integer limit) {
+            @RequestParam(required = false)
+            @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "可选应用编码过滤", position = BizParam.Position.QUERY) String appCode,
+            @Parameter(description = "TOP N, 默认 20, 最大 200") @RequestParam(defaultValue = "20")
+            @BizParam(name = "limit", type = BizField.FieldType.INTEGER, description = "TOP N，默认 20，最大 200", position = BizParam.Position.QUERY) Integer limit) {
         return Result.success(agentStatsService.getByApp(emptyToNull(appCode), limit));
     }
 
@@ -111,9 +124,12 @@ public class AgentStatsController {
      */
     @Operation(summary = "按用户聚合统计（TOP-N，默认 20）")
     @GetMapping("/by-user")
+    @BizApi(summary = "按用户聚合统计（TOP-N）", description = "按用户聚合统计（TOP-N）.", tags = { "z-agent" })
     public Result<List<AgentByUserRow>> byUser(
-            @RequestParam(required = false) String appCode,
-            @Parameter(description = "TOP N, 默认 20, 最大 200") @RequestParam(defaultValue = "20") Integer limit) {
+            @RequestParam(required = false)
+            @BizParam(name = "appCode", type = BizField.FieldType.STRING, description = "可选应用编码过滤", position = BizParam.Position.QUERY) String appCode,
+            @Parameter(description = "TOP N, 默认 20, 最大 200") @RequestParam(defaultValue = "20")
+            @BizParam(name = "limit", type = BizField.FieldType.INTEGER, description = "TOP N，默认 20，最大 200", position = BizParam.Position.QUERY) Integer limit) {
         return Result.success(agentStatsService.getByUser(emptyToNull(appCode), limit));
     }
 
@@ -124,7 +140,11 @@ public class AgentStatsController {
      */
     @Operation(summary = "健康检查")
     @GetMapping("/health")
+    @BizApi(summary = "健康检查端点", description = "健康检查端点.", tags = { "z-agent" })
     public Result<String> health() {
         return Result.success("Agent Stats API is healthy");
     }
 }
+
+
+

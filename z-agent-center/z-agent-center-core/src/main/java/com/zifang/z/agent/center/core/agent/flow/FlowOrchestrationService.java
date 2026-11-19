@@ -5,12 +5,13 @@ import com.zifang.z.agent.center.core.agent.executor.AgentExecutorFactory;
 import com.zifang.z.agent.center.core.agent.executor.ReActAgentFactory;
 import com.zifang.z.agent.center.core.agent.flow.entity.FlowDefinitionPO;
 import com.zifang.z.agent.center.core.agent.flow.service.FlowDefinitionService;
+import com.zifang.z.meta.api.annotation.BizMethod;
+import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -55,6 +56,7 @@ public class FlowOrchestrationService {
     }
 
     @PostConstruct
+    @BizMethod(name = "init", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public void init() {
         // FEATURE013 A7: 把追踪记录器注入到 FlowEngine
         if (flowTraceRecorder != null) {
@@ -98,6 +100,7 @@ public class FlowOrchestrationService {
     /**
      * FEATURE013 A3: 刷新指定 flowId 的缓存 (Controller 保存 / 发布后调用)
      */
+    @BizMethod(name = "FEATURE013 A3: 刷新指定 flowId 的缓存 (Controller 保存 / 发布后调用)", module = "z-agent", description = "FEATURE013 A3: 刷新指定 flowId 的缓存 (Controller 保存 / 发布后调用)", operation = BizMethod.Operation.ACTION)
     public void refreshFlowCache(String flowId) {
         FlowDefinitionPO latestPublished = flowDefinitionService.getLatestPublished(flowId);
         if (latestPublished == null) {
@@ -115,6 +118,7 @@ public class FlowOrchestrationService {
      * 注册流程定义 (保留向后兼容)
      * 新的保存流程请走 FlowDefinitionService.create(...) + refreshFlowCache(flowId)
      */
+    @BizMethod(name = "注册流程定义 (保留向后兼容)", module = "z-agent", description = "注册流程定义 (保留向后兼容) 新的保存流程请走 FlowDefinitionService.create(...) + refreshFlowCache(flowId)", operation = BizMethod.Operation.CREATE)
     public void registerFlow(FlowDefinition flow) {
         if (!flow.isDAG()) {
             throw new IllegalArgumentException("Flow is not a valid DAG: " + flow.getFlowId());
@@ -126,6 +130,7 @@ public class FlowOrchestrationService {
     /**
      * 获取流程定义 (FEATURE013 A3: miss 时回源 DB)
      */
+    @BizMethod(name = "获取流程定义 (FEATURE013 A3: miss 时回源 DB)", module = "z-agent", description = "获取流程定义 (FEATURE013 A3: miss 时回源 DB)", operation = BizMethod.Operation.QUERY)
     public FlowDefinition getFlow(String flowId) {
         FlowDefinition cached = flowDefinitions.get(flowId);
         if (cached != null) {
@@ -146,6 +151,7 @@ public class FlowOrchestrationService {
     /**
      * 执行流程
      */
+    @BizMethod(name = "执行流程", module = "z-agent", description = "执行流程", operation = BizMethod.Operation.ACTION)
     public FlowResult execute(String flowId, FlowContext context) {
         FlowDefinition flow = getFlow(flowId);
         if (flow == null) {
@@ -168,6 +174,7 @@ public class FlowOrchestrationService {
     /**
      * 执行流程（简化版，使用实例编码）
      */
+    @BizMethod(name = "执行流程（简化版，使用实例编码）", module = "z-agent", description = "执行流程（简化版，使用实例编码）", operation = BizMethod.Operation.ACTION)
     public FlowResult execute(String flowId, String instanceCode, String userMessage,
                               String userId, String userName, Map<String, Object> initialVars) {
         FlowContext context = new FlowContext(userId, userName);
@@ -184,6 +191,7 @@ public class FlowOrchestrationService {
     /**
      * 创建Agent节点
      */
+    @BizMethod(name = "创建Agent节点", module = "z-agent", description = "创建Agent节点", operation = BizMethod.Operation.CREATE)
     public FlowNode createAgentNode(String nodeId, String agentInstanceCode, String runMode) {
         AgentExecutor executor = agentExecutorFactory.getExecutor(runMode);
         return new com.zifang.z.agent.center.core.agent.flow.node.AgentNode(
@@ -194,6 +202,7 @@ public class FlowOrchestrationService {
     /**
      * 创建子流程节点
      */
+    @BizMethod(name = "创建子流程节点", module = "z-agent", description = "创建子流程节点", operation = BizMethod.Operation.CREATE)
     public FlowNode createSubFlowNode(String nodeId, String subFlowId) {
         return new SubFlowNode(nodeId, subFlowId, this);
     }
@@ -201,6 +210,7 @@ public class FlowOrchestrationService {
     /**
      * 创建条件节点
      */
+    @BizMethod(name = "创建条件节点", module = "z-agent", description = "创建条件节点", operation = BizMethod.Operation.CREATE)
     public FlowNode createConditionNode(String nodeId, String expression,
                                         String trueNodeId, String falseNodeId) {
         return new ConditionNode(nodeId, expression, trueNodeId, falseNodeId);
@@ -209,6 +219,7 @@ public class FlowOrchestrationService {
     /**
      * 获取运行中的流程
      */
+    @BizMethod(name = "获取运行中的流程", module = "z-agent", description = "获取运行中的流程", operation = BizMethod.Operation.QUERY)
     public FlowResult getRunningFlow(String executionId) {
         return runningFlows.get(executionId);
     }
@@ -216,6 +227,7 @@ public class FlowOrchestrationService {
     /**
      * 取消流程执行
      */
+    @BizMethod(name = "取消流程执行", module = "z-agent", description = "取消流程执行", operation = BizMethod.Operation.ACTION)
     public boolean cancelFlow(String executionId) {
         FlowResult result = runningFlows.get(executionId);
         if (result != null) {
@@ -228,6 +240,7 @@ public class FlowOrchestrationService {
     /**
      * 获取所有已注册的流程 (FEATURE013 A3: 仅返回 in-memory 缓存, 不穿透 DB)
      */
+    @BizMethod(name = "获取所有已注册的流程 (FEATURE013 A3: 仅返回 in-memory 缓存, 不穿透 DB)", module = "z-agent", description = "获取所有已注册的流程 (FEATURE013 A3: 仅返回 in-memory 缓存, 不穿透 DB)", operation = BizMethod.Operation.QUERY)
     public Map<String, FlowDefinition> getAllFlows() {
         return flowDefinitions;
     }
@@ -358,3 +371,4 @@ public class FlowOrchestrationService {
         }
     }
 }
+

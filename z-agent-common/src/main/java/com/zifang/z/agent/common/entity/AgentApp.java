@@ -3,6 +3,8 @@ package com.zifang.z.agent.common.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizModel;
 
 import java.time.LocalDateTime;
 
@@ -10,42 +12,72 @@ import java.time.LocalDateTime;
  * Agent 应用实体（共享模块，供 z-agent-center-core 和 z-agent-engine 使用）
  * 注意：本类不含任何 mapper/DB 操作，仅作为数据载体
  */
+@BizModel(name = "Agent 应用实体（共享模块，供 z-agent-center-core 和 z-agent-engine 使用）", module = "z-agent", description = "Agent 应用实体（共享模块，供 z-agent-center-core 和 z-agent-engine 使用） 注意：本类不含任何 mapper/DB 操作，仅作为数据载体")
 @TableName("z_agent_app")
 public class AgentApp {
 
     @TableId(type = IdType.AUTO)
+    @BizField(name = "主键", type = BizField.FieldType.INTEGER)
     private Long id;
+    @BizField(name = "应用编码(唯一标识)", type = BizField.FieldType.STRING)
     private String appCode;
+    @BizField(name = "应用名称", type = BizField.FieldType.STRING)
     private String appName;
+    @BizField(name = "应用描述", type = BizField.FieldType.STRING)
     private String description;
+    @BizField(name = "iconUrl", type = BizField.FieldType.STRING)
     private String iconUrl;
+    @BizField(name = "prompt", type = BizField.FieldType.STRING)
     private String prompt;
+    @BizField(name = "modelName", type = BizField.FieldType.STRING)
     private String modelName;
+    @BizField(name = "modelProvider", type = BizField.FieldType.STRING)
     private String modelProvider;
+    @BizField(name = "tools", type = BizField.FieldType.STRING)
     private String tools;
+    @BizField(name = "knowledgeIds", type = BizField.FieldType.STRING)
     private String knowledgeIds;
+    @BizField(name = "skillCodes", type = BizField.FieldType.STRING)
     private String skillCodes;
+    @BizField(name = "variables", type = BizField.FieldType.STRING)
     private String variables;
+    @BizField(name = "状态: ENABLE/DISABLE", type = BizField.FieldType.STRING)
     private String status;
+    @BizField(name = "groupCode", type = BizField.FieldType.STRING)
     private String groupCode = "";
+    @BizField(name = "tenantCode", type = BizField.FieldType.STRING)
     private String tenantCode;
+    @BizField(name = "creator", type = BizField.FieldType.STRING)
     private String creator;
+    @BizField(name = "gmtCreate", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtCreate;
+    @BizField(name = "gmtModified", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtModified;
+    @BizField(name = "isDeleted", type = BizField.FieldType.INTEGER)
     private Integer isDeleted;
     // 应用类型: chat-对话 / agent-智能体 / workflow-工作流
+    @BizField(name = "agentMode", type = BizField.FieldType.STRING)
     private String agentMode;
     // 模型参数
+    @BizField(name = "temperature", type = BizField.FieldType.DECIMAL)
     private Float temperature;
+    @BizField(name = "topP", type = BizField.FieldType.DECIMAL)
     private Float topP;
+    @BizField(name = "maxTokens", type = BizField.FieldType.INTEGER)
     private Integer maxTokens;
+    @BizField(name = "responseFormat", type = BizField.FieldType.STRING)
     private String responseFormat;
     // 记忆配置
+    @BizField(name = "historyWindowSize", type = BizField.FieldType.INTEGER)
     private Integer historyWindowSize;
+    @BizField(name = "enableLongMemory", type = BizField.FieldType.BOOLEAN)
     private Boolean enableLongMemory;
+    @BizField(name = "memoryPrompt", type = BizField.FieldType.STRING)
     private String memoryPrompt;
     // 分享配置：开启后生成 shareCode 用于分享链接
+    @BizField(name = "shareEnabled", type = BizField.FieldType.BOOLEAN)
     private Boolean shareEnabled;
+    @BizField(name = "shareCode", type = BizField.FieldType.STRING)
     private String shareCode;
 
     public Long getId() {
@@ -280,3 +312,4 @@ public class AgentApp {
         this.shareCode = shareCode;
     }
 }
+

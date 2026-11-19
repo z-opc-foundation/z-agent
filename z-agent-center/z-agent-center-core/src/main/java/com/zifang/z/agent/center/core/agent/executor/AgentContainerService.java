@@ -1,5 +1,6 @@
 package com.zifang.z.agent.center.core.agent.executor;
 
+import com.zifang.z.meta.api.annotation.BizMethod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class AgentContainerService {
      * @param instanceCode 实例编码
      * @return 容器端口
      */
+    @BizMethod(name = "创建 Agent 容器", module = "z-agent", description = "创建 Agent 容器", operation = BizMethod.Operation.CREATE)
     public Integer createContainer(String instanceCode) {
         // 1. 检查是否已存在
         if (instancePortMap.containsKey(instanceCode)) {
@@ -84,6 +86,7 @@ public class AgentContainerService {
     /**
      * 销毁 Agent 容器
      */
+    @BizMethod(name = "销毁 Agent 容器", module = "z-agent", description = "销毁 Agent 容器", operation = BizMethod.Operation.ACTION)
     public void destroyContainer(String instanceCode) {
         Integer port = instancePortMap.remove(instanceCode);
         if (port == null) {
@@ -104,6 +107,7 @@ public class AgentContainerService {
     /**
      * 获取容器状态
      */
+    @BizMethod(name = "获取容器状态", module = "z-agent", description = "获取容器状态", operation = BizMethod.Operation.QUERY)
     public String getContainerStatus(String instanceCode) {
         String containerName = "agent-" + instanceCode;
         try {
@@ -117,6 +121,7 @@ public class AgentContainerService {
     /**
      * 获取容器信息
      */
+    @BizMethod(name = "获取容器信息", module = "z-agent", description = "获取容器信息", operation = BizMethod.Operation.QUERY)
     public Map<String, Object> getContainerInfo(String instanceCode) {
         Map<String, Object> info = new HashMap<String, Object>();
         String containerName = "agent-" + instanceCode;
@@ -136,6 +141,7 @@ public class AgentContainerService {
     /**
      * 检查 Docker 是否可用
      */
+    @BizMethod(name = "检查 Docker 是否可用", module = "z-agent", description = "检查 Docker 是否可用", operation = BizMethod.Operation.ACTION)
     public boolean isDockerAvailable() {
         try {
             executeCommand(new String[]{"docker", "info"});
@@ -187,3 +193,4 @@ public class AgentContainerService {
         return output.toString();
     }
 }
+

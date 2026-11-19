@@ -6,6 +6,7 @@ import com.zifang.z.agent.center.core.agent.conversation.dto.ChatDto;
 import com.zifang.z.agent.center.core.agent.conversation.entity.AgentConversation;
 import com.zifang.z.agent.center.core.agent.conversation.mapper.AgentConversationMapper;
 import com.zifang.z.agent.center.core.agent.conversation.service.AgentConversationService;
+import com.zifang.z.meta.api.annotation.BizMethod;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -22,11 +23,13 @@ public class AgentConversationServiceImpl extends ServiceImpl<AgentConversationM
     private static final DateTimeFormatter DF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
+    @BizMethod(name = "listRespByInstance", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<ChatDto> listRespByInstance(String instanceCode, Integer limit) {
         return listByInstance(instanceCode, limit).stream().map(this::toDto).collect(Collectors.toList());
     }
 
     @Override
+    @BizMethod(name = "saveEntity", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public boolean saveEntity(AgentConversation conversation) {
         if (conversation.getId() == null) {
             conversation.setGmtCreate(LocalDateTime.now());
@@ -37,6 +40,7 @@ public class AgentConversationServiceImpl extends ServiceImpl<AgentConversationM
     }
 
     @Override
+    @BizMethod(name = "listByInstance", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentConversation> listByInstance(String instanceCode, int limit) {
         LambdaQueryWrapper<AgentConversation> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentConversation::getInstanceCode, instanceCode);
@@ -46,6 +50,7 @@ public class AgentConversationServiceImpl extends ServiceImpl<AgentConversationM
     }
 
     @Override
+    @BizMethod(name = "listByConversationCode", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentConversation> listByConversationCode(String conversationCode) {
         LambdaQueryWrapper<AgentConversation> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentConversation::getConversationCode, conversationCode);
@@ -64,3 +69,6 @@ public class AgentConversationServiceImpl extends ServiceImpl<AgentConversationM
         return dto;
     }
 }
+
+
+

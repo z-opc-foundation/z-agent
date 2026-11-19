@@ -5,6 +5,9 @@ import com.zifang.z.agent.api.dto.RunRequest;
 import com.zifang.z.agent.api.dto.RunResponse;
 import com.zifang.z.agent.api.exception.AgentException;
 import com.zifang.z.agent.core.runner.AgentRunner;
+import com.zifang.z.meta.api.annotation.BizApi;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -46,25 +49,31 @@ public class AgentController {
     }
 
     @GetMapping("/list")
+    @BizApi(summary = "list", description = "", tags = { "z-agent" })
     public List<AgentDto> list() {
         return runner.listAgents();
     }
 
     @GetMapping("/{name}")
-    public AgentDto describe(@PathVariable("name") String name) {
+    @BizApi(summary = "describe", description = "", tags = { "z-agent" })
+    public AgentDto describe(@PathVariable("name") @BizParam(name = "name", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.PATH) String name) {
         return runner.describeAgent(name);
     }
 
     @PostMapping("/{name}/run")
-    public RunResponse run(@PathVariable("name") String name,
-                           @RequestBody(required = false) Map<String, Object> body) {
+    @BizApi(summary = "run", description = "", tags = { "z-agent" })
+    public RunResponse run(@PathVariable("name") @BizParam(name = "name", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.PATH) String name,
+                           @RequestBody(required = false)
+                           @BizParam(name = "body", type = BizField.FieldType.JSON, description = "", position = BizParam.Position.BODY) Map<String, Object> body) {
         RunRequest req = parseRequest(name, body);
         return runner.run(req);
     }
 
     @PostMapping(value = "/{name}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<?> stream(@PathVariable("name") String name,
-                                    @RequestBody(required = false) Map<String, Object> body) {
+    @BizApi(summary = "stream", description = "", tags = { "z-agent" })
+    public ResponseEntity<?> stream(@PathVariable("name") @BizParam(name = "name", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.PATH) String name,
+                                    @RequestBody(required = false)
+                                    @BizParam(name = "body", type = BizField.FieldType.JSON, description = "", position = BizParam.Position.BODY) Map<String, Object> body) {
         RunRequest req = parseRequest(name, body);
         return ResponseEntity.ok().body(new java.util.HashMap<String, Object>() {{
             put("status", "sse-ready");
@@ -102,3 +111,4 @@ public class AgentController {
                 .build();
     }
 }
+

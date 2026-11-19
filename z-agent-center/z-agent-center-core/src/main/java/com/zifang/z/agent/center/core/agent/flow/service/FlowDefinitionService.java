@@ -7,6 +7,7 @@ import com.zifang.util.json.JsonUtil;
 import com.zifang.util.json.JsonUtil;
 import com.zifang.z.agent.center.core.agent.flow.entity.FlowDefinitionPO;
 import com.zifang.z.agent.center.core.agent.flow.mapper.FlowDefinitionMapper;
+import com.zifang.z.meta.api.annotation.BizMethod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -163,6 +164,7 @@ public class FlowDefinitionService {
      * 启动时加载所有 PUBLISHED 状态 flow 到内存
      * 调用方传入 put 回调 (通常是 FlowOrchestrationService.registerFlow)
      */
+    @BizMethod(name = "启动时加载所有 PUBLISHED 状态 flow 到内存", module = "z-agent", description = "启动时加载所有 PUBLISHED 状态 flow 到内存 调用方传入 put 回调 (通常是 FlowOrchestrationService.registerFlow)", operation = BizMethod.Operation.QUERY)
     public int loadAllPublished(Map<String, String> flowIdVersionMap) {
         QueryWrapper<FlowDefinitionPO> qw = new QueryWrapper<>();
         qw.eq("status", "PUBLISHED").eq("is_deleted", 0);
@@ -174,16 +176,19 @@ public class FlowDefinitionService {
         return list.size();
     }
 
+    @BizMethod(name = "getById", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public FlowDefinitionPO getById(Long id) {
         return flowDefinitionMapper.selectById(id);
     }
 
+    @BizMethod(name = "getByFlowIdAndVersion", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public FlowDefinitionPO getByFlowIdAndVersion(String flowId, Integer version) {
         QueryWrapper<FlowDefinitionPO> qw = new QueryWrapper<>();
         qw.eq("flow_id", flowId).eq("version", version).eq("is_deleted", 0);
         return flowDefinitionMapper.selectOne(qw);
     }
 
+    @BizMethod(name = "getLatestPublished", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public FlowDefinitionPO getLatestPublished(String flowId) {
         QueryWrapper<FlowDefinitionPO> qw = new QueryWrapper<>();
         qw.eq("flow_id", flowId).eq("status", "PUBLISHED").eq("is_deleted", 0)
@@ -191,12 +196,14 @@ public class FlowDefinitionService {
         return flowDefinitionMapper.selectOne(qw);
     }
 
+    @BizMethod(name = "listByFlowId", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<FlowDefinitionPO> listByFlowId(String flowId) {
         QueryWrapper<FlowDefinitionPO> qw = new QueryWrapper<>();
         qw.eq("flow_id", flowId).eq("is_deleted", 0).orderByDesc("version");
         return flowDefinitionMapper.selectList(qw);
     }
 
+    @BizMethod(name = "page", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public IPage<FlowDefinitionPO> page(String keyword, String status, String appCode,
                                         int pageNum, int pageSize) {
         QueryWrapper<FlowDefinitionPO> qw = new QueryWrapper<>();
@@ -213,6 +220,7 @@ public class FlowDefinitionService {
         return flowDefinitionMapper.selectPage(new Page<>(pageNum, pageSize), qw);
     }
 
+    @BizMethod(name = "create", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public Long create(FlowDefinitionPO po) {
         if (po.getVersion() == null) po.setVersion(1);
 
@@ -233,6 +241,7 @@ public class FlowDefinitionService {
         return po.getId();
     }
 
+    @BizMethod(name = "update", module = "z-agent", description = "", operation = BizMethod.Operation.UPDATE)
     public boolean update(FlowDefinitionPO po) {
         if (po.getId() == null) {
             throw new IllegalArgumentException("id 不能为空");
@@ -252,6 +261,7 @@ public class FlowDefinitionService {
      * - status = DRAFT
      * - changelog = 用户填写
      */
+    @BizMethod(name = "创建新版本 (FEATURE013 A9)", module = "z-agent", description = "创建新版本 (FEATURE013 A9) - 复制旧版本的 nodes/edges/variables - version + 1 - parent_version_id = 旧版本.id - status = DRAFT - changelog = 用户填写", operation = BizMethod.Operation.CREATE)
     public Long createNewVersion(Long parentId, String changelog, String creator) {
         FlowDefinitionPO parent = flowDefinitionMapper.selectById(parentId);
         if (parent == null) {
@@ -279,6 +289,7 @@ public class FlowDefinitionService {
 
     // ==================== JSON 校验 ====================
 
+    @BizMethod(name = "publish", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public boolean publish(Long id) {
         FlowDefinitionPO po = flowDefinitionMapper.selectById(id);
         if (po == null) {
@@ -292,6 +303,7 @@ public class FlowDefinitionService {
         return rows > 0;
     }
 
+    @BizMethod(name = "archive", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public boolean archive(Long id) {
         FlowDefinitionPO po = flowDefinitionMapper.selectById(id);
         if (po == null) {
@@ -302,6 +314,7 @@ public class FlowDefinitionService {
         return flowDefinitionMapper.updateById(po) > 0;
     }
 
+    @BizMethod(name = "delete", module = "z-agent", description = "", operation = BizMethod.Operation.DELETE)
     public boolean delete(Long id) {
         FlowDefinitionPO po = flowDefinitionMapper.selectById(id);
         if (po == null) {
@@ -352,3 +365,4 @@ public class FlowDefinitionService {
         }
     }
 }
+

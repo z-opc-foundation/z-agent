@@ -11,12 +11,15 @@ import com.zifang.z.agent.center.web.api.SkillBindController.BindReq;
 import com.zifang.z.agent.center.web.api.SkillBindController.HeartbeatReq;
 import com.zifang.z.agent.center.web.api.SkillBindController.RegisterReq;
 import com.zifang.z.agent.center.web.api.response.dto.*;
+import com.zifang.z.meta.api.annotation.BizApi;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.web.bind.annotation.*;
-
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.bind.annotation.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -77,7 +80,8 @@ public class AgentInstanceController {
      */
     @Operation(summary = "从应用创建实例")
     @PostMapping("/create")
-    public Result<AgentInstanceDto> create(@RequestBody AgentInstanceReq req) {
+    @BizApi(summary = "从应用创建实例", description = "从应用创建实例.", tags = { "z-agent" })
+    public Result<AgentInstanceDto> create(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "实例创建请求", position = BizParam.Position.BODY) AgentInstanceReq req) {
         return Result.success(instanceService.createResp(req));
     }
 
@@ -89,7 +93,8 @@ public class AgentInstanceController {
      */
     @Operation(summary = "创建容器模式Agent实例")
     @PostMapping("/create-container")
-    public Result<AgentInstanceDto> createContainer(@RequestBody AgentInstanceReq req) {
+    @BizApi(summary = "创建容器模式 Agent 实例（Hermes Docker 容器）", description = "创建容器模式 Agent 实例（Hermes Docker 容器）.", tags = { "z-agent" })
+    public Result<AgentInstanceDto> createContainer(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "实例创建请求", position = BizParam.Position.BODY) AgentInstanceReq req) {
         // 1. 创建 Hermes 容器
         String instanceCode = "inst_" + System.currentTimeMillis();
         Integer port = containerService.createContainer(instanceCode);
@@ -112,7 +117,8 @@ public class AgentInstanceController {
      */
     @Operation(summary = "销毁容器模式Agent实例")
     @PostMapping("/destroy-container")
-    public Result<Object> destroyContainer(@RequestParam String instanceCode) {
+    @BizApi(summary = "销毁容器模式 Agent 实例", description = "销毁容器模式 Agent 实例.", tags = { "z-agent" })
+    public Result<Object> destroyContainer(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode) {
         containerService.destroyContainer(instanceCode);
         return Result.success();
     }
@@ -127,7 +133,8 @@ public class AgentInstanceController {
      */
     @Operation(summary = "FEATURE014 创建多类型 Agent 实例（Claude Code / OpenCode / Hermes 本地 / 自定义）")
     @PostMapping("/create-external")
-    public Result<AgentInstanceDto> createExternal(@RequestBody AgentInstanceReq req) {
+    @BizApi(summary = "FEATURE014 创建多类型 Agent 实例", description = "FEATURE014 创建多类型 Agent 实例.", tags = { "z-agent" })
+    public Result<AgentInstanceDto> createExternal(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "实例创建请求（含 agentType / callbackUrl 等）", position = BizParam.Position.BODY) AgentInstanceReq req) {
         // 1. 创建实例记录
         AgentInstance instance = instanceService.createExternalAgent(
                 req.getAppCode(),
@@ -181,7 +188,8 @@ public class AgentInstanceController {
      */
     @Operation(summary = "FEATURE014 销毁本地进程模式 Agent 实例")
     @PostMapping("/destroy-local-process")
-    public Result<Object> destroyLocalProcess(@RequestParam String instanceCode) {
+    @BizApi(summary = "FEATURE014 销毁本地进程模式 Agent 实例", description = "FEATURE014 销毁本地进程模式 Agent 实例.", tags = { "z-agent" })
+    public Result<Object> destroyLocalProcess(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode) {
         localProcessRuntime.stopProcess(instanceCode);
         return Result.success();
     }
@@ -193,6 +201,7 @@ public class AgentInstanceController {
      */
     @Operation(summary = "FEATURE014 列出当前所有可用的 Agent 类型（前端下拉数据源）")
     @GetMapping("/agent-types")
+    @BizApi(summary = "FEATURE014 列出当前所有可用的 Agent 类型（前端下拉数据源）", description = "FEATURE014 列出当前所有可用的 Agent 类型（前端下拉数据源）.", tags = { "z-agent" })
     public Result<java.util.Map<String, String>> agentTypes() {
         return Result.success(executorFactory.getAvailableAgentTypes());
     }
@@ -205,7 +214,8 @@ public class AgentInstanceController {
      */
     @Operation(summary = "FEATURE014 健康检查某个 Agent 实例（按 agentType 选择健康检查策略）")
     @GetMapping("/health")
-    public Result<InstanceHealthResp> health(@RequestParam String instanceCode) {
+    @BizApi(summary = "FEATURE014 健康检查某个 Agent 实例（按 agentType 选择健康检查策略）", description = "FEATURE014 健康检查某个 Agent 实例（按 agentType 选择健康检查策略）.", tags = { "z-agent" })
+    public Result<InstanceHealthResp> health(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode) {
         AgentInstance instance = instanceService.getByInstanceCode(instanceCode);
         if (instance == null) {
             return Result.<InstanceHealthResp>fail("Instance not found: " + instanceCode).code(BaseStatusCode.FAIL.getCode());
@@ -244,7 +254,8 @@ public class AgentInstanceController {
      */
     @Operation(summary = "查询实例详情")
     @GetMapping("/get")
-    public Result<AgentInstanceDto> get(@RequestParam String instanceCode) {
+    @BizApi(summary = "按 instanceCode 查询实例详情", description = "按 instanceCode 查询实例详情.", tags = { "z-agent" })
+    public Result<AgentInstanceDto> get(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode) {
         return Result.success(instanceService.getRespByInstanceCode(instanceCode));
     }
 
@@ -256,7 +267,8 @@ public class AgentInstanceController {
      */
     @Operation(summary = "查询用户的实例列表")
     @GetMapping("/list")
-    public Result<List<AgentInstanceDto>> list(@RequestParam String ownerId) {
+    @BizApi(summary = "查询指定用户的所有实例列表", description = "查询指定用户的所有实例列表.", tags = { "z-agent" })
+    public Result<List<AgentInstanceDto>> list(@RequestParam @BizParam(name = "ownerId", type = BizField.FieldType.STRING, description = "所有者用户 ID", position = BizParam.Position.QUERY) String ownerId) {
         return Result.success(instanceService.listRespByOwner(ownerId));
     }
 
@@ -269,7 +281,8 @@ public class AgentInstanceController {
      */
     @Operation(summary = "更新实例状态")
     @PostMapping("/status")
-    public Result<Object> status(@RequestParam String instanceCode, @RequestParam String status) {
+    @BizApi(summary = "更新实例状态", description = "更新实例状态.", tags = { "z-agent" })
+    public Result<Object> status(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode, @RequestParam @BizParam(name = "status", type = BizField.FieldType.STRING, description = "目标状态值", position = BizParam.Position.QUERY) String status) {
         instanceService.updateStatus(instanceCode, status);
         return Result.success();
     }
@@ -281,7 +294,8 @@ public class AgentInstanceController {
      */
     @Operation(summary = "FEATURE014 §4.1 Agent 注册（spec alias）")
     @PostMapping("/register")
-    public Result<SkillRegisterResp> instanceRegister(@RequestBody java.util.Map<String, Object> rawBody) {
+    @BizApi(summary = "FEATURE014 §4.1 — Agent 注册 (alias for /api/agent/skill/register)", description = "FEATURE014 §4.1 — Agent 注册 (alias for /api/agent/skill/register)。", tags = { "z-agent" })
+    public Result<SkillRegisterResp> instanceRegister(@RequestBody @BizParam(name = "rawBody", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.BODY) java.util.Map<String, Object> rawBody) {
         RegisterReq req = new RegisterReq();
         Object appCode = rawBody.get("appCode");
         req.appCode = appCode != null ? appCode.toString() : "default-chat";
@@ -332,7 +346,8 @@ public class AgentInstanceController {
      */
     @Operation(summary = "FEATURE014 §4.1 绑定技能（spec alias）")
     @PostMapping("/bind-skill")
-    public Result<SkillBindResp> instanceBindSkill(@RequestBody BindReq req) {
+    @BizApi(summary = "FEATURE014 §4.1 — 给 Agent 实例绑定 Skill (alias for /api/agent/skill/bind)", description = "FEATURE014 §4.1 — 给 Agent 实例绑定 Skill (alias for /api/agent/skill/bind)。", tags = { "z-agent" })
+    public Result<SkillBindResp> instanceBindSkill(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.BODY) BindReq req) {
         int created = distributor.bind(req.instanceCode, req.skillCodes,
                 req.bindingType != null ? req.bindingType : "PUSH");
         SkillBindResp resp = new SkillBindResp();
@@ -348,7 +363,8 @@ public class AgentInstanceController {
      */
     @Operation(summary = "FEATURE014 §4.1 解绑技能（spec alias）")
     @PostMapping("/unbind-skill")
-    public Result<SkillUnbindResp> instanceUnbindSkill(@RequestBody BindReq req) {
+    @BizApi(summary = "FEATURE014 §4.1 — Agent 实例解绑 Skill (alias for /api/agent/skill/unbind)", description = "FEATURE014 §4.1 — Agent 实例解绑 Skill (alias for /api/agent/skill/unbind)。", tags = { "z-agent" })
+    public Result<SkillUnbindResp> instanceUnbindSkill(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.BODY) BindReq req) {
         boolean removed = distributor.unbind(req.instanceCode, req.skillCodes);
         SkillUnbindResp resp = new SkillUnbindResp();
         resp.setRemoved(removed);
@@ -362,8 +378,9 @@ public class AgentInstanceController {
      */
     @Operation(summary = "FEATURE014 §4.1 拉取技能（spec alias）")
     @GetMapping("/skill/pull")
+    @BizApi(summary = "FEATURE014 §4.1 — Agent 拉取 Skill (alias for /api/agent/skill/pull GET)", description = "FEATURE014 §4.1 — Agent 拉取 Skill (alias for /api/agent/skill/pull GET)。", tags = { "z-agent" })
     public Result<SkillPullResp> instanceSkillPull(HttpServletRequest httpRequest,
-                                                   @RequestParam String instanceCode) {
+                                                   @RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String instanceCode) {
         AgentInstance instance = resolveInstance(httpRequest, instanceCode);
         if (instance == null) {
             return Result.<SkillPullResp>fail("Instance not found: " + instanceCode)
@@ -383,11 +400,15 @@ public class AgentInstanceController {
      */
     @Operation(summary = "FEATURE014 §4.1 Agent 心跳（spec alias GET）")
     @GetMapping("/heartbeat")
+    @BizApi(summary = "FEATURE014 §4.1 — Agent 心跳 (spec 用 GET；原生 /api/agent/skill/heartbeat 是 POST)", description = "FEATURE014 §4.1 — Agent 心跳 (spec 用 GET；原生 /api/agent/skill/heartbeat 是 POST)。", tags = { "z-agent" })
     public Result<HeartbeatResp> instanceHeartbeat(HttpServletRequest httpRequest,
-                                                   @RequestParam String instanceCode,
-                                                   @RequestParam(required = false, defaultValue = "ACTIVE") String status,
-                                                   @RequestParam(required = false) String agentVersion,
-                                                   @RequestParam(required = false) String capabilities) {
+                                                   @RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String instanceCode,
+                                                   @RequestParam(required = false, defaultValue = "ACTIVE")
+                                                   @BizParam(name = "status", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String status,
+                                                   @RequestParam(required = false)
+                                                   @BizParam(name = "agentVersion", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String agentVersion,
+                                                   @RequestParam(required = false)
+                                                   @BizParam(name = "capabilities", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String capabilities) {
         HeartbeatReq req = new HeartbeatReq();
         req.instanceCode = instanceCode;
         req.status = status;
@@ -449,3 +470,6 @@ public class AgentInstanceController {
         return instanceService.getByInstanceCode(requestedCode);
     }
 }
+
+
+

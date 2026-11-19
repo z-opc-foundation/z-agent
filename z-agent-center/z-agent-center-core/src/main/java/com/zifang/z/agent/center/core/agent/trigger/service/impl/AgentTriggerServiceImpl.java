@@ -10,12 +10,13 @@ import com.zifang.z.agent.center.core.agent.runtime.service.AgentRuntimeService;
 import com.zifang.z.agent.center.core.agent.trigger.entity.AgentTrigger;
 import com.zifang.z.agent.center.core.agent.trigger.mapper.AgentTriggerMapper;
 import com.zifang.z.agent.center.core.agent.trigger.service.AgentTriggerService;
+import com.zifang.z.meta.api.annotation.BizMethod;
+import jakarta.annotation.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -35,6 +36,7 @@ public class AgentTriggerServiceImpl implements AgentTriggerService {
     private AgentRuntimeService agentRuntimeService;
 
     @Override
+    @BizMethod(name = "getById", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentTrigger getById(Long id) {
         if (id == null) {
             return null;
@@ -44,6 +46,7 @@ public class AgentTriggerServiceImpl implements AgentTriggerService {
     }
 
     @Override
+    @BizMethod(name = "getByCode", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentTrigger getByCode(String triggerCode) {
         if (triggerCode == null || triggerCode.isEmpty()) {
             return null;
@@ -55,6 +58,7 @@ public class AgentTriggerServiceImpl implements AgentTriggerService {
     }
 
     @Override
+    @BizMethod(name = "pageList", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentTrigger> pageList(String keyword, String appCode, String status, int page, int size) {
         if (page < 1) {
             page = 1;
@@ -83,6 +87,7 @@ public class AgentTriggerServiceImpl implements AgentTriggerService {
     }
 
     @Override
+    @BizMethod(name = "count", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public long count(String keyword, String appCode, String status) {
         LambdaQueryWrapper<AgentTrigger> q = new LambdaQueryWrapper<>();
         q.eq(AgentTrigger::getIsDeleted, 0);
@@ -101,6 +106,7 @@ public class AgentTriggerServiceImpl implements AgentTriggerService {
     }
 
     @Override
+    @BizMethod(name = "create", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentTrigger create(AgentTrigger trigger) {
         if (trigger == null || trigger.getTriggerCode() == null) {
             throw new IllegalArgumentException("triggerCode 必填");
@@ -123,6 +129,7 @@ public class AgentTriggerServiceImpl implements AgentTriggerService {
     }
 
     @Override
+    @BizMethod(name = "update", module = "z-agent", description = "", operation = BizMethod.Operation.UPDATE)
     public AgentTrigger update(AgentTrigger trigger) {
         if (trigger == null || trigger.getId() == null) {
             throw new IllegalArgumentException("id 必填");
@@ -145,6 +152,7 @@ public class AgentTriggerServiceImpl implements AgentTriggerService {
     }
 
     @Override
+    @BizMethod(name = "delete", module = "z-agent", description = "", operation = BizMethod.Operation.DELETE)
     public boolean delete(Long id) {
         AgentTrigger t = triggerMapper.selectById(id);
         if (t == null) {
@@ -157,6 +165,7 @@ public class AgentTriggerServiceImpl implements AgentTriggerService {
     }
 
     @Override
+    @BizMethod(name = "setStatus", module = "z-agent", description = "", operation = BizMethod.Operation.UPDATE)
     public AgentTrigger setStatus(Long id, String status) {
         if (!"ACTIVE".equals(status) && !"PAUSED".equals(status) && !"DISABLED".equals(status)) {
             throw new IllegalArgumentException("status 必须是 ACTIVE/PAUSED/DISABLED");
@@ -180,6 +189,7 @@ public class AgentTriggerServiceImpl implements AgentTriggerService {
     }
 
     @Override
+    @BizMethod(name = "fireNow", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public String fireNow(Long id) {
         AgentTrigger t = triggerMapper.selectById(id);
         if (t == null) {
@@ -199,6 +209,7 @@ public class AgentTriggerServiceImpl implements AgentTriggerService {
     }
 
     @Override
+    @BizMethod(name = "computeNextFireTime", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public LocalDateTime computeNextFireTime(String cronExpr, LocalDateTime from) {
         if (cronExpr == null || cronExpr.trim().isEmpty()) {
             return null;
@@ -216,6 +227,7 @@ public class AgentTriggerServiceImpl implements AgentTriggerService {
     /**
      * 内部: 执行一次触发, 调 AgentRuntimeService
      */
+    @BizMethod(name = "内部: 执行一次触发, 调 AgentRuntimeService", module = "z-agent", description = "内部: 执行一次触发, 调 AgentRuntimeService", operation = BizMethod.Operation.ACTION)
     public String executeTrigger(AgentTrigger trigger, String instanceCode, LocalDateTime fireTime) {
         String message = trigger.getMessage() == null ? "" : trigger.getMessage();
         // 占位符替换
@@ -244,3 +256,6 @@ public class AgentTriggerServiceImpl implements AgentTriggerService {
         }
     }
 }
+
+
+

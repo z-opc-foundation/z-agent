@@ -55,6 +55,11 @@
         </dependency>
         <!-- 2026-10-03: McpToolRegistryBindConfig 已归 z-mcp 仓 (z-mcp-starter bridge 包),
              本模块不再需要 z-mcp-starter 依赖. -->
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-meta-api</artifactId>
+            <version>${z-meta.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

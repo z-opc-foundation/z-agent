@@ -3,36 +3,60 @@ package com.zifang.z.agent.common.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizModel;
 
 import java.time.LocalDateTime;
 
 /**
  * Agent 应用版本实体（共享模块，供 z-agent-center-core 和 z-agent-engine 使用）
  */
+@BizModel(name = "Agent 应用版本实体（共享模块，供 z-agent-center-core 和 z-agent-engine 使用）", module = "z-agent", description = "Agent 应用版本实体（共享模块，供 z-agent-center-core 和 z-agent-engine 使用）")
 @TableName("z_agent_app_version")
 public class AgentAppVersion {
 
     @TableId(type = IdType.AUTO)
+    @BizField(name = "id", type = BizField.FieldType.INTEGER)
     private Long id;
+    @BizField(name = "appCode", type = BizField.FieldType.STRING)
     private String appCode;
+    @BizField(name = "version", type = BizField.FieldType.STRING)
     private String version;
+    @BizField(name = "prompt", type = BizField.FieldType.STRING)
     private String prompt;
+    @BizField(name = "modelName", type = BizField.FieldType.STRING)
     private String modelName;
+    @BizField(name = "modelProvider", type = BizField.FieldType.STRING)
     private String modelProvider;
+    @BizField(name = "tools", type = BizField.FieldType.STRING)
     private String tools;
+    @BizField(name = "knowledgeIds", type = BizField.FieldType.STRING)
     private String knowledgeIds;
+    @BizField(name = "skillCodes", type = BizField.FieldType.STRING)
     private String skillCodes;
+    @BizField(name = "variables", type = BizField.FieldType.STRING)
     private String variables;
+    @BizField(name = "changeLog", type = BizField.FieldType.STRING)
     private String changeLog;
+    @BizField(name = "status", type = BizField.FieldType.STRING)
     private String status;
+    @BizField(name = "temperature", type = BizField.FieldType.DECIMAL)
     private Float temperature;
+    @BizField(name = "topP", type = BizField.FieldType.DECIMAL)
     private Float topP;
+    @BizField(name = "maxTokens", type = BizField.FieldType.INTEGER)
     private Integer maxTokens;
+    @BizField(name = "responseFormat", type = BizField.FieldType.STRING)
     private String responseFormat;
+    @BizField(name = "historyWindowSize", type = BizField.FieldType.INTEGER)
     private Integer historyWindowSize;
+    @BizField(name = "enableLongMemory", type = BizField.FieldType.BOOLEAN)
     private Boolean enableLongMemory;
+    @BizField(name = "memoryPrompt", type = BizField.FieldType.STRING)
     private String memoryPrompt;
+    @BizField(name = "gmtCreate", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtCreate;
+    @BizField(name = "gmtModified", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtModified;
 
     public Long getId() {
@@ -203,3 +227,4 @@ public class AgentAppVersion {
         this.gmtModified = gmtModified;
     }
 }
+

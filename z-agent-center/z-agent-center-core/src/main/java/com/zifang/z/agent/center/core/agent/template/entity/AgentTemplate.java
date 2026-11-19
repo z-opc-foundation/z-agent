@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizModel;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -11,41 +13,67 @@ import java.time.LocalDateTime;
 /**
  * FEATURE013 T3.3: Agent 模板市场实体
  */
+@BizModel(name = "FEATURE013 T3.3: Agent 模板市场实体", module = "z-agent", description = "FEATURE013 T3.3: Agent 模板市场实体")
 @TableName("z_agent_template")
 public class AgentTemplate {
 
     @TableId(type = IdType.AUTO)
+    @BizField(name = "id", type = BizField.FieldType.INTEGER)
     private Long id;
+    @BizField(name = "templateCode", type = BizField.FieldType.STRING)
     private String templateCode;
+    @BizField(name = "name", type = BizField.FieldType.STRING)
     private String name;
+    @BizField(name = "description", type = BizField.FieldType.STRING)
     private String description;
+    @BizField(name = "category", type = BizField.FieldType.STRING)
     private String category;
+    @BizField(name = "tags", type = BizField.FieldType.STRING)
     private String tags;
+    @BizField(name = "icon", type = BizField.FieldType.STRING)
     private String icon;
+    @BizField(name = "coverImage", type = BizField.FieldType.STRING)
     private String coverImage;
+    @BizField(name = "configSnapshot", type = BizField.FieldType.STRING)
     private String configSnapshot;
+    @BizField(name = "requiredPlugins", type = BizField.FieldType.STRING)
     private String requiredPlugins;
+    @BizField(name = "requiredSkills", type = BizField.FieldType.STRING)
     private String requiredSkills;
+    @BizField(name = "requiredKnowledge", type = BizField.FieldType.STRING)
     private String requiredKnowledge;
     /**
      * FEATURE013 T3.3: 2026-09-04 DB 迁移补齐 author/author_name 等列后,
      * 移除多余的 @TableField(exist=false). 仅保留 download_count / status
      * (DB 中不存在这两列).
      */
+    @BizField(name = "author", type = BizField.FieldType.STRING)
     private String author;
+    @BizField(name = "authorName", type = BizField.FieldType.STRING)
     private String authorName;
+    @BizField(name = "homepage", type = BizField.FieldType.STRING)
     private String homepage;
     @TableField(exist = false)
+    @BizField(name = "downloadCount", type = BizField.FieldType.INTEGER)
     private Integer downloadCount;
+    @BizField(name = "viewCount", type = BizField.FieldType.INTEGER)
     private Integer viewCount;
+    @BizField(name = "rating", type = BizField.FieldType.DECIMAL)
     private BigDecimal rating;
+    @BizField(name = "ratingCount", type = BizField.FieldType.INTEGER)
     private Integer ratingCount;
+    @BizField(name = "isOfficial", type = BizField.FieldType.INTEGER)
     private Integer isOfficial;
     @TableField(exist = false)
+    @BizField(name = "status", type = BizField.FieldType.STRING)
     private String status;
+    @BizField(name = "tenantCode", type = BizField.FieldType.STRING)
     private String tenantCode;
+    @BizField(name = "gmtCreate", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtCreate;
+    @BizField(name = "gmtModified", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtModified;
+    @BizField(name = "isDeleted", type = BizField.FieldType.INTEGER)
     private Integer isDeleted;
 
     public Long getId() {
@@ -248,3 +276,6 @@ public class AgentTemplate {
         this.isDeleted = isDeleted;
     }
 }
+
+
+

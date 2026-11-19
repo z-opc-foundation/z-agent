@@ -4,11 +4,14 @@ import com.zifang.util.core.meta.Result;
 import com.zifang.z.agent.center.core.agent.humaninput.entity.AgentFlowHumanInput;
 import com.zifang.z.agent.center.core.agent.humaninput.service.AgentFlowHumanInputService;
 import com.zifang.z.agent.center.web.api.response.dto.HumanInboxResp;
+import com.zifang.z.meta.api.annotation.BizApi;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.annotation.Resource;
 import java.util.List;
 
 /**
@@ -41,9 +44,12 @@ public class AgentFlowHumanInputController {
      */
     @Operation(summary = "收件箱: 列出某用户的待办 (assignee 留空=全部)")
     @GetMapping("/inbox")
+    @BizApi(summary = "收件箱：列出某用户的待办 human-input 请求", description = "收件箱：列出某用户的待办 human-input 请求.", tags = { "z-agent" })
     public Result<HumanInboxResp> inbox(
-            @RequestParam(required = false) String assignee,
-            @RequestParam(defaultValue = "50") Integer limit) {
+            @RequestParam(required = false)
+            @BizParam(name = "assignee", type = BizField.FieldType.STRING, description = "被指派人，传 _all / - / all 表示全部待办", position = BizParam.Position.QUERY) String assignee,
+            @RequestParam(defaultValue = "50")
+            @BizParam(name = "limit", type = BizField.FieldType.INTEGER, description = "返回条数上限，默认 50", position = BizParam.Position.QUERY) Integer limit) {
         if ("_all".equals(assignee) || "-".equals(assignee) || "all".equals(assignee)) {
             assignee = null;
         }
@@ -63,7 +69,8 @@ public class AgentFlowHumanInputController {
      */
     @Operation(summary = "列出某 Flow 执行的所有 human-input 请求")
     @GetMapping("/execution")
-    public Result<List<AgentFlowHumanInput>> listByExecution(@RequestParam String executionId) {
+    @BizApi(summary = "列出某 Flow 执行的所有 human-input 请求（含已决策）", description = "列出某 Flow 执行的所有 human-input 请求（含已决策）.", tags = { "z-agent" })
+    public Result<List<AgentFlowHumanInput>> listByExecution(@RequestParam @BizParam(name = "executionId", type = BizField.FieldType.STRING, description = "流程执行 ID", position = BizParam.Position.QUERY) String executionId) {
         return Result.success(humanInputService.listByExecution(executionId));
     }
 
@@ -75,7 +82,8 @@ public class AgentFlowHumanInputController {
      */
     @Operation(summary = "按 ID 查详情")
     @GetMapping("/byId")
-    public Result<AgentFlowHumanInput> getById(@RequestParam Long id) {
+    @BizApi(summary = "按 ID 查询 human-input 详情", description = "按 ID 查询 human-input 详情.", tags = { "z-agent" })
+    public Result<AgentFlowHumanInput> getById(@RequestParam @BizParam(name = "id", type = BizField.FieldType.INTEGER, description = "主键 ID", position = BizParam.Position.QUERY) Long id) {
         return Result.success(humanInputService.getById(id));
     }
 
@@ -87,7 +95,8 @@ public class AgentFlowHumanInputController {
      */
     @Operation(summary = "按 requestCode 查详情")
     @GetMapping("/by-code")
-    public Result<AgentFlowHumanInput> getByCode(@RequestParam String requestCode) {
+    @BizApi(summary = "按 requestCode 查询 human-input 详情", description = "按 requestCode 查询 human-input 详情.", tags = { "z-agent" })
+    public Result<AgentFlowHumanInput> getByCode(@RequestParam @BizParam(name = "requestCode", type = BizField.FieldType.STRING, description = "请求编码", position = BizParam.Position.QUERY) String requestCode) {
         return Result.success(humanInputService.getByCode(requestCode));
     }
 
@@ -100,7 +109,8 @@ public class AgentFlowHumanInputController {
      */
     @Operation(summary = "决策: 通过 / 拒绝 / 取消")
     @PostMapping("/decide")
-    public Result<AgentFlowHumanInput> decide(@RequestParam Long id, @RequestBody DecideReq req) {
+    @BizApi(summary = "对 human-input 请求进行决策", description = "对 human-input 请求进行决策.", tags = { "z-agent" })
+    public Result<AgentFlowHumanInput> decide(@RequestParam @BizParam(name = "id", type = BizField.FieldType.INTEGER, description = "human-input 主键 ID", position = BizParam.Position.QUERY) Long id, @RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "决策请求体（status / decidedBy / resultJson / resultText / comments）", position = BizParam.Position.BODY) DecideReq req) {
         return Result.success(humanInputService.decide(
                 id, req.status, req.decidedBy, req.resultJson, req.resultText, req.comments));
     }
@@ -114,7 +124,8 @@ public class AgentFlowHumanInputController {
      */
     @Operation(summary = "手动创建 PENDING 请求 (供测试 / 外部系统调用)")
     @PostMapping("/create")
-    public Result<AgentFlowHumanInput> create(@RequestBody AgentFlowHumanInput req) {
+    @BizApi(summary = "手动创建一条 PENDING 状态的 human-input 请求", description = "手动创建一条 PENDING 状态的 human-input 请求. 供测试或外部系统调用。", tags = { "z-agent" })
+    public Result<AgentFlowHumanInput> create(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "待创建的 human-input 实体", position = BizParam.Position.BODY) AgentFlowHumanInput req) {
         return Result.success(humanInputService.createPending(req));
     }
 
@@ -125,6 +136,7 @@ public class AgentFlowHumanInputController {
      */
     @Operation(summary = "健康检查")
     @GetMapping("/health")
+    @BizApi(summary = "健康检查端点", description = "健康检查端点.", tags = { "z-agent" })
     public Result<String> health() {
         return Result.success("Agent Human-in-the-Loop API is healthy");
     }
@@ -140,3 +152,6 @@ public class AgentFlowHumanInputController {
         public String comments;     // 审批意见 (可选)
     }
 }
+
+
+

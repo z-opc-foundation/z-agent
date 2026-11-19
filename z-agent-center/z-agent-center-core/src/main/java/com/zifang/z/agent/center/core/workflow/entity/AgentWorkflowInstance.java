@@ -3,23 +3,37 @@ package com.zifang.z.agent.center.core.workflow.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizModel;
 
 import java.time.LocalDateTime;
 
+@BizModel(name = "z_agent_workflow_instance", module = "z-agent", description = "z_agent_workflow_instance")
 @TableName("z_agent_workflow_instance")
 public class AgentWorkflowInstance {
 
     @TableId(type = IdType.AUTO)
+    @BizField(name = "主键", type = BizField.FieldType.INTEGER)
     private Long id;
+    @BizField(name = "流程实例ID", type = BizField.FieldType.STRING)
     private String processId;
+    @BizField(name = "所属应用编码", type = BizField.FieldType.STRING)
     private String appCode;
+    @BizField(name = "状态: RUNNING/COMPLETED/FAILED/PAUSED", type = BizField.FieldType.STRING)
     private String status;
+    @BizField(name = "工作流配置JSON", type = BizField.FieldType.STRING)
     private String workflowConfig;
+    @BizField(name = "执行快照JSON", type = BizField.FieldType.STRING)
     private String snapshotData;
+    @BizField(name = "当前执行节点", type = BizField.FieldType.STRING)
     private String currentNodeId;
+    @BizField(name = "错误信息", type = BizField.FieldType.STRING)
     private String errorMessage;
+    @BizField(name = "创建时间", type = BizField.FieldType.DATETIME)
     private LocalDateTime createdTime;
+    @BizField(name = "更新时间", type = BizField.FieldType.DATETIME)
     private LocalDateTime updatedTime;
+    @BizField(name = "逻辑删除", type = BizField.FieldType.INTEGER)
     private Integer isDeleted = 0;
 
     public Long getId() {
@@ -110,3 +124,6 @@ public class AgentWorkflowInstance {
         this.isDeleted = isDeleted;
     }
 }
+
+
+

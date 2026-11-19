@@ -4,11 +4,14 @@ import com.zifang.util.core.meta.Result;
 import com.zifang.z.agent.center.core.agent.share.dto.AgentShareDto;
 import com.zifang.z.agent.center.core.agent.share.dto.AgentShareReq;
 import com.zifang.z.agent.center.core.agent.share.service.AgentShareService;
+import com.zifang.z.meta.api.annotation.BizApi;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.annotation.Resource;
 import java.util.List;
 
 /**
@@ -42,7 +45,8 @@ public class AgentShareController {
      */
     @Operation(summary = "生成分享链接")
     @PostMapping("/create")
-    public Result<AgentShareDto> create(@RequestBody AgentShareReq req) {
+    @BizApi(summary = "生成分享链接", description = "生成分享链接.", tags = { "z-agent" })
+    public Result<AgentShareDto> create(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "分享请求参数", position = BizParam.Position.BODY) AgentShareReq req) {
         return Result.success(shareService.createResp(req));
     }
 
@@ -54,7 +58,8 @@ public class AgentShareController {
      */
     @Operation(summary = "验证分享码并返回实例信息")
     @GetMapping("/verify")
-    public Result<AgentShareDto> verify(@RequestParam String shareCode) {
+    @BizApi(summary = "验证分享码并返回实例信息", description = "验证分享码并返回实例信息.", tags = { "z-agent" })
+    public Result<AgentShareDto> verify(@RequestParam @BizParam(name = "shareCode", type = BizField.FieldType.STRING, description = "分享码", position = BizParam.Position.QUERY) String shareCode) {
         return Result.success(shareService.verifyResp(shareCode));
     }
 
@@ -66,7 +71,8 @@ public class AgentShareController {
      */
     @Operation(summary = "查询实例的所有分享记录")
     @GetMapping("/list")
-    public Result<List<AgentShareDto>> list(@RequestParam String instanceCode) {
+    @BizApi(summary = "查询指定实例的所有分享记录", description = "查询指定实例的所有分享记录.", tags = { "z-agent" })
+    public Result<List<AgentShareDto>> list(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode) {
         return Result.success(shareService.listRespByInstance(instanceCode));
     }
 
@@ -78,8 +84,12 @@ public class AgentShareController {
      */
     @Operation(summary = "禁用分享")
     @PostMapping("/disable")
-    public Result<Object> disable(@RequestParam String shareCode) {
+    @BizApi(summary = "禁用指定分享", description = "禁用指定分享.", tags = { "z-agent" })
+    public Result<Object> disable(@RequestParam @BizParam(name = "shareCode", type = BizField.FieldType.STRING, description = "分享码", position = BizParam.Position.QUERY) String shareCode) {
         shareService.disable(shareCode);
         return Result.success();
     }
 }
+
+
+

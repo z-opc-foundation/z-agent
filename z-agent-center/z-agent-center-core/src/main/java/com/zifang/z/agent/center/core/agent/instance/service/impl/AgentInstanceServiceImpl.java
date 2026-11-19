@@ -9,11 +9,12 @@ import com.zifang.z.agent.center.core.agent.instance.entity.AgentInstance;
 import com.zifang.z.agent.center.core.agent.instance.mapper.AgentInstanceMapper;
 import com.zifang.z.agent.center.core.agent.instance.service.AgentInstanceService;
 import com.zifang.z.agent.common.enums.AgentType;
+import com.zifang.z.meta.api.annotation.BizMethod;
+import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -29,12 +30,14 @@ public class AgentInstanceServiceImpl extends ServiceImpl<AgentInstanceMapper, A
     private com.zifang.z.agent.center.core.agent.executor.AgentContainerService agentContainerService;
 
     @Override
+    @BizMethod(name = "createResp", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentInstanceDto createResp(AgentInstanceReq req) {
         AgentInstance instance = createFromApp(req.getAppCode(), req.getUserId(), req.getUserName());
         return toDto(instance);
     }
 
     @Override
+    @BizMethod(name = "save", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public boolean save(AgentInstance instance) {
         // 接口层显式声明，本类继承自 ServiceImpl（MyBatis-Plus），
         // 委托到 baseMapper.insert 以满足接口契约且语义清晰
@@ -48,16 +51,19 @@ public class AgentInstanceServiceImpl extends ServiceImpl<AgentInstanceMapper, A
     }
 
     @Override
+    @BizMethod(name = "getRespByInstanceCode", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentInstanceDto getRespByInstanceCode(String instanceCode) {
         return toDto(getByInstanceCode(instanceCode));
     }
 
     @Override
+    @BizMethod(name = "listRespByOwner", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentInstanceDto> listRespByOwner(String ownerId) {
         return listByOwner(ownerId).stream().map(this::toDto).collect(Collectors.toList());
     }
 
     @Override
+    @BizMethod(name = "getByInstanceCode", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentInstance getByInstanceCode(String instanceCode) {
         LambdaQueryWrapper<AgentInstance> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentInstance::getInstanceCode, instanceCode);
@@ -66,6 +72,7 @@ public class AgentInstanceServiceImpl extends ServiceImpl<AgentInstanceMapper, A
     }
 
     @Override
+    @BizMethod(name = "createFromApp", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentInstance createFromApp(String appCode, String userId, String userName) {
         return createFromAppWithMode(appCode, userId, userName, "IN_PROCESS", null);
     }
@@ -73,6 +80,7 @@ public class AgentInstanceServiceImpl extends ServiceImpl<AgentInstanceMapper, A
     /**
      * 创建 Agent 实例 (指定运行模式)
      */
+    @BizMethod(name = "创建 Agent 实例 (指定运行模式)", module = "z-agent", description = "创建 Agent 实例 (指定运行模式)", operation = BizMethod.Operation.CREATE)
     public AgentInstance createFromAppWithMode(String appCode, String userId, String userName, String runMode, Integer containerPort) {
         AgentInstance instance = new AgentInstance();
         instance.setInstanceCode("inst_" + RandomUtil.uuidShort(12));
@@ -92,6 +100,7 @@ public class AgentInstanceServiceImpl extends ServiceImpl<AgentInstanceMapper, A
     }
 
     @Override
+    @BizMethod(name = "listByOwner", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentInstance> listByOwner(String ownerId) {
         LambdaQueryWrapper<AgentInstance> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentInstance::getOwnerId, ownerId);
@@ -101,6 +110,7 @@ public class AgentInstanceServiceImpl extends ServiceImpl<AgentInstanceMapper, A
     }
 
     @Override
+    @BizMethod(name = "listAllActive", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public java.util.List<AgentInstance> listAllActive() {
         LambdaQueryWrapper<AgentInstance> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AgentInstance::getStatus, "ACTIVE");
@@ -110,6 +120,7 @@ public class AgentInstanceServiceImpl extends ServiceImpl<AgentInstanceMapper, A
     }
 
     @Override
+    @BizMethod(name = "updateStatus", module = "z-agent", description = "", operation = BizMethod.Operation.UPDATE)
     public void updateStatus(String instanceCode, String status) {
         AgentInstance instance = getByInstanceCode(instanceCode);
         if (instance != null) {
@@ -120,6 +131,7 @@ public class AgentInstanceServiceImpl extends ServiceImpl<AgentInstanceMapper, A
     }
 
     @Override
+    @BizMethod(name = "getByWidgetApiKey", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentInstance getByWidgetApiKey(String widgetApiKey) {
         if (widgetApiKey == null || widgetApiKey.trim().isEmpty()) {
             return null;
@@ -132,6 +144,7 @@ public class AgentInstanceServiceImpl extends ServiceImpl<AgentInstanceMapper, A
     }
 
     @Override
+    @BizMethod(name = "recordVisit", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public void recordVisit(String instanceCode) {
         AgentInstance instance = getByInstanceCode(instanceCode);
         if (instance != null) {
@@ -165,6 +178,7 @@ public class AgentInstanceServiceImpl extends ServiceImpl<AgentInstanceMapper, A
     // ===== FEATURE014 多 Agent 实例创建 =====
 
     @Override
+    @BizMethod(name = "createExternalAgent", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentInstance createExternalAgent(String appCode, String userId, String userName,
                                              String agentTypeCode, String callbackUrl) {
         AgentType agentType = AgentType.parse(agentTypeCode);
@@ -215,3 +229,6 @@ public class AgentInstanceServiceImpl extends ServiceImpl<AgentInstanceMapper, A
         return instance;
     }
 }
+
+
+

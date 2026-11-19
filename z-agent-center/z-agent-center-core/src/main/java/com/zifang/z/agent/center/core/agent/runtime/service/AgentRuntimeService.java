@@ -1,8 +1,8 @@
 package com.zifang.z.agent.center.core.agent.runtime.service;
 
+import com.zifang.util.core.lang.RandomUtil;
 import com.zifang.util.json.JsonCursor;
 import com.zifang.util.json.JsonUtil;
-import com.zifang.util.core.lang.RandomUtil;
 import com.zifang.z.agent.center.core.agent.conversation.dto.ChatDto;
 import com.zifang.z.agent.center.core.agent.conversation.entity.AgentConversation;
 import com.zifang.z.agent.center.core.agent.conversation.service.AgentConversationService;
@@ -19,8 +19,10 @@ import com.zifang.z.agent.engine.agent.observe.AgentTracer;
 import com.zifang.z.llm.gateway.api.dto.UnifiedMessage;
 import com.zifang.z.llm.gateway.api.dto.UnifiedRequest;
 import com.zifang.z.llm.gateway.api.dto.UnifiedResponse;
-
 import com.zifang.z.llm.gateway.core.service.ChatGatewayService;
+import com.zifang.z.meta.api.annotation.BizMethod;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -29,8 +31,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -104,6 +104,7 @@ public class AgentRuntimeService {
     /**
      * 对话入口 - 返回DTO
      */
+    @BizMethod(name = "对话入口 - 返回DTO", module = "z-agent", description = "对话入口 - 返回DTO", operation = BizMethod.Operation.ACTION)
     public ChatDto chatResp(String instanceCode, String userMessage, String userId, String userName) {
         return toDto(chat(instanceCode, userMessage, userId, userName));
     }
@@ -111,6 +112,7 @@ public class AgentRuntimeService {
     /**
      * 对话入口 - 返回Entity
      */
+    @BizMethod(name = "对话入口 - 返回Entity", module = "z-agent", description = "对话入口 - 返回Entity", operation = BizMethod.Operation.ACTION)
     public AgentConversation chat(String instanceCode, String userMessage, String userId, String userName) {
         long startTime = System.currentTimeMillis();
 
@@ -276,6 +278,7 @@ public class AgentRuntimeService {
      * // 5. 记录助手回复
      * 流式对话入口
      */
+    @BizMethod(name = "// 5. 记录助手回复", module = "z-agent", description = "// 5. 记录助手回复 流式对话入口", operation = BizMethod.Operation.ACTION)
     public void chatStream(String instanceCode, String userMessage, String userId, String userName, HttpServletResponse response) throws IOException {
         long startTime = System.currentTimeMillis();
 
@@ -575,6 +578,7 @@ public class AgentRuntimeService {
     /**
      * 清除会话历史
      */
+    @BizMethod(name = "清除会话历史", module = "z-agent", description = "清除会话历史", operation = BizMethod.Operation.DELETE)
     public void clearHistory(String instanceCode) {
         conversationHistoryMap.entrySet().removeIf(entry -> entry.getKey().startsWith(instanceCode));
     }
@@ -733,3 +737,6 @@ public class AgentRuntimeService {
         }
     }
 }
+
+
+

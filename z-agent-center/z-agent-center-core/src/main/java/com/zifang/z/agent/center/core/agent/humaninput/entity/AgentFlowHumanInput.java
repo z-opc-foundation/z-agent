@@ -3,39 +3,66 @@ package com.zifang.z.agent.center.core.agent.humaninput.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizModel;
 
 import java.time.LocalDateTime;
 
 /**
  * FEATURE013 T3.5: Human-in-the-Loop 实体
  */
+@BizModel(name = "FEATURE013 T3.5: Human-in-the-Loop 实体", module = "z-agent", description = "FEATURE013 T3.5: Human-in-the-Loop 实体")
 @TableName("z_agent_flow_human_input")
 public class AgentFlowHumanInput {
 
     @TableId(type = IdType.AUTO)
+    @BizField(name = "id", type = BizField.FieldType.INTEGER)
     private Long id;
+    @BizField(name = "requestCode", type = BizField.FieldType.STRING)
     private String requestCode;
+    @BizField(name = "flowCode", type = BizField.FieldType.STRING)
     private String flowCode;
+    @BizField(name = "executionId", type = BizField.FieldType.STRING)
     private String executionId;
+    @BizField(name = "nodeId", type = BizField.FieldType.STRING)
     private String nodeId;
+    @BizField(name = "nodeName", type = BizField.FieldType.STRING)
     private String nodeName;
+    @BizField(name = "appCode", type = BizField.FieldType.STRING)
     private String appCode;
+    @BizField(name = "prompt", type = BizField.FieldType.STRING)
     private String prompt;
+    @BizField(name = "inputData", type = BizField.FieldType.STRING)
     private String inputData;
+    @BizField(name = "formSchema", type = BizField.FieldType.STRING)
     private String formSchema;
+    @BizField(name = "assignee", type = BizField.FieldType.STRING)
     private String assignee;
+    @BizField(name = "approverRole", type = BizField.FieldType.STRING)
     private String approverRole;
+    @BizField(name = "status", type = BizField.FieldType.STRING)
     private String status;
+    @BizField(name = "priority", type = BizField.FieldType.STRING)
     private String priority;
+    @BizField(name = "dueAt", type = BizField.FieldType.DATETIME)
     private LocalDateTime dueAt;
+    @BizField(name = "decidedBy", type = BizField.FieldType.STRING)
     private String decidedBy;
+    @BizField(name = "decidedAt", type = BizField.FieldType.DATETIME)
     private LocalDateTime decidedAt;
+    @BizField(name = "resultJson", type = BizField.FieldType.STRING)
     private String resultJson;
+    @BizField(name = "resultText", type = BizField.FieldType.STRING)
     private String resultText;
+    @BizField(name = "comments", type = BizField.FieldType.STRING)
     private String comments;
+    @BizField(name = "requesterId", type = BizField.FieldType.STRING)
     private String requesterId;
+    @BizField(name = "tenantCode", type = BizField.FieldType.STRING)
     private String tenantCode;
+    @BizField(name = "gmtCreate", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtCreate;
+    @BizField(name = "gmtModified", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtModified;
 
     public Long getId() {
@@ -230,3 +257,6 @@ public class AgentFlowHumanInput {
         this.gmtModified = gmtModified;
     }
 }
+
+
+

@@ -5,11 +5,12 @@ import com.zifang.z.agent.center.core.agent.instance.entity.AgentInstance;
 import com.zifang.z.agent.center.core.agent.instance.mapper.AgentInstanceMapper;
 import com.zifang.z.agent.center.core.agent.instance.service.AgentInstanceService;
 import com.zifang.z.agent.center.core.agent.runtime.service.AgentRuntimeService;
+import com.zifang.z.meta.api.annotation.BizMethod;
+import jakarta.annotation.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,6 +51,7 @@ public class WidgetCallService {
     /**
      * 验证 API Key 并返回 Agent 实例. 失败抛 IllegalArgumentException.
      */
+    @BizMethod(name = "验证 API Key 并返回 Agent 实例. 失败抛 IllegalArgumentException", module = "z-agent", description = "验证 API Key 并返回 Agent 实例. 失败抛 IllegalArgumentException.", operation = BizMethod.Operation.ACTION)
     public AgentInstance authenticate(String apiKey, String origin) {
         if (apiKey == null || apiKey.trim().isEmpty()) {
             throw new IllegalArgumentException("API Key 缺失");
@@ -87,6 +89,7 @@ public class WidgetCallService {
     /**
      * 检查限流. true=允许, false=超限.
      */
+    @BizMethod(name = "检查限流. true=允许, false=超限", module = "z-agent", description = "检查限流. true=允许, false=超限.", operation = BizMethod.Operation.ACTION)
     public boolean checkRateLimit(AgentInstance instance) {
         Integer limit = instance.getWidgetRateLimit();
         if (limit == null || limit == 0) return true; // 0=不限
@@ -105,6 +108,7 @@ public class WidgetCallService {
     /**
      * Widget 调用入口. 返回 Assistant 文本.
      */
+    @BizMethod(name = "Widget 调用入口. 返回 Assistant 文本", module = "z-agent", description = "Widget 调用入口. 返回 Assistant 文本.", operation = BizMethod.Operation.ACTION)
     public String invoke(AgentInstance instance, String message, String userId, String userName) {
         String uid = (userId == null || userId.isEmpty()) ? "widget_" + instance.getInstanceCode() : userId;
         String uname = (userName == null || userName.isEmpty()) ? "Widget User" : userName;
@@ -142,3 +146,6 @@ public class WidgetCallService {
         volatile long minute;
     }
 }
+
+
+

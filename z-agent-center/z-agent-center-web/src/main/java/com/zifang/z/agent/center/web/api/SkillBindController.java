@@ -8,11 +8,14 @@ import com.zifang.z.agent.center.core.skill.SkillDistributor;
 import com.zifang.z.agent.center.core.skill.entity.SkillBinding;
 import com.zifang.z.agent.center.core.skill.entity.SkillSyncLog;
 import com.zifang.z.agent.center.web.api.response.dto.*;
+import com.zifang.z.meta.api.annotation.BizApi;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -49,7 +52,8 @@ public class SkillBindController {
      */
     @Operation(summary = "FEATURE014 给 Agent 实例绑定 Skill 并立即分发")
     @PostMapping("/bind")
-    public Result<SkillBindResp> bind(@RequestBody BindReq req) {
+    @BizApi(summary = "FEATURE014 给 Agent 实例绑定 Skill 并立即分发", description = "FEATURE014 给 Agent 实例绑定 Skill 并立即分发.", tags = { "z-agent" })
+    public Result<SkillBindResp> bind(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "绑定请求体（instanceCode / skillCodes / bindingType）", position = BizParam.Position.BODY) BindReq req) {
         int created = distributor.bind(req.instanceCode, req.skillCodes,
                 req.bindingType != null ? req.bindingType : "PUSH");
         SkillBindResp resp = new SkillBindResp();
@@ -68,7 +72,8 @@ public class SkillBindController {
      */
     @Operation(summary = "FEATURE014 给 Agent 实例解绑 Skill")
     @PostMapping("/unbind")
-    public Result<SkillUnbindResp> unbind(@RequestBody BindReq req) {
+    @BizApi(summary = "FEATURE014 给 Agent 实例解绑 Skill", description = "FEATURE014 给 Agent 实例解绑 Skill.", tags = { "z-agent" })
+    public Result<SkillUnbindResp> unbind(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "解绑请求体（instanceCode / skillCodes）", position = BizParam.Position.BODY) BindReq req) {
         boolean removed = distributor.unbind(req.instanceCode, req.skillCodes);
         SkillUnbindResp resp = new SkillUnbindResp();
         resp.setRemoved(removed);
@@ -85,7 +90,8 @@ public class SkillBindController {
      */
     @Operation(summary = "查询一个 Agent 实例的所有绑定")
     @GetMapping("/bindings")
-    public Result<List<SkillBinding>> bindings(@RequestParam String instanceCode) {
+    @BizApi(summary = "查询一个 Agent 实例的所有绑定", description = "查询一个 Agent 实例的所有绑定.", tags = { "z-agent" })
+    public Result<List<SkillBinding>> bindings(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode) {
         return Result.success(distributor.listBindings(instanceCode));
     }
 
@@ -100,8 +106,10 @@ public class SkillBindController {
      */
     @Operation(summary = "查询一个 Agent 实例的最近同步日志")
     @GetMapping("/sync-logs")
-    public Result<List<SkillSyncLog>> syncLogs(@RequestParam String instanceCode,
-                                               @RequestParam(defaultValue = "20") int limit) {
+    @BizApi(summary = "查询一个 Agent 实例的最近同步日志", description = "查询一个 Agent 实例的最近同步日志.", tags = { "z-agent" })
+    public Result<List<SkillSyncLog>> syncLogs(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode,
+                                               @RequestParam(defaultValue = "20")
+                                               @BizParam(name = "limit", type = BizField.FieldType.INTEGER, description = "返回条数上限，默认 20", position = BizParam.Position.QUERY) int limit) {
         return Result.success(distributor.recentLogs(instanceCode, limit));
     }
 
@@ -114,8 +122,9 @@ public class SkillBindController {
      */
     @Operation(summary = "FEATURE014 外部 Agent 拉取自己应该加载的 Skill 列表")
     @GetMapping("/pull")
+    @BizApi(summary = "FEATURE014 外部 Agent 拉取自己应该加载的 Skill 列表", description = "FEATURE014 外部 Agent 拉取自己应该加载的 Skill 列表.", tags = { "z-agent" })
     public Result<SkillPullResp> pull(jakarta.servlet.http.HttpServletRequest httpRequest,
-                                      @RequestParam String instanceCode) {
+                                      @RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode) {
         AgentInstance instance = resolveInstance(httpRequest, instanceCode);
         if (instance == null) {
             return Result.<SkillPullResp>fail("Instance not found: " + instanceCode).code(BaseStatusCode.FAIL.getCode());
@@ -138,8 +147,9 @@ public class SkillBindController {
      */
     @Operation(summary = "FEATURE014 Agent 心跳上报 — 更新 lastHeartbeat")
     @PostMapping("/heartbeat")
+    @BizApi(summary = "FEATURE014 Agent 心跳上报 — 更新 lastHeartbeat", description = "FEATURE014 Agent 心跳上报 — 更新 lastHeartbeat.", tags = { "z-agent" })
     public Result<HeartbeatResp> heartbeat(jakarta.servlet.http.HttpServletRequest httpRequest,
-                                           @RequestBody HeartbeatReq req) {
+                                           @RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "心跳请求体（instanceCode / status / agentVersion / capabilities）", position = BizParam.Position.BODY) HeartbeatReq req) {
         return doHeartbeat(httpRequest, req.instanceCode, req.status, req.agentVersion, req.capabilities);
     }
 
@@ -148,11 +158,15 @@ public class SkillBindController {
      */
     @Operation(summary = "FEATURE014 Agent 心跳（GET 别名）")
     @GetMapping("/heartbeat")
+    @BizApi(summary = "FEATURE014 §4.1 — 同路径 GET 别名，与 POST 行为一致", description = "FEATURE014 §4.1 — 同路径 GET 别名，与 POST 行为一致。", tags = { "z-agent" })
     public Result<HeartbeatResp> heartbeatGet(jakarta.servlet.http.HttpServletRequest httpRequest,
-                                              @RequestParam String instanceCode,
-                                              @RequestParam(required = false, defaultValue = "ACTIVE") String status,
-                                              @RequestParam(required = false) String agentVersion,
-                                              @RequestParam(required = false) String capabilities) {
+                                              @RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String instanceCode,
+                                              @RequestParam(required = false, defaultValue = "ACTIVE")
+                                              @BizParam(name = "status", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String status,
+                                              @RequestParam(required = false)
+                                              @BizParam(name = "agentVersion", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String agentVersion,
+                                              @RequestParam(required = false)
+                                              @BizParam(name = "capabilities", type = BizField.FieldType.STRING, description = "", position = BizParam.Position.QUERY) String capabilities) {
         return doHeartbeat(httpRequest, instanceCode, status, agentVersion, capabilities);
     }
 
@@ -216,7 +230,8 @@ public class SkillBindController {
      */
     @Operation(summary = "FEATURE014 外部 Agent 注册到中心（首次启动时）")
     @PostMapping("/register")
-    public Result<SkillRegisterResp> register(@RequestBody RegisterReq req) {
+    @BizApi(summary = "FEATURE014 外部 Agent 注册到中心（首次启动时）", description = "FEATURE014 外部 Agent 注册到中心（首次启动时）.", tags = { "z-agent" })
+    public Result<SkillRegisterResp> register(@RequestBody @BizParam(name = "req", type = BizField.FieldType.STRING, description = "注册请求体", position = BizParam.Position.BODY) RegisterReq req) {
         AgentInstance instance = instanceService.createExternalAgent(
                 req.appCode, req.userId, req.userName,
                 req.agentType, req.callbackUrl);
@@ -286,3 +301,6 @@ public class SkillBindController {
         public String capabilities;
     }
 }
+
+
+

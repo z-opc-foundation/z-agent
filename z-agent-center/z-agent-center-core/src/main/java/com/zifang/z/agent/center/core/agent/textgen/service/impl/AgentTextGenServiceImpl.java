@@ -2,9 +2,9 @@ package com.zifang.z.agent.center.core.agent.textgen.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.zifang.util.core.lang.RandomUtil;
 import com.zifang.util.json.JsonUtil;
 import com.zifang.util.json.define.TypeReference;
-import com.zifang.util.core.lang.RandomUtil;
 import com.zifang.z.agent.center.core.agent.conversation.entity.AgentConversation;
 import com.zifang.z.agent.center.core.agent.instance.entity.AgentInstance;
 import com.zifang.z.agent.center.core.agent.instance.service.AgentInstanceService;
@@ -14,11 +14,12 @@ import com.zifang.z.agent.center.core.agent.textgen.entity.AgentTextGenTask;
 import com.zifang.z.agent.center.core.agent.textgen.mapper.AgentTextGenMapper;
 import com.zifang.z.agent.center.core.agent.textgen.mapper.AgentTextGenResultMapper;
 import com.zifang.z.agent.center.core.agent.textgen.service.AgentTextGenService;
+import com.zifang.z.meta.api.annotation.BizMethod;
+import jakarta.annotation.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,11 +67,13 @@ public class AgentTextGenServiceImpl implements AgentTextGenService {
     }
 
     @Override
+    @BizMethod(name = "getById", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentTextGenTask getById(Long id) {
         return id == null ? null : agentTextGenMapper.selectById(id);
     }
 
     @Override
+    @BizMethod(name = "getByCode", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentTextGenTask getByCode(String taskCode) {
         if (taskCode == null || taskCode.isEmpty()) {
             return null;
@@ -82,6 +85,7 @@ public class AgentTextGenServiceImpl implements AgentTextGenService {
     }
 
     @Override
+    @BizMethod(name = "pageList", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentTextGenTask> pageList(String keyword, String appCode, String status, int page, int size) {
         if (page < 1) {
             page = 1;
@@ -109,6 +113,7 @@ public class AgentTextGenServiceImpl implements AgentTextGenService {
     }
 
     @Override
+    @BizMethod(name = "count", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public long count(String keyword, String appCode, String status) {
         LambdaQueryWrapper<AgentTextGenTask> q = new LambdaQueryWrapper<>();
         q.eq(AgentTextGenTask::getIsDeleted, 0);
@@ -129,6 +134,7 @@ public class AgentTextGenServiceImpl implements AgentTextGenService {
     }
 
     @Override
+    @BizMethod(name = "create", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentTextGenTask create(AgentTextGenTask task) {
         if (task == null || task.getTaskCode() == null) {
             throw new IllegalArgumentException("taskCode 必填");
@@ -154,6 +160,7 @@ public class AgentTextGenServiceImpl implements AgentTextGenService {
     }
 
     @Override
+    @BizMethod(name = "delete", module = "z-agent", description = "", operation = BizMethod.Operation.DELETE)
     public boolean delete(Long id) {
         AgentTextGenTask t = agentTextGenMapper.selectById(id);
         if (t == null) {
@@ -166,11 +173,13 @@ public class AgentTextGenServiceImpl implements AgentTextGenService {
     }
 
     @Override
+    @BizMethod(name = "listResults", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentTextGenResult> listResults(Long taskId) {
         return agentTextGenMapper.selectResultsByTaskId(taskId);
     }
 
     @Override
+    @BizMethod(name = "run", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public AgentTextGenTask run(Long taskId) {
         AgentTextGenTask task = agentTextGenMapper.selectById(taskId);
         if (task == null) {
@@ -316,6 +325,7 @@ public class AgentTextGenServiceImpl implements AgentTextGenService {
     }
 
     @Override
+    @BizMethod(name = "createAndRun", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public Map<String, Object> createAndRun(String taskName, String appCode, String promptTemplate,
                                             List<Map<String, Object>> rows, String ownerId, String ownerName) {
         String taskCode = "tg_" + RandomUtil.uuidShort(8);
@@ -353,3 +363,6 @@ public class AgentTextGenServiceImpl implements AgentTextGenService {
         return resp;
     }
 }
+
+
+

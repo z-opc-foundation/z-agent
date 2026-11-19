@@ -75,6 +75,7 @@
     </modules>
 
     <properties>
+        <z-meta.version>1.0.2</z-meta.version>
         <!-- 1.0.1 = KernelOllamaModel 换上 kernel 的 OllamaProvider + AgentEngine 去掉死的
              OllamaModel 构造参数。1.0.0 已在 Central（不可覆盖），故抬号。
              1.0.2（2026-10-22）= 上游模型「把思考混进 content」的兼容层：
@@ -250,6 +251,11 @@
                 <groupId>net.minidev</groupId>
                 <artifactId>accessors-smart</artifactId>
                 <version>2.4.11</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.yuku123</groupId>
+                <artifactId>z-meta-api</artifactId>
+                <version>${z-meta.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zifang.z.agent.center.core.bot.entity.BotMemoryEntry;
 import com.zifang.z.agent.center.core.bot.mapper.BotMemoryMapper;
+import com.zifang.z.meta.api.annotation.BizMethod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ public class BotMemoryService extends ServiceImpl<BotMemoryMapper, BotMemoryEntr
     /**
      * 追加一条记忆（来自 chat / feedback / consolidation / manual）。
      */
+    @BizMethod(name = "追加一条记忆（来自 chat / feedback / consolidation / manual）", module = "z-agent", description = "追加一条记忆（来自 chat / feedback / consolidation / manual）。", operation = BizMethod.Operation.ACTION)
     public BotMemoryEntry append(String instanceCode, String userId, String role,
                                  String content, BigDecimal importance, String source, String tags) {
         BotMemoryEntry e = new BotMemoryEntry();
@@ -65,6 +67,7 @@ public class BotMemoryService extends ServiceImpl<BotMemoryMapper, BotMemoryEntr
     /**
      * 拉取一个实例最近 N 条记忆（按时间倒序），过滤掉已过期的。
      */
+    @BizMethod(name = "拉取一个实例最近 N 条记忆（按时间倒序），过滤掉已过期的", module = "z-agent", description = "拉取一个实例最近 N 条记忆（按时间倒序），过滤掉已过期的。", operation = BizMethod.Operation.ACTION)
     public List<BotMemoryEntry> recent(String instanceCode, String userId, int limit) {
         LambdaQueryWrapper<BotMemoryEntry> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(BotMemoryEntry::getInstanceCode, instanceCode);
@@ -87,6 +90,7 @@ public class BotMemoryService extends ServiceImpl<BotMemoryMapper, BotMemoryEntr
      *
      * @return 新写入的 summary entry
      */
+    @BizMethod(name = "把多条历史消息汇总成一条 summary（write-then-delete 模式）", module = "z-agent", description = "把多条历史消息汇总成一条 summary（write-then-delete 模式）。 操作：写入一条 role=summary 的高重要度记忆，然后批量软删除 原始 N 条 chat 记忆（保留 audit 痕迹）。", operation = BizMethod.Operation.ACTION)
     public BotMemoryEntry consolidate(String instanceCode, String userId, String summary,
                                       List<Long> sourceEntryIds, String tags) {
         if (summary == null || summary.trim().isEmpty()) {
@@ -111,6 +115,7 @@ public class BotMemoryService extends ServiceImpl<BotMemoryMapper, BotMemoryEntr
      *
      * <p>生产环境应当用向量检索；这里是 LIKE 的 fallback。</p>
      */
+    @BizMethod(name = "关键字检索一个实例的历史记忆", module = "z-agent", description = "关键字检索一个实例的历史记忆。 生产环境应当用向量检索；这里是 LIKE 的 fallback。", operation = BizMethod.Operation.QUERY)
     public List<BotMemoryEntry> search(String instanceCode, String userId, String query, int limit) {
         LambdaQueryWrapper<BotMemoryEntry> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(BotMemoryEntry::getInstanceCode, instanceCode);
@@ -134,6 +139,7 @@ public class BotMemoryService extends ServiceImpl<BotMemoryMapper, BotMemoryEntr
      *
      * @return Markdown 字符串；如果没有任何记忆返回 null
      */
+    @BizMethod(name = "为下一次 chat 构造系统提示中的\"长期记忆段落\"", module = "z-agent", description = "为下一次 chat 构造系统提示中的\"长期记忆段落\"。 把最近的若干条 summary / 高 importance 记忆压成一个 Markdown 段落， 由 Agent 拼到 system prompt 前。", operation = BizMethod.Operation.ACTION)
     public String recallForContext(String instanceCode, String userId) {
         List<BotMemoryEntry> recent = recent(instanceCode, userId, 20);
         if (recent.isEmpty()) {
@@ -167,6 +173,7 @@ public class BotMemoryService extends ServiceImpl<BotMemoryMapper, BotMemoryEntr
     /**
      * 清理过期记忆（每天定时任务调用）。
      */
+    @BizMethod(name = "清理过期记忆（每天定时任务调用）", module = "z-agent", description = "清理过期记忆（每天定时任务调用）。", operation = BizMethod.Operation.DELETE)
     public int purgeExpired() {
         LambdaQueryWrapper<BotMemoryEntry> wrapper = new LambdaQueryWrapper<>();
         wrapper.lt(BotMemoryEntry::getGmtExpire, LocalDateTime.now());
@@ -179,3 +186,6 @@ public class BotMemoryService extends ServiceImpl<BotMemoryMapper, BotMemoryEntr
         return ok ? 1 : 0;
     }
 }
+
+
+

@@ -2,19 +2,20 @@ package com.zifang.z.agent.center.core.agent.template.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.zifang.util.json.JsonUtil;
 import com.zifang.util.core.lang.RandomUtil;
+import com.zifang.util.json.JsonUtil;
 import com.zifang.z.agent.center.core.agent.template.entity.AgentTemplate;
 import com.zifang.z.agent.center.core.agent.template.mapper.AgentTemplateMapper;
 import com.zifang.z.agent.center.core.agent.template.service.AgentTemplateService;
 import com.zifang.z.agent.center.core.app.dto.AgentAppDto;
 import com.zifang.z.agent.center.core.app.dto.AgentAppReq;
 import com.zifang.z.agent.center.core.app.service.AgentAppService;
+import com.zifang.z.meta.api.annotation.BizMethod;
+import jakarta.annotation.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +63,7 @@ public class AgentTemplateServiceImpl implements AgentTemplateService {
     }
 
     @Override
+    @BizMethod(name = "getById", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentTemplate getById(Long id) {
         if (id == null) {
             return null;
@@ -71,6 +73,7 @@ public class AgentTemplateServiceImpl implements AgentTemplateService {
     }
 
     @Override
+    @BizMethod(name = "getByCode", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentTemplate getByCode(String templateCode) {
         if (templateCode == null || templateCode.isEmpty()) {
             return null;
@@ -82,6 +85,7 @@ public class AgentTemplateServiceImpl implements AgentTemplateService {
     }
 
     @Override
+    @BizMethod(name = "pageList", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentTemplate> pageList(String keyword, String category, String status,
                                         Integer isOfficial, int page, int size) {
         if (page < 1) {
@@ -115,6 +119,7 @@ public class AgentTemplateServiceImpl implements AgentTemplateService {
     }
 
     @Override
+    @BizMethod(name = "count", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public long count(String keyword, String category, String status, Integer isOfficial) {
         LambdaQueryWrapper<AgentTemplate> q = new LambdaQueryWrapper<>();
         q.eq(AgentTemplate::getIsDeleted, 0);
@@ -135,6 +140,7 @@ public class AgentTemplateServiceImpl implements AgentTemplateService {
     }
 
     @Override
+    @BizMethod(name = "listHot", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentTemplate> listHot(int limit) {
         if (limit <= 0 || limit > 50) {
             limit = 12;
@@ -144,6 +150,7 @@ public class AgentTemplateServiceImpl implements AgentTemplateService {
     }
 
     @Override
+    @BizMethod(name = "create", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentTemplate create(AgentTemplate template) {
         if (template == null || template.getTemplateCode() == null) {
             throw new IllegalArgumentException("templateCode 必填");
@@ -175,6 +182,7 @@ public class AgentTemplateServiceImpl implements AgentTemplateService {
     }
 
     @Override
+    @BizMethod(name = "update", module = "z-agent", description = "", operation = BizMethod.Operation.UPDATE)
     public AgentTemplate update(AgentTemplate template) {
         if (template == null || template.getId() == null) {
             throw new IllegalArgumentException("id 必填");
@@ -194,6 +202,7 @@ public class AgentTemplateServiceImpl implements AgentTemplateService {
     }
 
     @Override
+    @BizMethod(name = "delete", module = "z-agent", description = "", operation = BizMethod.Operation.DELETE)
     public boolean delete(Long id) {
         AgentTemplate t = templateMapper.selectById(id);
         if (t == null) {
@@ -206,6 +215,7 @@ public class AgentTemplateServiceImpl implements AgentTemplateService {
     }
 
     @Override
+    @BizMethod(name = "setStatus", module = "z-agent", description = "", operation = BizMethod.Operation.UPDATE)
     public AgentTemplate setStatus(Long id, String status) {
         if (!"DRAFT".equals(status) && !"PUBLISHED".equals(status) && !"DEPRECATED".equals(status)) {
             throw new IllegalArgumentException("status 必须是 DRAFT/PUBLISHED/DEPRECATED");
@@ -222,6 +232,7 @@ public class AgentTemplateServiceImpl implements AgentTemplateService {
     }
 
     @Override
+    @BizMethod(name = "fork", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public Map<String, Object> fork(Long templateId, String newAppName, String userId, String userName) {
         AgentTemplate tpl = templateMapper.selectById(templateId);
         if (tpl == null) {
@@ -300,3 +311,6 @@ public class AgentTemplateServiceImpl implements AgentTemplateService {
         return (Map<String, Object>) JsonUtil.toPlainValue(JsonUtil.parse(json));
     }
 }
+
+
+

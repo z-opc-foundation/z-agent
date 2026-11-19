@@ -3,39 +3,66 @@ package com.zifang.z.agent.center.core.agent.textgen.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizModel;
 
 import java.time.LocalDateTime;
 
 /**
  * FEATURE013 T3.4: Agent 文本生成器 任务实体
  */
+@BizModel(name = "FEATURE013 T3.4: Agent 文本生成器 任务实体", module = "z-agent", description = "FEATURE013 T3.4: Agent 文本生成器 任务实体")
 @TableName("z_agent_text_gen_task")
 public class AgentTextGenTask {
 
     @TableId(type = IdType.AUTO)
+    @BizField(name = "id", type = BizField.FieldType.INTEGER)
     private Long id;
+    @BizField(name = "taskCode", type = BizField.FieldType.STRING)
     private String taskCode;
+    @BizField(name = "taskName", type = BizField.FieldType.STRING)
     private String taskName;
+    @BizField(name = "appCode", type = BizField.FieldType.STRING)
     private String appCode;
+    @BizField(name = "instanceCode", type = BizField.FieldType.STRING)
     private String instanceCode;
+    @BizField(name = "promptTemplate", type = BizField.FieldType.STRING)
     private String promptTemplate;
+    @BizField(name = "inputData", type = BizField.FieldType.STRING)
     private String inputData;
+    @BizField(name = "variables", type = BizField.FieldType.STRING)
     private String variables;
+    @BizField(name = "outputFormat", type = BizField.FieldType.STRING)
     private String outputFormat;
+    @BizField(name = "status", type = BizField.FieldType.STRING)
     private String status;
+    @BizField(name = "totalCount", type = BizField.FieldType.INTEGER)
     private Integer totalCount;
+    @BizField(name = "successCount", type = BizField.FieldType.INTEGER)
     private Integer successCount;
+    @BizField(name = "failedCount", type = BizField.FieldType.INTEGER)
     private Integer failedCount;
+    @BizField(name = "startedAt", type = BizField.FieldType.DATETIME)
     private LocalDateTime startedAt;
+    @BizField(name = "finishedAt", type = BizField.FieldType.DATETIME)
     private LocalDateTime finishedAt;
+    @BizField(name = "elapsedMs", type = BizField.FieldType.INTEGER)
     private Long elapsedMs;
+    @BizField(name = "outputCsv", type = BizField.FieldType.STRING)
     private String outputCsv;
+    @BizField(name = "errorMessage", type = BizField.FieldType.STRING)
     private String errorMessage;
+    @BizField(name = "ownerId", type = BizField.FieldType.STRING)
     private String ownerId;
+    @BizField(name = "ownerName", type = BizField.FieldType.STRING)
     private String ownerName;
+    @BizField(name = "tenantCode", type = BizField.FieldType.STRING)
     private String tenantCode;
+    @BizField(name = "gmtCreate", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtCreate;
+    @BizField(name = "gmtModified", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtModified;
+    @BizField(name = "isDeleted", type = BizField.FieldType.INTEGER)
     private Integer isDeleted;
 
     public Long getId() {
@@ -230,3 +257,6 @@ public class AgentTextGenTask {
         this.isDeleted = isDeleted;
     }
 }
+
+
+

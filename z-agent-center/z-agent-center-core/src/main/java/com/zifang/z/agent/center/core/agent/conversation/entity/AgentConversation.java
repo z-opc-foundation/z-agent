@@ -3,26 +3,43 @@ package com.zifang.z.agent.center.core.agent.conversation.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizModel;
 
 import java.time.LocalDateTime;
 
+@BizModel(name = "z_agent_conversation", module = "z-agent", description = "z_agent_conversation")
 @TableName("z_agent_conversation")
 public class AgentConversation {
 
     @TableId(type = IdType.AUTO)
+    @BizField(name = "主键", type = BizField.FieldType.INTEGER)
     private Long id;
+    @BizField(name = "会话编码", type = BizField.FieldType.STRING)
     private String conversationCode;
+    @BizField(name = "实例编码", type = BizField.FieldType.STRING)
     private String instanceCode;
+    @BizField(name = "用户ID", type = BizField.FieldType.STRING)
     private String userId;
+    @BizField(name = "用户名称", type = BizField.FieldType.STRING)
     private String userName;
+    @BizField(name = "userMessage", type = BizField.FieldType.STRING)
     private String userMessage;
+    @BizField(name = "assistantMessage", type = BizField.FieldType.STRING)
     private String assistantMessage;
+    @BizField(name = "modelName", type = BizField.FieldType.STRING)
     private String modelName;
+    @BizField(name = "tokenCount", type = BizField.FieldType.INTEGER)
     private Integer tokenCount;
+    @BizField(name = "toolCalls", type = BizField.FieldType.STRING)
     private String toolCalls;
+    @BizField(name = "latencyMs", type = BizField.FieldType.INTEGER)
     private Integer latencyMs;
+    @BizField(name = "状态", type = BizField.FieldType.STRING)
     private String status;
+    @BizField(name = "errorMsg", type = BizField.FieldType.STRING)
     private String errorMsg;
+    @BizField(name = "gmtCreate", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtCreate;
 
     public Long getId() {
@@ -137,3 +154,6 @@ public class AgentConversation {
         this.gmtCreate = gmtCreate;
     }
 }
+
+
+

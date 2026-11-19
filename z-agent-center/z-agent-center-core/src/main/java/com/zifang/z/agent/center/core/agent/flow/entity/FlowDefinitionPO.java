@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizModel;
 
 import java.time.LocalDateTime;
 
@@ -11,97 +13,118 @@ import java.time.LocalDateTime;
  * 工作流定义实体 (FEATURE013 A2)
  * 对应表: z_agent_flow_definition
  */
+@BizModel(name = "工作流定义实体 (FEATURE013 A2)", module = "z-agent", description = "工作流定义实体 (FEATURE013 A2) 对应表: z_agent_flow_definition")
 @TableName("z_agent_flow_definition")
 public class FlowDefinitionPO {
 
     @TableId(type = IdType.AUTO)
+    @BizField(name = "id", type = BizField.FieldType.INTEGER)
     private Long id;
 
     /**
      * 流程ID (业务唯一标识)
      */
+    @BizField(name = "流程ID (业务唯一标识)", type = BizField.FieldType.STRING)
     private String flowId;
 
     /**
      * 流程名称
      */
+    @BizField(name = "流程名称", type = BizField.FieldType.STRING)
     private String name;
 
     /**
      * 流程描述
      */
+    @BizField(name = "流程描述", type = BizField.FieldType.STRING)
     private String description;
 
     /**
      * DAG 节点数组 JSON (LogicFlow 画布的 nodes 数组)
      */
+    @BizField(name = "DAG 节点数组 JSON (LogicFlow 画布的 nodes 数组)", type = BizField.FieldType.STRING)
     private String nodes;
 
     /**
      * DAG 有向边 JSON (LogicFlow 画布的 edges 数组)
      */
+    @BizField(name = "DAG 有向边 JSON (LogicFlow 画布的 edges 数组)", type = BizField.FieldType.STRING)
     private String edges;
 
     /**
      * 流程静态变量 JSON
      */
+    @BizField(name = "流程静态变量 JSON", type = BizField.FieldType.STRING)
     private String variables;
 
     /**
      * 流程总超时 (毫秒, 默认30分钟)
      */
+    @BizField(name = "流程总超时 (毫秒, 默认30分钟)", type = BizField.FieldType.INTEGER)
     private Long timeoutMs = 1800000L;
 
     /**
      * 重试策略 JSON
      */
+    @BizField(name = "重试策略 JSON", type = BizField.FieldType.STRING)
     private String retryPolicy;
 
     /**
      * 关联 Agent App (NULL 表示独立流程)
      */
+    @BizField(name = "关联 Agent App (NULL 表示独立流程)", type = BizField.FieldType.STRING)
     private String appCode;
 
     /**
      * AGENT / WF / STANDALONE
      */
+    @BizField(name = "AGENT / WF / STANDALONE", type = BizField.FieldType.STRING)
     private String flowType = "AGENT";
 
     /**
      * 版本号 (FEATURE013 A9)
      */
+    @BizField(name = "版本号 (FEATURE013 A9)", type = BizField.FieldType.INTEGER)
     private Integer version = 1;
 
     /**
      * 上一版本 flow_definition.id (FEATURE013 A9)
      */
+    @BizField(name = "上一版本 flow_definition.id (FEATURE013 A9)", type = BizField.FieldType.INTEGER)
     private Long parentVersionId;
 
     /**
      * 本版本变更说明 (FEATURE013 A9)
      */
+    @BizField(name = "本版本变更说明 (FEATURE013 A9)", type = BizField.FieldType.STRING)
     private String changelog;
 
     /**
      * DRAFT / PUBLISHED / ARCHIVED
      */
+    @BizField(name = "DRAFT / PUBLISHED / ARCHIVED", type = BizField.FieldType.STRING)
     private String status = "DRAFT";
 
     /**
      * 创建人
      */
+    @BizField(name = "创建人", type = BizField.FieldType.STRING)
     private String creator;
 
     /**
      * 租户编码
      */
     @TableField("tenant_code")
+    @BizField(name = "租户编码", type = BizField.FieldType.STRING)
     private String tenantCode;
 
+    @BizField(name = "createdAt", type = BizField.FieldType.DATETIME)
     private LocalDateTime createdAt;
 
+    @BizField(name = "updatedAt", type = BizField.FieldType.DATETIME)
     private LocalDateTime updatedAt;
 
+    @BizField(name = "isDeleted", type = BizField.FieldType.INTEGER)
     private Integer isDeleted = 0;
 
     public Long getId() {
@@ -264,3 +287,4 @@ public class FlowDefinitionPO {
         this.isDeleted = isDeleted;
     }
 }
+

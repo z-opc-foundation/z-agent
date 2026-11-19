@@ -3,43 +3,75 @@ package com.zifang.z.agent.center.core.agent.instance.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizModel;
 
 import java.time.LocalDateTime;
 
+@BizModel(name = "z_agent_instance", module = "z-agent", description = "z_agent_instance")
 @TableName("z_agent_instance")
 public class AgentInstance {
 
     @TableId(type = IdType.AUTO)
+    @BizField(name = "主键", type = BizField.FieldType.INTEGER)
     private Long id;
+    @BizField(name = "实例编码", type = BizField.FieldType.STRING)
     private String instanceCode;
+    @BizField(name = "所属应用编码", type = BizField.FieldType.STRING)
     private String appCode;
+    @BizField(name = "应用版本", type = BizField.FieldType.STRING)
     private String appVersion;
+    @BizField(name = "实例名称", type = BizField.FieldType.STRING)
     private String instanceName;
+    @BizField(name = "所有者ID", type = BizField.FieldType.STRING)
     private String ownerId;
+    @BizField(name = "所有者名称", type = BizField.FieldType.STRING)
     private String ownerName;
+    @BizField(name = "实例配置", type = BizField.FieldType.STRING)
     private String config;
+    @BizField(name = "状态", type = BizField.FieldType.STRING)
     private String status;
+    @BizField(name = "访问次数", type = BizField.FieldType.INTEGER)
     private Integer visitCount;
+    @BizField(name = "最后访问时间", type = BizField.FieldType.DATETIME)
     private LocalDateTime lastVisitTime;
+    @BizField(name = "gmtCreate", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtCreate;
+    @BizField(name = "gmtModified", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtModified;
+    @BizField(name = "是否删除", type = BizField.FieldType.INTEGER)
     private Integer isDeleted;
+    @BizField(name = "运行模式: IN_PROCESS/CONTAINER", type = BizField.FieldType.STRING)
     private String runMode;
+    @BizField(name = "Docker容器ID(CONTAINER模式)", type = BizField.FieldType.STRING)
     private String containerId;
+    @BizField(name = "容器端口(CONTAINER模式)", type = BizField.FieldType.INTEGER)
     private Integer containerPort;
+    @BizField(name = "agentType", type = BizField.FieldType.STRING)
     private String agentType;
+    @BizField(name = "callbackUrl", type = BizField.FieldType.STRING)
     private String callbackUrl;
+    @BizField(name = "skillRootPath", type = BizField.FieldType.STRING)
     private String skillRootPath;
+    @BizField(name = "authToken", type = BizField.FieldType.STRING)
     private String authToken;
+    @BizField(name = "lastHeartbeat", type = BizField.FieldType.DATETIME)
     private LocalDateTime lastHeartbeat;
+    @BizField(name = "agentVersion", type = BizField.FieldType.STRING)
     private String agentVersion;
+    @BizField(name = "capabilities", type = BizField.FieldType.STRING)
     private String capabilities;
 
     // ===== FEATURE013 T2.2: Widget 嵌入字段 =====
+    @BizField(name = "widgetEnabled", type = BizField.FieldType.INTEGER)
     private Integer widgetEnabled;
+    @BizField(name = "widgetApiKey", type = BizField.FieldType.STRING)
     private String widgetApiKey;
+    @BizField(name = "widgetRateLimit", type = BizField.FieldType.INTEGER)
     private Integer widgetRateLimit;
+    @BizField(name = "widgetCors", type = BizField.FieldType.STRING)
     private String widgetCors;
+    @BizField(name = "widgetEmbedCount", type = BizField.FieldType.INTEGER)
     private Long widgetEmbedCount;
 
     public Long getId() {
@@ -274,3 +306,6 @@ public class AgentInstance {
         this.widgetEmbedCount = widgetEmbedCount;
     }
 }
+
+
+

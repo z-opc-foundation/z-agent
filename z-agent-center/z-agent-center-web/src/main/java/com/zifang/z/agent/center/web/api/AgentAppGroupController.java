@@ -3,11 +3,14 @@ package com.zifang.z.agent.center.web.api;
 import com.zifang.util.core.meta.Result;
 import com.zifang.z.agent.center.core.app.entity.AgentAppGroup;
 import com.zifang.z.agent.center.core.app.service.AgentAppGroupService;
+import com.zifang.z.meta.api.annotation.BizApi;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.annotation.Resource;
 import java.util.List;
 
 /**
@@ -42,7 +45,8 @@ public class AgentAppGroupController {
      */
     @Operation(summary = "查询分组树")
     @GetMapping("/tree")
-    public Result<List<AgentAppGroup>> tree(@RequestParam(required = false) String tenantCode) {
+    @BizApi(summary = "查询分组树", description = "查询分组树.", tags = { "z-agent" })
+    public Result<List<AgentAppGroup>> tree(@RequestParam(required = false) @BizParam(name = "tenantCode", type = BizField.FieldType.STRING, description = "租户编码，可为空表示不过滤", position = BizParam.Position.QUERY) String tenantCode) {
         return Result.success(groupService.listTree(tenantCode));
     }
 
@@ -54,7 +58,8 @@ public class AgentAppGroupController {
      */
     @Operation(summary = "查询单个分组")
     @GetMapping
-    public Result<AgentAppGroup> get(@RequestParam String groupCode) {
+    @BizApi(summary = "按 groupCode 查询单个分组", description = "按 groupCode 查询单个分组.", tags = { "z-agent" })
+    public Result<AgentAppGroup> get(@RequestParam @BizParam(name = "groupCode", type = BizField.FieldType.STRING, description = "分组编码", position = BizParam.Position.QUERY) String groupCode) {
         return Result.success(groupService.getByCode(groupCode));
     }
 
@@ -66,7 +71,8 @@ public class AgentAppGroupController {
      */
     @Operation(summary = "创建分组")
     @PostMapping
-    public Result<AgentAppGroup> create(@RequestBody AgentAppGroup group) {
+    @BizApi(summary = "创建分组", description = "创建分组.", tags = { "z-agent" })
+    public Result<AgentAppGroup> create(@RequestBody @BizParam(name = "group", type = BizField.FieldType.STRING, description = "待创建的分组实体", position = BizParam.Position.BODY) AgentAppGroup group) {
         return Result.success(groupService.create(group));
     }
 
@@ -78,7 +84,8 @@ public class AgentAppGroupController {
      */
     @Operation(summary = "更新分组")
     @PostMapping("/update")
-    public Result<AgentAppGroup> update(@RequestBody AgentAppGroup group) {
+    @BizApi(summary = "更新分组", description = "更新分组.", tags = { "z-agent" })
+    public Result<AgentAppGroup> update(@RequestBody @BizParam(name = "group", type = BizField.FieldType.STRING, description = "待更新的分组实体", position = BizParam.Position.BODY) AgentAppGroup group) {
         return Result.success(groupService.update(group));
     }
 
@@ -90,8 +97,10 @@ public class AgentAppGroupController {
      */
     @Operation(summary = "删除分组")
     @PostMapping("/delete")
-    public Result<Object> delete(@RequestParam String groupCode) {
+    @BizApi(summary = "删除分组", description = "删除分组.", tags = { "z-agent" })
+    public Result<Object> delete(@RequestParam @BizParam(name = "groupCode", type = BizField.FieldType.STRING, description = "分组编码", position = BizParam.Position.QUERY) String groupCode) {
         groupService.delete(groupCode);
         return Result.success();
     }
 }
+

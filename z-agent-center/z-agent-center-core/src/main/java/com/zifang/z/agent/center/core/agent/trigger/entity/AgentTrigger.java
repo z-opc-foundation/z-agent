@@ -3,35 +3,58 @@ package com.zifang.z.agent.center.core.agent.trigger.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizModel;
 
 import java.time.LocalDateTime;
 
 /**
  * FEATURE013 T3.1: Agent 定时触发实体
  */
+@BizModel(name = "FEATURE013 T3.1: Agent 定时触发实体", module = "z-agent", description = "FEATURE013 T3.1: Agent 定时触发实体")
 @TableName("z_agent_trigger")
 public class AgentTrigger {
 
     @TableId(type = IdType.AUTO)
+    @BizField(name = "id", type = BizField.FieldType.INTEGER)
     private Long id;
+    @BizField(name = "triggerCode", type = BizField.FieldType.STRING)
     private String triggerCode;
+    @BizField(name = "triggerName", type = BizField.FieldType.STRING)
     private String triggerName;
+    @BizField(name = "appCode", type = BizField.FieldType.STRING)
     private String appCode;
+    @BizField(name = "instanceCode", type = BizField.FieldType.STRING)
     private String instanceCode;
+    @BizField(name = "cron", type = BizField.FieldType.STRING)
     private String cron;
+    @BizField(name = "message", type = BizField.FieldType.STRING)
     private String message;
+    @BizField(name = "status", type = BizField.FieldType.STRING)
     private String status;
+    @BizField(name = "nextFireTime", type = BizField.FieldType.DATETIME)
     private LocalDateTime nextFireTime;
+    @BizField(name = "lastFireTime", type = BizField.FieldType.DATETIME)
     private LocalDateTime lastFireTime;
+    @BizField(name = "lastFireStatus", type = BizField.FieldType.STRING)
     private String lastFireStatus;
+    @BizField(name = "lastFireMessage", type = BizField.FieldType.STRING)
     private String lastFireMessage;
+    @BizField(name = "fireCount", type = BizField.FieldType.INTEGER)
     private Integer fireCount;
+    @BizField(name = "ownerId", type = BizField.FieldType.STRING)
     private String ownerId;
+    @BizField(name = "ownerName", type = BizField.FieldType.STRING)
     private String ownerName;
+    @BizField(name = "description", type = BizField.FieldType.STRING)
     private String description;
+    @BizField(name = "tenantCode", type = BizField.FieldType.STRING)
     private String tenantCode;
+    @BizField(name = "gmtCreate", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtCreate;
+    @BizField(name = "gmtModified", type = BizField.FieldType.DATETIME)
     private LocalDateTime gmtModified;
+    @BizField(name = "isDeleted", type = BizField.FieldType.INTEGER)
     private Integer isDeleted;
 
     public Long getId() {
@@ -194,3 +217,6 @@ public class AgentTrigger {
         this.isDeleted = isDeleted;
     }
 }
+
+
+

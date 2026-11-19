@@ -10,11 +10,12 @@ import com.zifang.z.agent.center.core.agent.plugin.executor.BeanPluginDispatcher
 import com.zifang.z.agent.center.core.agent.plugin.executor.BeanPluginExecutor;
 import com.zifang.z.agent.center.core.agent.plugin.executor.HttpPluginExecutor;
 import com.zifang.z.agent.center.core.agent.plugin.mapper.AgentPluginMapper;
+import com.zifang.z.meta.api.annotation.BizMethod;
+import jakarta.annotation.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +36,7 @@ public class AgentPluginServiceImpl implements AgentPluginService {
     private BeanPluginDispatcher beanDispatcher;
 
     @Override
+    @BizMethod(name = "getById", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentPlugin getById(Long id) {
         if (id == null) {
             return null;
@@ -44,6 +46,7 @@ public class AgentPluginServiceImpl implements AgentPluginService {
     }
 
     @Override
+    @BizMethod(name = "getByCode", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentPlugin getByCode(String pluginCode) {
         if (pluginCode == null || pluginCode.isEmpty()) {
             return null;
@@ -55,6 +58,7 @@ public class AgentPluginServiceImpl implements AgentPluginService {
     }
 
     @Override
+    @BizMethod(name = "pageList", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentPlugin> pageList(String keyword, String category, String status,
                                       Integer builtin, int page, int size) {
         if (page < 1) {
@@ -88,6 +92,7 @@ public class AgentPluginServiceImpl implements AgentPluginService {
     }
 
     @Override
+    @BizMethod(name = "count", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public long count(String keyword, String category, String status, Integer builtin) {
         LambdaQueryWrapper<AgentPlugin> q = new LambdaQueryWrapper<>();
         q.eq(AgentPlugin::getIsDeleted, 0);
@@ -110,6 +115,7 @@ public class AgentPluginServiceImpl implements AgentPluginService {
     }
 
     @Override
+    @BizMethod(name = "create", module = "z-agent", description = "", operation = BizMethod.Operation.CREATE)
     public AgentPlugin create(AgentPlugin plugin) {
         if (plugin == null || plugin.getPluginCode() == null) {
             throw new IllegalArgumentException("pluginCode 必填");
@@ -138,6 +144,7 @@ public class AgentPluginServiceImpl implements AgentPluginService {
     }
 
     @Override
+    @BizMethod(name = "update", module = "z-agent", description = "", operation = BizMethod.Operation.UPDATE)
     public AgentPlugin update(AgentPlugin plugin) {
         if (plugin == null || plugin.getId() == null) {
             throw new IllegalArgumentException("id 必填");
@@ -165,6 +172,7 @@ public class AgentPluginServiceImpl implements AgentPluginService {
     }
 
     @Override
+    @BizMethod(name = "setStatus", module = "z-agent", description = "", operation = BizMethod.Operation.UPDATE)
     public AgentPlugin setStatus(Long id, String status) {
         if (!"ACTIVE".equals(status) && !"DISABLED".equals(status) && !"DEPRECATED".equals(status)) {
             throw new IllegalArgumentException("status 必须是 ACTIVE/DISABLED/DEPRECATED");
@@ -181,6 +189,7 @@ public class AgentPluginServiceImpl implements AgentPluginService {
     }
 
     @Override
+    @BizMethod(name = "delete", module = "z-agent", description = "", operation = BizMethod.Operation.DELETE)
     public boolean delete(Long id) {
         AgentPlugin p = pluginMapper.selectById(id);
         if (p == null) {
@@ -196,6 +205,7 @@ public class AgentPluginServiceImpl implements AgentPluginService {
     }
 
     @Override
+    @BizMethod(name = "execute", module = "z-agent", description = "", operation = BizMethod.Operation.ACTION)
     public Map<String, Object> execute(String pluginCode, Map<String, Object> inputs) {
         if (pluginCode == null || pluginCode.isEmpty()) {
             throw new IllegalArgumentException("pluginCode 必填");
@@ -260,6 +270,7 @@ public class AgentPluginServiceImpl implements AgentPluginService {
     }
 
     @Override
+    @BizMethod(name = "listBuiltinBeanNames", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public java.util.Set<String> listBuiltinBeanNames() {
         return beanDispatcher.listAvailableBeanNames();
     }
@@ -316,3 +327,6 @@ public class AgentPluginServiceImpl implements AgentPluginService {
         return (Map<String, Object>) JsonUtil.toPlainValue(JsonUtil.parse(json));
     }
 }
+
+
+

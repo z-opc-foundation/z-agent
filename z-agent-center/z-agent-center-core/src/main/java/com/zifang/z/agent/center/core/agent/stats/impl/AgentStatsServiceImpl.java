@@ -3,11 +3,12 @@ package com.zifang.z.agent.center.core.agent.stats.impl;
 import com.zifang.z.agent.center.core.agent.stats.AgentStatsService;
 import com.zifang.z.agent.center.core.agent.stats.dto.*;
 import com.zifang.z.agent.center.core.agent.stats.mapper.AgentStatsMapper;
+import com.zifang.z.meta.api.annotation.BizMethod;
+import jakarta.annotation.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -87,6 +88,7 @@ public class AgentStatsServiceImpl implements AgentStatsService {
     }
 
     @Override
+    @BizMethod(name = "getOverview", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public AgentStatsOverview getOverview(String appCode) {
         AgentStatsOverview o = new AgentStatsOverview();
         try {
@@ -133,6 +135,7 @@ public class AgentStatsServiceImpl implements AgentStatsService {
     // ========== 类型安全转换辅助 ==========
 
     @Override
+    @BizMethod(name = "getTrend", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentTrendPoint> getTrend(String appCode, int days) {
         if (days <= 0 || days > 90) {
             days = 7;
@@ -174,6 +177,7 @@ public class AgentStatsServiceImpl implements AgentStatsService {
     }
 
     @Override
+    @BizMethod(name = "getLatencyDistribution", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentLatencyBucket> getLatencyDistribution(String appCode) {
         List<AgentLatencyBucket> result = new ArrayList<>();
         try {
@@ -194,6 +198,7 @@ public class AgentStatsServiceImpl implements AgentStatsService {
     }
 
     @Override
+    @BizMethod(name = "getByApp", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentByAppRow> getByApp(String appCode, int limit) {
         if (limit <= 0 || limit > 200) {
             limit = 20;
@@ -223,6 +228,7 @@ public class AgentStatsServiceImpl implements AgentStatsService {
     }
 
     @Override
+    @BizMethod(name = "getByUser", module = "z-agent", description = "", operation = BizMethod.Operation.QUERY)
     public List<AgentByUserRow> getByUser(String appCode, int limit) {
         if (limit <= 0 || limit > 200) {
             limit = 20;
@@ -248,3 +254,6 @@ public class AgentStatsServiceImpl implements AgentStatsService {
         return result;
     }
 }
+
+
+

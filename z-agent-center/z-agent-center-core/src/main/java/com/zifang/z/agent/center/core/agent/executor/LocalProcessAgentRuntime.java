@@ -1,6 +1,7 @@
 package com.zifang.z.agent.center.core.agent.executor;
 
 import com.zifang.z.agent.common.enums.AgentType;
+import com.zifang.z.meta.api.annotation.BizMethod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
@@ -71,6 +72,7 @@ public class LocalProcessAgentRuntime {
      * @param customCommand CUSTOM 类型时由调用方传入的 shell 命令（可包含占位符 {@code {port}}）
      * @return 分配的本地端口
      */
+    @BizMethod(name = "启动一个本地进程型 Agent，返回分配的端口", module = "z-agent", description = "启动一个本地进程型 Agent，返回分配的端口。", operation = BizMethod.Operation.ACTION)
     public synchronized Integer startProcess(String instanceCode, AgentType agentType, String customCommand) {
         if (portMap.containsKey(instanceCode)) {
             return portMap.get(instanceCode);
@@ -123,6 +125,7 @@ public class LocalProcessAgentRuntime {
     /**
      * 停止一个本地进程型 Agent。
      */
+    @BizMethod(name = "停止一个本地进程型 Agent", module = "z-agent", description = "停止一个本地进程型 Agent。", operation = BizMethod.Operation.ACTION)
     public synchronized void stopProcess(String instanceCode) {
         Integer port = portMap.remove(instanceCode);
         ProcessHandle handle = processMap.remove(instanceCode);
@@ -145,6 +148,7 @@ public class LocalProcessAgentRuntime {
     /**
      * 健康检查：HTTP GET /health。
      */
+    @BizMethod(name = "健康检查：HTTP GET /health", module = "z-agent", description = "健康检查：HTTP GET /health。", operation = BizMethod.Operation.ACTION)
     public boolean isHealthy(String instanceCode) {
         Integer port = portMap.get(instanceCode);
         if (port == null) {
@@ -169,6 +173,7 @@ public class LocalProcessAgentRuntime {
     /**
      * 检查外部 CLI 是否已安装在系统中（which / where 命令）。
      */
+    @BizMethod(name = "检查外部 CLI 是否已安装在系统中（which / where 命令）", module = "z-agent", description = "检查外部 CLI 是否已安装在系统中（which / where 命令）。", operation = BizMethod.Operation.ACTION)
     public boolean isCliAvailable(AgentType agentType) {
         String binary = resolveBinary(agentType);
         if (binary == null) {
@@ -285,3 +290,6 @@ public class LocalProcessAgentRuntime {
         }
     }
 }
+
+
+

@@ -6,11 +6,14 @@ import com.zifang.z.agent.center.core.agent.instance.mapper.AgentInstanceMapper;
 import com.zifang.z.agent.center.core.agent.instance.service.AgentInstanceService;
 import com.zifang.z.agent.center.core.agent.widget.WidgetCallService;
 import com.zifang.z.agent.center.web.api.response.dto.*;
+import com.zifang.z.meta.api.annotation.BizApi;
+import com.zifang.z.meta.api.annotation.BizField;
+import com.zifang.z.meta.api.annotation.BizParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.annotation.Resource;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -61,10 +64,14 @@ public class AgentWidgetController {
      */
     @Operation(summary = "Widget 调用 (POST JSON)")
     @PostMapping("/call")
+    @BizApi(summary = "Widget 调用（POST JSON）", description = "Widget 调用（POST JSON）. 优先从 X-Widget-Key Header 取 apiKey，否则从 body.apiKey 取。", tags = { "z-agent" })
     public Result<WidgetCallResp> call(
-            @RequestHeader(value = "X-Widget-Key", required = false) String headerKey,
-            @RequestBody(required = false) java.util.Map<String, Object> body,
-            @RequestHeader(value = "Origin", required = false) String origin) {
+            @RequestHeader(value = "X-Widget-Key", required = false)
+            @BizParam(name = "X-Widget-Key", type = BizField.FieldType.STRING, description = "请求头中的 Widget Key", position = BizParam.Position.HEADER) String headerKey,
+            @RequestBody(required = false)
+            @BizParam(name = "body", type = BizField.FieldType.STRING, description = "请求体（可包含 apiKey / message / userId / userName）", position = BizParam.Position.BODY) java.util.Map<String, Object> body,
+            @RequestHeader(value = "Origin", required = false)
+            @BizParam(name = "Origin", type = BizField.FieldType.STRING, description = "请求头中的 Origin（用于 CORS 校验）", position = BizParam.Position.HEADER) String origin) {
         String apiKey = headerKey != null ? headerKey : (body != null ? String.valueOf(body.get("apiKey")) : null);
         return Result.success(doCall(apiKey, body, origin));
     }
@@ -79,10 +86,12 @@ public class AgentWidgetController {
      */
     @Operation(summary = "Widget 调用 (GET)")
     @GetMapping("/call/{apiKey}")
+    @BizApi(summary = "Widget 调用（GET 形式）", description = "Widget 调用（GET 形式）.", tags = { "z-agent" })
     public Result<WidgetCallResp> callGet(
-            @PathVariable String apiKey,
-            @RequestParam String message,
-            @RequestHeader(value = "Origin", required = false) String origin) {
+            @PathVariable @BizParam(name = "apiKey", type = BizField.FieldType.STRING, description = "Widget API Key", position = BizParam.Position.PATH) String apiKey,
+            @RequestParam @BizParam(name = "message", type = BizField.FieldType.STRING, description = "用户消息", position = BizParam.Position.QUERY) String message,
+            @RequestHeader(value = "Origin", required = false)
+            @BizParam(name = "Origin", type = BizField.FieldType.STRING, description = "请求头中的 Origin（用于 CORS 校验）", position = BizParam.Position.HEADER) String origin) {
         java.util.Map<String, Object> body = new HashMap<>();
         body.put("message", message);
         return Result.success(doCall(apiKey, body, origin));
@@ -141,7 +150,8 @@ public class AgentWidgetController {
      */
     @Operation(summary = "生成 Widget API Key")
     @PostMapping("/key/generate")
-    public Result<WidgetKeyGenerateResp> generateKey(@RequestParam String instanceCode) {
+    @BizApi(summary = "为指定实例生成 Widget API Key", description = "为指定实例生成 Widget API Key.", tags = { "z-agent" })
+    public Result<WidgetKeyGenerateResp> generateKey(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode) {
         AgentInstance instance = instanceService.getByInstanceCode(instanceCode);
         if (instance == null) {
             throw new IllegalArgumentException("实例不存在: " + instanceCode);
@@ -168,7 +178,8 @@ public class AgentWidgetController {
      */
     @Operation(summary = "启用/禁用 Widget")
     @PostMapping("/key/toggle")
-    public Result<WidgetToggleResp> toggleWidget(@RequestParam String instanceCode, @RequestParam Boolean enabled) {
+    @BizApi(summary = "启用或禁用 Widget", description = "启用或禁用 Widget.", tags = { "z-agent" })
+    public Result<WidgetToggleResp> toggleWidget(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode, @RequestParam @BizParam(name = "enabled", type = BizField.FieldType.BOOLEAN, description = "是否启用", position = BizParam.Position.QUERY) Boolean enabled) {
         AgentInstance instance = instanceService.getByInstanceCode(instanceCode);
         if (instance == null) {
             throw new IllegalArgumentException("实例不存在");
@@ -193,9 +204,12 @@ public class AgentWidgetController {
      */
     @Operation(summary = "配置 CORS + 限流")
     @PostMapping("/key/config")
-    public Result<WidgetConfigResp> configWidget(@RequestParam String instanceCode,
-                                                 @RequestParam(required = false) String cors,
-                                                 @RequestParam(required = false) Integer rateLimit) {
+    @BizApi(summary = "配置 CORS 白名单与限流值", description = "配置 CORS 白名单与限流值.", tags = { "z-agent" })
+    public Result<WidgetConfigResp> configWidget(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode,
+                                                 @RequestParam(required = false)
+                                                 @BizParam(name = "cors", type = BizField.FieldType.STRING, description = "CORS 白名单（多个 Origin 用逗号分隔），可为空表示不修改", position = BizParam.Position.QUERY) String cors,
+                                                 @RequestParam(required = false)
+                                                 @BizParam(name = "rateLimit", type = BizField.FieldType.INTEGER, description = "每实例的请求频率上限（次/分钟），可为空表示不修改", position = BizParam.Position.QUERY) Integer rateLimit) {
         AgentInstance instance = instanceService.getByInstanceCode(instanceCode);
         if (instance == null) {
             throw new IllegalArgumentException("实例不存在");
@@ -226,7 +240,8 @@ public class AgentWidgetController {
      */
     @Operation(summary = "获取 Widget 配置")
     @GetMapping("/key")
-    public Result<WidgetConfigDetailResp> getWidgetConfig(@RequestParam String instanceCode) {
+    @BizApi(summary = "获取 Widget 配置（含脱敏后的 API Key）", description = "获取 Widget 配置（含脱敏后的 API Key）.", tags = { "z-agent" })
+    public Result<WidgetConfigDetailResp> getWidgetConfig(@RequestParam @BizParam(name = "instanceCode", type = BizField.FieldType.STRING, description = "Agent 实例编码", position = BizParam.Position.QUERY) String instanceCode) {
         AgentInstance instance = instanceService.getByInstanceCode(instanceCode);
         if (instance == null) {
             throw new IllegalArgumentException("实例不存在");
@@ -250,7 +265,11 @@ public class AgentWidgetController {
      */
     @Operation(summary = "健康检查")
     @GetMapping("/health")
+    @BizApi(summary = "健康检查端点", description = "健康检查端点.", tags = { "z-agent" })
     public Result<String> health() {
         return Result.success("Agent Widget API is healthy");
     }
 }
+
+
+
