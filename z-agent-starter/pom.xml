@@ -41,5 +41,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
-    </dependencies>
+        <dependency>
+            <groupId>io.github.yuku123</groupId>
+            <artifactId>z-meta-starter</artifactId>
+            <version>${z-meta.version}</version>
+        </dependency>
+</dependencies>
 </project>
